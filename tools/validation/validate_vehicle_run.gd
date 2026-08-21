@@ -1029,6 +1029,7 @@ func _check_boss_autonomous_shapes(run) -> void:
 			var pattern := String(pattern_name)
 			var kind := BossPatterns.kind(pattern)
 			run.denied_zones.clear()
+			run.boss_runtime.clear_pending_attacks()
 			var enemies_before: int = run.enemy_store.live.size()
 			var projectiles_before: int = run.projectile_store.hostile_count()
 			run.call("_execute_boss_autonomous", {
@@ -1101,17 +1102,18 @@ func _check_boss_autonomous_shapes(run) -> void:
 						and run.denied_zones.all(func(zone): return StringName(zone["shape"]) == &"corridor" and Vector2(zone["motion"]).length() > 0.0 and is_equal_approx(float(zone["safe_gap"]), 200.0) and not zone.has("beam_emission_mode")),
 					"%s creates crossing translating walls with collision-true gaps" % pattern
 				)
-			elif kind == &"alternating_pulse":
+			elif kind == &"radial_volley":
 				_expect(
-					run.denied_zones.size() == 2
-						and StringName(run.denied_zones[0]["shape"]) == &"wedge_ring"
-						and StringName(run.denied_zones[1]["shape"]) == &"wedge_ring"
-						and is_equal_approx(
-							float(run.denied_zones[1]["radius"]),
-							BossPatterns.radius(pattern, stage_index)
-						)
-						and StringName(run.denied_zones[1]["activation_kind"]) == &"radial_volley",
-					"%s creates alternating warned safe sectors and one bounded volley" % pattern
+					run.denied_zones.is_empty()
+						and run.boss_runtime.pending_radial_volley_count() == 1,
+					"%s schedules one bounded projectile-only volley without warning geometry" % pattern
+				)
+				run.boss_runtime.advance_pending_attacks(
+					BossPatterns.startup_seconds(pattern) + 0.56, run
+				)
+				_expect(
+					run.projectile_store.hostile_count() == projectiles_before + 12,
+					"%s reveals only its twelve live projectile bodies" % pattern
 				)
 			else:
 				_expect(false, "%s has an unsupported autonomous kind" % pattern)

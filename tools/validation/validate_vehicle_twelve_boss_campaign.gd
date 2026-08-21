@@ -69,7 +69,7 @@ func _initialize() -> void:
 	for stage_id in Stages.STAGE_IDS:
 		for pattern in Patterns.autonomous_sequence(stage_id):
 			_expect(
-				Patterns.kind(String(pattern)) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"alternating_pulse", &"compression"],
+				Patterns.kind(String(pattern)) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"radial_volley", &"compression"],
 				"%s autonomous pattern has a VehicleRun handler" % String(pattern)
 			)
 	_finish()

@@ -15,6 +15,7 @@ const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechan
 const PHASE_GAPS := [0.40, 0.30, 0.24]
 const AUTONOMOUS_INTERVALS := [4.8, 3.9, 3.1]
 const DIRECT_RECOVERY_SCALE := 0.72
+const MAX_PENDING_RADIAL_VOLLEYS := 4
 const ACTION_NONE: StringName = &""
 const ACTION_REPOSITION: StringName = &"reposition"
 const ACTION_SELECT_DIRECT: StringName = &"select_direct"
@@ -36,6 +37,7 @@ var autonomous_timer := 3.2
 var autonomous_index := 0
 var autonomous_serial := 0
 var finite_summons_remaining := 6
+var _pending_radial_volleys: Array[Dictionary] = []
 
 
 func configure(next_stage_id: StringName) -> void:
@@ -48,6 +50,42 @@ func configure(next_stage_id: StringName) -> void:
 	autonomous_index = 0
 	autonomous_serial = 0
 	finite_summons_remaining = 6
+	_pending_radial_volleys.clear()
+
+
+func schedule_radial_volley(event: Dictionary) -> bool:
+	if _pending_radial_volleys.size() >= MAX_PENDING_RADIAL_VOLLEYS:
+		return false
+	var turn := -1.0 if String(event["pattern"]) == "radial_volley_b" else 1.0
+	_pending_radial_volleys.append({
+		"id":String(event["id"]),
+		"remaining":maxf(0.0, float(event["startup"]) + 0.55),
+		"origin":Vector2(event["origin"]),
+		"count":12,
+		"rotation":turn * 0.18,
+		"damage":float(event["damage"]),
+		"source":String(event["pattern"]),
+		"affinity":StringName(event["affinity"]),
+	})
+	return true
+
+
+func advance_pending_attacks(delta: float, services: Variant) -> void:
+	for index in range(_pending_radial_volleys.size() - 1, -1, -1):
+		var volley := _pending_radial_volleys[index]
+		volley["remaining"] = float(volley["remaining"]) - maxf(0.0, delta)
+		if float(volley["remaining"]) > 0.0:
+			continue
+		services.call("_fire_boss_radial_volley", volley)
+		_pending_radial_volleys.remove_at(index)
+
+
+func clear_pending_attacks() -> void:
+	_pending_radial_volleys.clear()
+
+
+func pending_radial_volley_count() -> int:
+	return _pending_radial_volleys.size()
 
 
 func read_gap(phase: int) -> float:
@@ -212,10 +250,14 @@ func update_active(
 				pattern,
 				damage
 			)
-	elif kind in [&"crossing_weave", &"alternating_pulse", &"compression"]:
+	elif kind in [&"crossing_weave", &"compression"]:
 		if boss.pattern_volleys == 0:
 			boss.pattern_volleys = 1
 			services.call("_activate_boss_identity_pattern", boss, pattern)
+	elif kind == &"radial_volley":
+		# VehicleRun scheduled the projectile-only volley when the pattern was
+		# selected. The active phase owns no hidden area damage or warning zone.
+		boss.pattern_volleys = 1
 	elif kind == &"charge":
 		if boss.pattern_volleys == 0:
 			services.call("_boss_fire_aimed_burst", boss, pattern, damage * 0.55)
@@ -359,4 +401,5 @@ func snapshot() -> Dictionary:
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
 		"finite_summons_remaining":finite_summons_remaining,
+		"pending_radial_volley_count":_pending_radial_volleys.size(),
 	}

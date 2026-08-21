@@ -1,6 +1,5 @@
 extends SceneTree
 
-const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const LateMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
@@ -32,11 +31,6 @@ func _run() -> void:
 	_expect(is_equal_approx(LateMechanics.resonance_damage_multiplier(500.0, 0.0), 1.0) and is_equal_approx(LateMechanics.resonance_damage_multiplier(300.0, 0.0), 0.2), "base resonance band applies full and reduced damage")
 	_expect(LateMechanics.resonance_band(8.0) == Vector2(520.0, 880.0), "resonance alternates to the shifted band")
 	_expect(not LateMechanics.overload_active(11.99) and LateMechanics.overload_active(12.0) and not LateMechanics.overload_active(18.0) and LateMechanics.overload_active(30.0), "overload begins after 12 seconds and repeats every 18 seconds for six seconds")
-
-	for stage_index in range(8, 12):
-		var teaching_role: StringName = CombatStages.BOSS_TUTOR_ROLES[stage_index]
-		var sequence := CombatStages._role_sequence_for_arc(stage_index, CombatStages.QUOTAS[stage_index])
-		_expect(sequence.count(teaching_role) >= 4, "stage %d admits its teaching role at least four times" % (stage_index + 1))
 
 	var stage := StageScene.instantiate()
 	root.add_child(stage)

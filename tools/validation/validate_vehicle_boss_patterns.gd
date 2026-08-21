@@ -79,7 +79,7 @@ func _initialize() -> void:
 				"%s remains independent of boss-body state" % pattern
 			)
 			_expect(
-				Patterns.kind(pattern) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"alternating_pulse"],
+				Patterns.kind(pattern) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"radial_volley"],
 				"%s has an explicitly dispatched autonomous shape" % pattern
 			)
 			if Patterns.kind(pattern) == &"area" and Patterns.damage(pattern, stage_index) > 0.0:
@@ -104,10 +104,10 @@ func _initialize() -> void:
 		"Stage 7 Boss owns two crossing-weave identity selections without Cross Beam"
 	)
 	_expect(
-		Patterns.sequence(&"stage_8").count("alternating_sectors_a") == 1
-			and Patterns.sequence(&"stage_8").count("alternating_sectors_b") == 1
+		Patterns.sequence(&"stage_8").count("radial_volley_a") == 1
+			and Patterns.sequence(&"stage_8").count("radial_volley_b") == 1
 			and "mirror_cross" not in Patterns.sequence(&"stage_8"),
-		"Stage 8 Boss owns two alternating-pulse identity selections without Mirror Cross"
+		"Stage 8 Boss owns two projectile-only radial-volley selections without Mirror Cross"
 	)
 	_expect(
 		Difficulty.BOSS_HEALTH_MULTIPLIERS.size() == 12

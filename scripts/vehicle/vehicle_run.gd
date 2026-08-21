@@ -1249,6 +1249,7 @@ func _reset_run(
 	boss_death_runtime.reset()
 	_dying_boss_id = ""
 	_pending_boss_barrage_rows.clear()
+	boss_runtime.clear_pending_attacks()
 	_boss_barrage_hit_lock_remaining = 0.0
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO
@@ -5117,10 +5118,7 @@ func _update_denied_zones(delta: float) -> void:
 		var zone: Dictionary = denied_zones[index]
 		if float(zone["warning"]) > 0.0:
 			zone["warning"] = maxf(0.0, float(zone["warning"]) - delta)
-			if float(zone["warning"]) <= 0.0:
-				_activate_denied_zone_once(zone)
 			continue
-		_activate_denied_zone_once(zone)
 		zone["duration"] = float(zone["duration"]) - delta
 		zone["tick"] = float(zone["tick"]) - delta
 		if float(zone["duration"]) <= 0.0:
@@ -5166,14 +5164,6 @@ func _update_denied_zones(delta: float) -> void:
 				corridor_to
 			) <= Rules.PLAYER_RADIUS + float(zone["width"]) * 0.5:
 				damage = float(zone["damage"])
-		elif shape == &"wedge_ring":
-			var offset := player_position - Vector2(zone["pos"])
-			var ring_distance := offset.length()
-			var safe_axis := Vector2(zone.get("safe_axis", Vector2.RIGHT)).normalized()
-			var within_ring := absf(ring_distance - float(zone["radius"])) <= float(zone["width"]) * 0.5 + Rules.PLAYER_RADIUS
-			var in_safe_wedge := absf(safe_axis.angle_to(offset.normalized())) <= float(zone.get("safe_half_angle", 0.48))
-			if within_ring and not in_safe_wedge:
-				damage = float(zone["damage"])
 		else:
 			push_error("Unsupported denied-zone shape: %s" % String(shape))
 			denied_zones.remove_at(index)
@@ -5190,35 +5180,6 @@ func _update_denied_zones(delta: float) -> void:
 				true,
 				bool(zone.get("final_damage", false))
 			)
-
-
-func _activate_denied_zone_once(zone: Dictionary) -> void:
-	var activation_kind := StringName(zone.get("activation_kind", &""))
-	if activation_kind == &"":
-		return
-	if bool(zone.get("activation_fired", false)):
-		return
-	zone["activation_fired"] = true
-	if activation_kind != &"radial_volley":
-		return
-	var origin := Vector2(zone.get("pos", Vector2.ZERO))
-	var count := clampi(int(zone.get("volley_count", 12)), 6, 16)
-	var rotation := float(zone.get("volley_rotation", 0.0))
-	for shot_index in count:
-		var direction := Vector2.RIGHT.rotated(
-			rotation + TAU * float(shot_index) / float(count)
-		)
-		_spawn_hostile_projectile(
-			origin + direction * 66.0,
-			direction,
-			float(zone.get("volley_damage", 12.0)),
-			540.0,
-			String(zone.get("source", "pulse_radial_volley")),
-			StringName(zone.get("affinity", &"arc")),
-			true,
-			false,
-			AttackContract.THREAT_BOSS
-		)
 
 
 func _update_effects(delta: float) -> void:
@@ -5607,6 +5568,7 @@ func _begin_boss_destruction(boss: EnemyState, source: String) -> void:
 	projectile_store.retire_boss_hostiles()
 	_retire_denied_zones_by_owner(&"boss_actor")
 	_pending_boss_barrage_rows.clear()
+	boss_runtime.clear_pending_attacks()
 	var owned_ids: Array[StringName] = []
 	for enemy in enemies:
 		if enemy != boss and enemy.alive and _is_boss_owned_enemy(enemy):
@@ -6141,6 +6103,7 @@ func _update_aim_target() -> void:
 
 func _update_stage_progression(delta: float = 0.0) -> void:
 	_advance_pending_boss_barrage(delta)
+	boss_runtime.advance_pending_attacks(delta, self)
 	_advance_boss_destruction(delta)
 	var receipt := stage_flow.advance(delta)
 	if (
@@ -6509,7 +6472,7 @@ func _boss_select_pattern(boss: EnemyState) -> void:
 	if kind == &"lanes":
 		var spacing := BossPatterns.lane_spacing(current_stage_index)
 		boss.lane_centers = [-spacing, spacing]
-	if kind in [&"crossing_weave", &"alternating_pulse", &"compression"]:
+	if kind in [&"crossing_weave", &"radial_volley", &"compression"]:
 		_prepare_boss_identity_pattern(boss, pattern)
 	AttackTelegraphs.refresh_boss(
 		boss,
@@ -6695,6 +6658,27 @@ func _fire_boss_barrage_row(row: Dictionary) -> void:
 		)
 
 
+func _fire_boss_radial_volley(volley: Dictionary) -> void:
+	var origin := Vector2(volley.get("origin", Vector2.ZERO))
+	var count := clampi(int(volley.get("count", 12)), 6, 16)
+	var rotation := float(volley.get("rotation", 0.0))
+	for shot_index in count:
+		var direction := Vector2.RIGHT.rotated(
+			rotation + TAU * float(shot_index) / float(count)
+		)
+		_spawn_hostile_projectile(
+			origin + direction * 66.0,
+			direction,
+			float(volley.get("damage", 12.0)),
+			540.0,
+			String(volley.get("source", "boss_radial_volley")),
+			StringName(volley.get("affinity", &"arc")),
+			true,
+			false,
+			AttackContract.THREAT_BOSS
+		)
+
+
 func _execute_boss_autonomous(event: Dictionary) -> void:
 	var pattern := String(event["pattern"])
 	var kind := StringName(event.get("kind", BossPatterns.kind(pattern)))
@@ -6723,7 +6707,7 @@ func _execute_boss_autonomous(event: Dictionary) -> void:
 	if kind == &"long_banks":
 		_spawn_boss_long_banks(event)
 		return
-	if kind in [&"crossing_weave", &"alternating_pulse", &"compression"]:
+	if kind in [&"crossing_weave", &"radial_volley", &"compression"]:
 		_execute_boss_identity_event(event)
 		return
 	push_error("Unsupported autonomous boss pattern kind: %s (%s)" % [String(kind), pattern])
@@ -6733,8 +6717,9 @@ func _execute_boss_identity_event(event: Dictionary) -> void:
 	match StringName(event.get("kind", &"")):
 		&"crossing_weave":
 			_append_boss_crossing_weave(event)
-		&"alternating_pulse":
-			_append_boss_alternating_pulse(event)
+		&"radial_volley":
+			if not boss_runtime.schedule_radial_volley(event):
+				push_error("Stage 8 radial-volley queue exceeded its fixed capacity")
 		&"compression":
 			_append_boss_compression(event)
 		_:
@@ -6899,45 +6884,6 @@ func _append_boss_weave_pass(
 				"weave_pass":StringName(pass_id),
 				"direct_boss_id":String(event.get("direct_boss_id", "")),
 			})
-
-
-func _append_boss_alternating_pulse(event: Dictionary) -> void:
-	var origin := Vector2(event["origin"])
-	var safe_axis := (Vector2(event["target"]) - origin).normalized()
-	if safe_axis.is_zero_approx():
-		safe_axis = Vector2.RIGHT
-	var inverted := String(event["pattern"]) == "alternating_sectors_b"
-	var turn := -1.0 if inverted else 1.0
-	for pulse_index in 2:
-		var pulse_axis := safe_axis.rotated(turn * float(pulse_index) * PI * 0.75)
-		var warning_offset := float(pulse_index) * 0.55
-		denied_zones.append({
-			"id":"%s_pulse_%d" % [String(event["id"]), pulse_index],
-			"shape":&"wedge_ring",
-			"pos":origin,
-			"radius":float(event["radius"]) * (0.72 if pulse_index == 0 else 1.0),
-			"width":72.0,
-			"safe_axis":pulse_axis,
-			"safe_half_angle":0.52,
-			"warning":float(event["startup"]) + warning_offset,
-			"warning_total":float(event["startup"]) + warning_offset,
-			"duration":0.52,
-			"tick":0.0,
-			"damage":float(event["damage"]),
-			"source":String(event["pattern"]),
-			"owner_kind":&"boss_actor",
-			"affinity":StringName(event["affinity"]),
-			"commit_mode":StringName(event.get("commit_mode", &"autonomous")),
-			"final_damage":true,
-			"single_hit":true,
-			"hit_committed":false,
-			"activation_kind":&"radial_volley" if pulse_index == 1 else &"",
-			"activation_fired":false,
-			"volley_count":12,
-			"volley_rotation":turn * 0.18,
-			"volley_damage":maxf(12.0, float(event["damage"]) * 0.75),
-			"direct_boss_id":String(event.get("direct_boss_id", "")),
-		})
 
 
 func _append_boss_area_zone(event: Dictionary) -> void:
@@ -7444,6 +7390,7 @@ func _finalize_next_stage_continuation() -> void:
 	boss_death_runtime.reset()
 	_dying_boss_id = ""
 	_pending_boss_barrage_rows.clear()
+	boss_runtime.clear_pending_attacks()
 	_boss_barrage_hit_lock_remaining = 0.0
 	boss_phase_two_announced = false
 	boss_arrival_position = Vector2.ZERO

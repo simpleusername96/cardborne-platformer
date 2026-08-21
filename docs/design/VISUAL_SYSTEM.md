@@ -510,11 +510,11 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   emission 계약의 대상이 아니다.
 - Stage 7 Boss의 crossing weave는 같은 placed moving hazard 계약을 사용한다. 첫 paired
   wall pass와 지연된 orthogonal pass는 startup에 각 entry edge의 짧은 marker만 보이고,
-  active부터 현재 collision과 gap을 표시한다. Stage 8 Boss의 두 alternating pulse는
-  warning 동안 실제 wedge-ring 피해 영역과 safe sector를 표시한다. 두 번째 pulse가
-  발동할 때만 12발 radial projectile body가 생성되며, warning
-  단계에서 탄환 경로나 미래 위치를 미리 그리지 않는다. 두 보스의 기존 raster identity는
-  그대로 유지한다.
+  active부터 현재 collision과 gap을 표시한다. Stage 8 Boss의 두 radial volley 선택은
+  gameplay-owned delay 뒤 각도 offset이 반대인 12발 projectile body만 생성한다. Startup과
+  delay 동안 wedge-ring, safe sector, damage zone, predicted route, impact preview, source effect와
+  그 밖의 pre-fire world effect를 모두 표시하지 않는다. 탄환이 실제 생성된 frame부터 authored
+  hostile projectile body만 보인다. 두 보스의 기존 raster identity는 그대로 유지한다.
 - hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
   committed footprint를 danger-red full area로 채우고 thin near-black perimeter와
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라

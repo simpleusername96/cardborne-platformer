@@ -64,8 +64,8 @@ const EXTRA_PATTERNS := {
 	&"long_bank_barrage": {"kind": &"long_banks", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.30, "active": 1.30, "recovery": 0.0, "damage": 16.0},
 	&"crossing_weave_a": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 68.0},
 	&"crossing_weave_b": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.55, "recovery": 1.00, "damage": 72.0},
-	&"alternating_sectors_a": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 18.0, "radius": 300.0},
-	&"alternating_sectors_b": {"kind": &"alternating_pulse", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 20.0, "radius": 320.0},
+	&"radial_volley_a": {"kind": &"radial_volley", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 18.0},
+	&"radial_volley_b": {"kind": &"radial_volley", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.30, "active": 1.45, "recovery": 1.00, "damage": 20.0},
 	&"edge_bars_a": {"kind": &"long_banks", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.10, "active": 1.20, "recovery": 0.0, "damage": 18.0},
 	&"edge_bars_b": {"kind": &"crossing_weave", "commit_mode": &"autonomous", "affinity": &"kinetic", "startup": 1.15, "active": 1.35, "recovery": 0.90, "damage": 60.0},
 	&"pull_pulse_a": {"kind": &"area", "commit_mode": &"autonomous", "affinity": &"arc", "startup": 1.55, "active": 0.75, "recovery": 0.0, "damage": 24.0, "radius": 220.0},
@@ -103,7 +103,7 @@ const STAGE_SEQUENCES := {
 	&"stage_5": [&"common_charge", &"focused_beam", &"common_broad_barrage", &"mirror_cross", &"carrier_wave"],
 	&"stage_6": [&"common_charge", &"long_bank_barrage", &"common_broad_barrage", &"ricochet_volley", &"gate_shockwave"],
 	&"stage_7": [&"common_charge", &"crossing_weave_a", &"common_broad_barrage", &"crossing_weave_b", &"ricochet_volley"],
-	&"stage_8": [&"common_charge", &"alternating_sectors_a", &"common_broad_barrage", &"alternating_sectors_b", &"focused_beam"],
+	&"stage_8": [&"common_charge", &"radial_volley_a", &"common_broad_barrage", &"radial_volley_b", &"focused_beam"],
 	&"stage_9": [&"compression_single", &"compression_shift", &"compression_pair", &"compression_reverse", &"compression_break"],
 	&"stage_10": [&"reflect_lance", &"reflect_fan", &"reflect_break", &"reflect_crossfire", &"reflect_reposition"],
 	&"stage_11": [&"resonance_lanes", &"resonance_pulse", &"resonance_fan", &"resonance_cross", &"resonance_break"],
@@ -111,7 +111,7 @@ const STAGE_SEQUENCES := {
 }
 const AUTONOMOUS_SEQUENCES := {
 	&"stage_1": [&"slag_ring", &"forge_vent"], &"stage_2": [&"opposing_lanes", &"depth_charges"], &"stage_3": [&"thunder_chain", &"boss_pattern_fixed_beam_01_call"], &"stage_4": [&"switchyard_mines", &"switch_sweeps"], &"stage_5": [&"parallel_beams", &"relay_pulse_rings"],
-	&"stage_6": [&"long_bank_barrage", &"long_bank_barrage"], &"stage_7": [&"crossing_weave_a", &"crossing_weave_b"], &"stage_8": [&"alternating_sectors_a", &"alternating_sectors_b"],
+	&"stage_6": [&"long_bank_barrage", &"long_bank_barrage"], &"stage_7": [&"crossing_weave_a", &"crossing_weave_b"], &"stage_8": [&"radial_volley_a", &"radial_volley_b"],
 	&"stage_9": [&"compression_single", &"compression_pair"], &"stage_10": [&"reflect_lance", &"reflect_break"], &"stage_11": [&"resonance_lanes", &"resonance_pulse"], &"stage_12": [&"overload_crossfire_shift", &"overload_break"],
 }
 

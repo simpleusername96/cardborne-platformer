@@ -320,9 +320,10 @@ second global elite-stat layer.
    Stage 7 Boss commits paired translating walls with one collision-true opening, then
    crosses the field with a delayed orthogonal pass whose opening moves to a different
    axis. Startup shows only short entry-edge markers rather than the complete routes.
-   Stage 8 Boss commits two ring pulses whose safe sector alternates, then
-   emits one bounded twelve-shot radial volley from the second pulse. These mechanics
-   execute in both direct and autonomous selections. Stage 9 uses 180-unit-deep moving
+   Stage 8 Boss commits projectile-only twelve-shot radial volleys with alternating
+   angular offsets. Direct and autonomous selections use a gameplay-owned delay with no
+   ring damage, warning zone, predicted route, impact preview, or other pre-fire world
+   effect; only the live projectile bodies appear when each volley is emitted. Stage 9 uses 180-unit-deep moving
    compression slabs with a 360-unit gap that can shift by at most 280 units; paired slabs
    enter at least 0.45 seconds apart and never close every route together. Stage 10 carries
    a body-attached 100-degree frontal reflection plate for six seconds followed by two

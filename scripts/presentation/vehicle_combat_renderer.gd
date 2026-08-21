@@ -1971,9 +1971,6 @@ func _sync_world_overlays(state: Dictionary, visible_world: Rect2) -> void:
 							float(zone.get("duration", 0.0))
 						)
 				continue
-			if shape == &"wedge_ring":
-				_sync_wedge_ring_zone(zone, readiness)
-				continue
 			if shape != &"area":
 				continue
 			var position := Vector2(zone["pos"])
@@ -2385,34 +2382,6 @@ func _write_hostile_area_notches(center: Vector2, radius: float, readiness: floa
 			center + direction * (radius - inset),
 			notch_radius,
 			Color(Art.SPACE_BLACK, lerpf(0.30, 0.72, readiness))
-		)
-
-
-func _sync_wedge_ring_zone(zone: Dictionary, readiness: float) -> void:
-	var center := Vector2(zone.get("pos", Vector2.ZERO))
-	var radius := maxf(1.0, float(zone.get("radius", 1.0)))
-	var width := maxf(1.0, float(zone.get("width", 1.0)))
-	var safe_axis := Vector2(zone.get("safe_axis", Vector2.RIGHT)).normalized()
-	if safe_axis.is_zero_approx():
-		safe_axis = Vector2.RIGHT
-	var safe_half_angle := clampf(float(zone.get("safe_half_angle", 0.48)), 0.0, PI - 0.05)
-	var dangerous_angle := TAU - safe_half_angle * 2.0
-	var segment_count := 28
-	var start_angle := safe_axis.angle() + safe_half_angle
-	var body_alpha := lerpf(0.10, 0.20, clampf(readiness, 0.0, 1.0))
-	for segment_index in segment_count:
-		var from_angle := start_angle + dangerous_angle * float(segment_index) / float(segment_count)
-		var to_angle := start_angle + dangerous_angle * float(segment_index + 1) / float(segment_count)
-		var from := center + Vector2.from_angle(from_angle) * radius
-		var to := center + Vector2.from_angle(to_angle) * radius
-		_write_beam(from, to, width + 6.0, Color(Art.SPACE_BLACK, 0.82))
-		_write_beam(from, to, width, Color(Art.DANGER, body_alpha))
-	for notch_index in 4:
-		var angle := start_angle + dangerous_angle * (float(notch_index) + 0.5) / 4.0
-		_write_diamond(
-			center + Vector2.from_angle(angle) * (radius - width * 0.28),
-			clampf(width * 0.10, 4.0, 9.0),
-			Color(Art.SPACE_BLACK, 0.78)
 		)
 
 

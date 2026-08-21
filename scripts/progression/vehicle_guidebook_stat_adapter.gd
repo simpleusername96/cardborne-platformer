@@ -165,7 +165,7 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 		if damage > 0.0:
 			minimum_damage = minf(minimum_damage, damage)
 			maximum_damage = maxf(maximum_damage, damage)
-		if BossPatterns.kind(pattern) in [&"area", &"pylons", &"alternating_pulse"]:
+		if BossPatterns.kind(pattern) in [&"area", &"pylons"]:
 			maximum_radius = maxf(
 				maximum_radius, BossPatterns.radius(pattern, index)
 			)
@@ -186,11 +186,12 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 				_one_decimal(BossRuntime.AUTONOMOUS_INTERVALS[0] * cadence_scale),
 			], &"cadence"
 		),
-		_row(
+	]
+	if maximum_radius > 0.0:
+		rows.append(_row(
 			"GUIDE_STAT_MAX_COVERAGE", "GUIDE_VALUE_RADIUS",
 			[roundi(maximum_radius)], &"coverage"
-		),
-	]
+		))
 	if BossPhaseCatalog.uses_shield(stage_id):
 		rows.insert(2, _row(
 			"GUIDE_STAT_BOSS_SHIELD", "GUIDE_VALUE_DAMAGE_REDUCTION",

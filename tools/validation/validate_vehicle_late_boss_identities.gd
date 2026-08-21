@@ -28,7 +28,7 @@ func _run() -> void:
 		return
 	run.call("_reset_run", false)
 	_validate_crossing_weave(run)
-	_validate_alternating_pulse(run)
+	_validate_radial_volley(run)
 	_validate_direct_preparation(run)
 	run.call("_retire_denied_zones_by_owner", &"boss_actor")
 	_expect(run.denied_zones.is_empty(), "boss-owned identity zones retire as one bounded owner")
@@ -67,43 +67,41 @@ func _validate_crossing_weave(run) -> void:
 	)
 
 
-func _validate_alternating_pulse(run) -> void:
+func _validate_radial_volley(run) -> void:
 	run.denied_zones.clear()
 	run.projectile_store.clear()
-	var event := _event("alternating_sectors_a", 7)
+	run.boss_runtime.clear_pending_attacks()
+	var event := _event("radial_volley_a", 7)
 	run.call("_execute_boss_autonomous", event)
 	_expect(
-		run.denied_zones.size() == 2
-			and run.denied_zones.all(
-				func(zone): return StringName(zone["shape"]) == &"wedge_ring"
-			),
-		"Stage 8 Boss creates two collision-owned safe-sector pulses"
+		run.denied_zones.is_empty()
+			and run.boss_runtime.pending_radial_volley_count() == 1,
+		"Stage 8 Boss schedules one radial volley without a warning or damage zone"
 	)
-	if run.denied_zones.size() != 2:
+	if run.boss_runtime.pending_radial_volley_count() != 1:
 		return
-	_expect(
-		Vector2(run.denied_zones[0]["safe_axis"]).dot(
-			Vector2(run.denied_zones[1]["safe_axis"])
-		) < 0.0,
-		"Stage 8 Boss alternates the safe sector between pulses"
-	)
 	var projectile_count: int = run.projectile_store.hostile_count()
-	run.call("_activate_denied_zone_once", run.denied_zones[1])
+	run.boss_runtime.advance_pending_attacks(float(event["startup"]) + 0.54, run)
 	_expect(
-		run.projectile_store.hostile_count() == projectile_count + 12,
-		"Stage 8 Boss's second pulse emits one bounded sparse radial volley"
+		run.projectile_store.hostile_count() == projectile_count,
+		"Stage 8 Boss shows no projectile before the committed delay expires"
 	)
-	run.call("_activate_denied_zone_once", run.denied_zones[1])
+	run.boss_runtime.advance_pending_attacks(0.02, run)
 	_expect(
 		run.projectile_store.hostile_count() == projectile_count + 12,
-		"Stage 8 Boss's radial volley cannot fire twice"
+		"Stage 8 Boss reveals exactly twelve bodies only when the volley fires"
+	)
+	run.boss_runtime.advance_pending_attacks(1.0, run)
+	_expect(
+		run.projectile_store.hostile_count() == projectile_count + 12
+			and run.boss_runtime.pending_radial_volley_count() == 0,
+		"Stage 8 Boss's scheduled radial volley cannot fire twice"
 	)
 
 
 func _validate_direct_preparation(run) -> void:
 	for case in [
 		{&"stage_index":6, &"pattern":"crossing_weave_b", &"zone_count":8},
-		{&"stage_index":7, &"pattern":"alternating_sectors_b", &"zone_count":2},
 	]:
 		run.denied_zones.clear()
 		run.current_stage_index = int(case[&"stage_index"])
@@ -130,6 +128,22 @@ func _validate_direct_preparation(run) -> void:
 			run.denied_zones.all(func(zone): return bool(zone.get("direct_active", false))),
 			"%s activates its prepared direct geometry" % String(case[&"pattern"])
 		)
+
+	run.denied_zones.clear()
+	run.boss_runtime.clear_pending_attacks()
+	run.current_stage_index = 7
+	var boss := EnemyState.new()
+	boss.id = "direct_radial_boss"
+	boss.alive = true
+	boss.pos = Vector2(1800.0, 1500.0)
+	boss.committed_target = Vector2(2300.0, 1700.0)
+	boss.pattern_index = 1
+	run.call("_prepare_boss_identity_pattern", boss, "radial_volley_b")
+	_expect(
+		run.denied_zones.is_empty()
+			and run.boss_runtime.pending_radial_volley_count() == 1,
+		"Stage 8 direct preparation publishes no warning or damage geometry"
+	)
 
 
 func _event(pattern: String, stage_index: int) -> Dictionary:

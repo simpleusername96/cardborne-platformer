@@ -15,6 +15,8 @@ class BossServiceStub:
 	var player_position := Vector2.ZERO
 	var damage_calls := 0
 	var identity_activation_calls := 0
+	var radial_projectiles_fired := 0
+	var radial_projectile_damage := 0.0
 
 
 	func _boss_fire_aimed_burst(
@@ -44,6 +46,11 @@ class BossServiceStub:
 		_pattern: String
 	) -> void:
 		identity_activation_calls += 1
+
+
+	func _fire_boss_radial_volley(volley: Dictionary) -> void:
+		radial_projectiles_fired += int(volley.get("count", 0))
+		radial_projectile_damage = float(volley.get("damage", 0.0))
 
 
 func _init() -> void:
@@ -153,6 +160,7 @@ func _init() -> void:
 	_validate_late_stage_direct_area_coverage(runtime)
 	_validate_direct_beam_growth(runtime)
 	_validate_direct_identity_activation(runtime)
+	_validate_radial_volley_schedule(runtime)
 	_validate_direct_recovery_scale(runtime)
 	_validate_phase_receipts(runtime)
 	_finish()
@@ -243,28 +251,72 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 
 
 func _validate_direct_identity_activation(runtime: BossRuntime) -> void:
-	for case in [
-		{&"stage_id":&"stage_7", &"pattern":&"crossing_weave_a"},
-		{&"stage_id":&"stage_8", &"pattern":&"alternating_sectors_a"},
-	]:
-		runtime.configure(StringName(case[&"stage_id"]))
-		var services := BossServiceStub.new()
-		var boss := _boss()
-		boss.pattern = StringName(case[&"pattern"])
-		boss.phase = &"boss_active"
-		boss.phase_time = 0.5
-		boss.pattern_volleys = 0
-		runtime.update_active(boss, 0.01, services)
-		_expect(
-			services.identity_activation_calls == 1 and boss.pattern_volleys == 1,
-			"%s direct identity activates its prepared collision geometry exactly once"
-				% String(case[&"pattern"])
-		)
-		runtime.update_active(boss, 0.01, services)
-		_expect(
-			services.identity_activation_calls == 1,
-			"%s direct identity cannot activate twice" % String(case[&"pattern"])
-		)
+	runtime.configure(&"stage_7")
+	var services := BossServiceStub.new()
+	var boss := _boss()
+	boss.pattern = &"crossing_weave_a"
+	boss.phase = &"boss_active"
+	boss.phase_time = 0.5
+	boss.pattern_volleys = 0
+	runtime.update_active(boss, 0.01, services)
+	_expect(
+		services.identity_activation_calls == 1 and boss.pattern_volleys == 1,
+		"crossing_weave_a activates its prepared collision geometry exactly once"
+	)
+	runtime.update_active(boss, 0.01, services)
+	_expect(
+		services.identity_activation_calls == 1,
+		"crossing_weave_a direct identity cannot activate twice"
+	)
+
+	runtime.configure(&"stage_8")
+	services = BossServiceStub.new()
+	boss = _boss()
+	boss.pattern = &"radial_volley_a"
+	boss.phase = &"boss_active"
+	boss.phase_time = 0.5
+	boss.pattern_volleys = 0
+	runtime.update_active(boss, 0.01, services)
+	_expect(
+		services.identity_activation_calls == 0 and boss.pattern_volleys == 1,
+		"Stage 8 radial volley owns no hidden collision-zone activation"
+	)
+
+
+func _validate_radial_volley_schedule(runtime: BossRuntime) -> void:
+	runtime.configure(&"stage_8")
+	var event := {
+		"id":"radial_schedule",
+		"pattern":"radial_volley_a",
+		"startup":BossPatterns.startup_seconds("radial_volley_a"),
+		"origin":Vector2(400.0, 300.0),
+		"damage":BossPatterns.damage("radial_volley_a", 7),
+		"affinity":BossPatterns.affinity("radial_volley_a"),
+	}
+	for index in BossRuntime.MAX_PENDING_RADIAL_VOLLEYS:
+		event["id"] = "radial_schedule_%d" % index
+		_expect(runtime.schedule_radial_volley(event), "radial-volley queue accepts its fixed capacity")
+	_expect(
+		not runtime.schedule_radial_volley(event)
+			and runtime.pending_radial_volley_count() == BossRuntime.MAX_PENDING_RADIAL_VOLLEYS,
+		"radial-volley queue rejects overflow without changing its capacity"
+	)
+	var services := BossServiceStub.new()
+	runtime.advance_pending_attacks(BossPatterns.startup_seconds("radial_volley_a") + 0.54, services)
+	_expect(services.radial_projectiles_fired == 0, "radial volleys stay hidden before their delay")
+	runtime.advance_pending_attacks(0.02, services)
+	_expect(
+		services.radial_projectiles_fired == BossRuntime.MAX_PENDING_RADIAL_VOLLEYS * 12
+			and runtime.pending_radial_volley_count() == 0
+			and is_equal_approx(
+				services.radial_projectile_damage,
+				BossPatterns.damage("radial_volley_a", 7)
+			),
+		"each scheduled radial volley fires once and retires"
+	)
+	_expect(runtime.schedule_radial_volley(event), "radial-volley queue accepts work after retirement")
+	runtime.clear_pending_attacks()
+	_expect(runtime.pending_radial_volley_count() == 0, "boss cleanup clears delayed radial volleys")
 
 
 func _validate_direct_beam_growth(runtime: BossRuntime) -> void:
