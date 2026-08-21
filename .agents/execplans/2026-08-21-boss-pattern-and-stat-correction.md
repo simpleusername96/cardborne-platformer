@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 created: 2026-08-21
 scope: Boss pattern semantics, independent boss statistics, attack execution correctness, circular warning readability, hostile beam timing, Stage 10 reflection availability, focused boss-depth improvements, and the Korean implementation report
 related:
@@ -96,7 +96,7 @@ Readiness statement:
 - Binding document read completely: `docs/design/VISUAL_SYSTEM.md`.
 - Canonical sheet inspected at original `1448×1086` detail: `docs/design/cardborne-universal-art-style-reference.png`.
 - Expected and observed sheet SHA-256: `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
-- Observed `VISUAL_SYSTEM.md` SHA-256: `86e9ab2549793c70c55edf1b1c9856a9811a2a433c445a4f78b221238d30caa2`.
+- Final observed `VISUAL_SYSTEM.md` SHA-256 after the synchronized specification update: `37241450a68d02b8bc651acb6a77d93ec9d23dfcbb36f2fe4805bfd2b9a22628`.
 - Original artifact provenance: `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`, timestamp `2026-08-02 12:13:44 KST`.
 - Task constraints: code-native full-area radial warning, danger semantic color, monotonic readiness, damage-band boundaries only, source-only hostile beam startup, collision-matched active beam, body-attached reflection state, no new raster/SVG/ImageGen asset.
 - Raster/ImageGen actual reference use: not applicable; no raster creation or edit is in scope.
@@ -193,13 +193,13 @@ Preconditions:
 
 Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`, `docs/reports/2026-08-21-boss-implementation-analysis.html`, existing capture gateway and production wrapper
 
-- [ ] **4.1** Synchronize canonical specs and the report.
+- [x] **4.1** Synchronize canonical specs and the report.
   - Change: replace multiplier language, old beam timing, old Stage 10 schedule, name-based sharing, and known defect notes with implemented truth; retain current production boss images.
   - Accept: code/spec/report values and terminology agree, and report rows show each boss's absolute stats and resolved attack values.
-- [ ] **4.2** Capture and inspect one bounded rendered gameplay batch.
+- [x] **4.2** Capture and inspect one bounded rendered gameplay batch.
   - Change: use the existing project capture path for radial readiness start/mid/end, hostile beam charge/early/full states, and Stage 10 exposed/cue/active states.
   - Accept: actual pixels show monotonic radial darkening, no hostile startup path, collision-matched beam growth, and distinguishable reflection states without clipping or new visual owners.
-- [ ] **4.3** Run the final focused and production-style gates.
+- [x] **4.3** Run the final focused and production-style gates.
   - Accept: full import, focused boss/renderer/Guidebook validators, Web export, built-Web smoke, report script validation, and `git diff --check` pass once after the implementation set is complete.
 
 Final gate:
@@ -247,12 +247,13 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4.
-- Next task: 4.1, finish report/spec synchronization and remove remaining obsolete terminology.
-- Last completed gate: Phase 3 batch gate (`validate_vehicle_combat_renderer`, `validate_vehicle_boss_identity_cues`, and visual-authority validation).
+- Current phase: Complete.
+- Next task: None.
+- Last completed gate: Phase 4 final gate.
 - Phase 1 evidence: all 12 profiles and every selected pattern resolve absolute values; the two walk-out failures found during migration were corrected to 1.28 s and 1.31 s; the report renders 12 boss cards and 12 production images with no unresolved values or boss multiplier readouts.
 - Phase 2 evidence: every selection kind resolves an explicit direct/autonomous route; Stage 6 direct long banks emit one ten-projectile receipt; Stage 4 builds three forward collision beams at release delays `0.00/0.18/0.36 s` and uses a distinct signature family.
 - Phase 3 evidence: one exact-radius disk remains constant while alpha rises `0.06/0.18/0.30`; beam collision and pixels use a shared `0.20 s` growth after `0.45 s` source charge; reflection fixtures prove exposed/cue/active boundaries at `0/14/15/20 s`.
+- Phase 4 evidence: the Korean report renders 12 boss cards, 12 production images, independent stats, and behavior-based shared/signature sections with no unresolved or prohibited text. The nine-frame bounded capture and contact sheet show radial start/mid/ready, beam charge/early/full-length, and Stage 10 exposed/cue/active states. Full import, all named focused validators, final visual-authority validation, report-script execution, Web export, `index.html`/`index.pck` HTTP 200 smoke on registered codex port `13029`, and `git diff --check` passed; the task-owned server was stopped and the port released.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

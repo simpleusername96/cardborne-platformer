@@ -153,6 +153,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_collision_overlay_evidence()
 		&"all_bosses":
 			await _capture_all_boss_evidence()
+		&"boss_correction":
+			await _capture_boss_correction_evidence()
 
 
 func show_ui_fixture(fixture: Dictionary) -> void:
@@ -1719,7 +1721,7 @@ func _capture_arc_area_telegraph_evidence() -> void:
 		return
 	boss.phase = &"boss_startup"
 	boss.pattern = &"thermal_ring"
-	boss.phase_time = BossPatterns.startup_seconds("thermal_ring")
+	boss.phase_time = BossPatterns.startup_seconds("thermal_ring", 0)
 	boss.committed_target = _run.player_position
 	boss.committed_dir = (_run.player_position - boss.pos).normalized()
 	AttackTelegraphs.refresh_boss(
@@ -1772,7 +1774,7 @@ func _capture_all_boss_evidence() -> void:
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-startup.png" % [boss_number, stage_slug])
 
-		boss.phase_time = BossPatterns.startup_seconds(String(boss.pattern)) * 0.12
+		boss.phase_time = BossPatterns.startup_seconds(String(boss.pattern), stage_index) * 0.12
 		AttackTelegraphs.update_boss_readiness(boss, String(boss.pattern))
 		await _settle_capture()
 		_save_capture(
@@ -1791,7 +1793,7 @@ func _capture_all_boss_evidence() -> void:
 		_run.denied_zones.clear()
 		_run.call("_clear_effects")
 		boss.phase = "boss_recovery"
-		boss.phase_time = BossPatterns.recovery_seconds(String(boss.pattern))
+		boss.phase_time = BossPatterns.recovery_seconds(String(boss.pattern), stage_index)
 		boss.vulnerable = 1.55
 		boss.last_pattern = boss.pattern
 		boss.pattern = "recovery_window"
@@ -1807,7 +1809,7 @@ func _capture_all_boss_evidence() -> void:
 		if stage_index == 0:
 			boss.pos = _run.player_position + Vector2(920.0, 0.0)
 			boss.phase = &"boss_startup"
-			boss.phase_time = BossPatterns.startup_seconds("thermal_ring")
+			boss.phase_time = BossPatterns.startup_seconds("thermal_ring", 0)
 			boss.pattern = "thermal_ring"
 			boss.committed_target = _run.player_position
 			boss.committed_dir = (_run.player_position - Vector2(boss.pos)).normalized()
@@ -1820,7 +1822,7 @@ func _capture_all_boss_evidence() -> void:
 			_run._camera.position = _run.player_position
 			await _settle_capture()
 			_save_capture("30-boss-01-stage-1-offscreen-furnace.png")
-			boss.phase_time = BossPatterns.startup_seconds("thermal_ring") * 0.12
+			boss.phase_time = BossPatterns.startup_seconds("thermal_ring", 0) * 0.12
 			AttackTelegraphs.update_boss_readiness(boss, "thermal_ring")
 			await _settle_capture()
 			_save_capture(
@@ -1837,7 +1839,7 @@ func _capture_all_boss_evidence() -> void:
 		elif stage_index == 4:
 			boss.pos = _run.player_position + Vector2(420.0, 0.0)
 			boss.phase = &"boss_startup"
-			boss.phase_time = BossPatterns.startup_seconds("focused_beam") * 0.5
+			boss.phase_time = BossPatterns.startup_seconds("focused_beam", 4) * 0.5
 			boss.pattern = "focused_beam"
 			boss.committed_target = _run.player_position
 			boss.committed_dir = (_run.player_position - Vector2(boss.pos)).normalized()
@@ -1856,6 +1858,70 @@ func _capture_all_boss_evidence() -> void:
 			_run._boss_update_active(boss, 0.05)
 			await _settle_capture()
 			_save_capture("30-boss-05-radial-beam-active.png")
+
+
+func _capture_boss_correction_evidence() -> void:
+	var boss := prepare_boss(0)
+	if boss == null:
+		push_error("boss-correction capture could not create Stage 1 boss")
+		return
+	boss.phase = &"boss_startup"
+	boss.pattern = &"thermal_ring"
+	boss.committed_target = _run.player_position + Vector2(-120.0, 0.0)
+	boss.committed_dir = (Vector2(boss.committed_target) - Vector2(boss.pos)).normalized()
+	var radial_startup := BossPatterns.startup_seconds("thermal_ring", 0)
+	AttackTelegraphs.refresh_boss(boss, "thermal_ring", _run._runtime_attack_path_callable, _run._runtime_charge_path_callable, 0)
+	_run.capture_set_mode(&"paused")
+	for fixture in [
+		[radial_startup, "boss-correction-radial-start.png"],
+		[radial_startup * 0.5, "boss-correction-radial-mid.png"],
+		[0.0, "boss-correction-radial-ready.png"],
+	]:
+		boss.phase_time = float(fixture[0])
+		AttackTelegraphs.update_boss_readiness(boss, "thermal_ring", 0)
+		_refresh_combat_capture()
+		await _settle_capture()
+		_save_capture(String(fixture[1]))
+
+	boss = prepare_boss(3)
+	if boss == null:
+		push_error("boss-correction capture could not create Stage 4 boss")
+		return
+	boss.phase = &"boss_startup"
+	boss.pattern = &"switch_sweep"
+	boss.committed_target = _run.player_position
+	boss.committed_dir = (Vector2(boss.committed_target) - Vector2(boss.pos)).normalized()
+	boss.phase_time = BossPatterns.startup_seconds("switch_sweep", 3) * 0.5
+	AttackTelegraphs.refresh_boss(boss, "switch_sweep", _run._runtime_attack_path_callable, _run._runtime_charge_path_callable, 3)
+	AttackTelegraphs.update_boss_readiness(boss, "switch_sweep", 3)
+	_refresh_combat_capture()
+	await _settle_capture()
+	_save_capture("boss-correction-beam-charge.png")
+	_run._boss_begin_active(boss)
+	var beam_active := BossPatterns.active_seconds("switch_sweep", 3)
+	for fixture in [
+		[0.05, "boss-correction-beam-early.png"],
+		[0.20, "boss-correction-beam-full.png"],
+	]:
+		boss.phase_time = beam_active - float(fixture[0])
+		_refresh_combat_capture()
+		await _settle_capture()
+		_save_capture(String(fixture[1]))
+
+	boss = prepare_boss(9)
+	if boss == null:
+		push_error("boss-correction capture could not create Stage 10 boss")
+		return
+	for fixture in [
+		[0.0, "boss-correction-reflect-exposed.png"],
+		[14.5, "boss-correction-reflect-cue.png"],
+		[15.0, "boss-correction-reflect-active.png"],
+	]:
+		boss.pattern_timer = float(fixture[0])
+		_run._refresh_late_boss_mechanic_state(boss)
+		_refresh_combat_capture()
+		await _settle_capture()
+		_save_capture(String(fixture[1]))
 
 
 func prepare_boss(stage_index: int) -> EnemyState:

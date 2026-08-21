@@ -4,6 +4,7 @@ const Stages = preload("res://scripts/vehicle/stages/vehicle_combat_stages.gd")
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const Flow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const Difficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const Phases = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const DeathRuntime = preload("res://scripts/bosses/vehicle_boss_death_runtime.gd")
@@ -29,7 +30,11 @@ func _initialize() -> void:
 		var expected_count := 4 if index <= 2 else (5 if index <= 5 else 6)
 		_expect(rows.size() == 3 and int(rows[0]["count"]) == expected_count and is_equal_approx(float(rows[1]["at"]), 0.38), "%s broad barrage has exact rows" % stage_id)
 		if index > 0:
-			_expect(Difficulty.boss_health(index) > Difficulty.boss_health(index - 1) and Difficulty.boss_damage_multiplier(index) > Difficulty.boss_damage_multiplier(index - 1) and Difficulty.boss_move_speed(index) > Difficulty.boss_move_speed(index - 1), "%s strengthens boss base stats" % stage_id)
+			_expect(
+				BossProfiles.health(index) > BossProfiles.health(index - 1)
+					and BossProfiles.move_speed(index) > BossProfiles.move_speed(index - 1),
+				"%s has stronger independently authored core stats" % stage_id
+			)
 	_expect(Phases.uses_shield(&"stage_3"), "stage 3 boss retains its offensive segmented defense")
 	_expect(not Phases.uses_shield(&"stage_1") and not Phases.uses_shield(&"stage_5") and not Phases.uses_shield(&"stage_12"), "other bosses do not inherit a global shield")
 	var flow := Flow.new()

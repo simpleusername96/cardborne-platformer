@@ -53,6 +53,17 @@ const CORE_CAPTURE_FILES := [
 const REPORT_CAPTURE_FILES := [
 	"91-stage-report.png", "92-failure-report.png", "93-final-result.png",
 ]
+const BOSS_CORRECTION_CAPTURE_FILES := [
+	"boss-correction-radial-start.png",
+	"boss-correction-radial-mid.png",
+	"boss-correction-radial-ready.png",
+	"boss-correction-beam-charge.png",
+	"boss-correction-beam-early.png",
+	"boss-correction-beam-full.png",
+	"boss-correction-reflect-exposed.png",
+	"boss-correction-reflect-cue.png",
+	"boss-correction-reflect-active.png",
+]
 
 const FULL_CAPTURE_FILES := [
 	"01-deployment.png",
@@ -223,6 +234,7 @@ var viewport_size := Vector2i.ZERO
 var text_scale := 1.0
 var core_only := false
 var report_only := false
+var boss_correction_only := false
 var layout_seed_override: Variant = null
 var field_id_override := &""
 var failed := false
@@ -262,6 +274,8 @@ static func from_command_line() -> VehicleRunCaptureDriver:
 			driver.core_only = true
 		elif argument == "--capture-report-only":
 			driver.report_only = true
+		elif argument == "--capture-boss-correction-only":
+			driver.boss_correction_only = true
 		elif argument.begins_with("--layout-seed="):
 			driver.layout_seed_override = int(argument.trim_prefix("--layout-seed="))
 		elif argument.begins_with("--field-id="):
@@ -294,6 +308,10 @@ func run(gateway: RefCounted) -> void:
 		"viewport_size":viewport_size,
 		"text_scale":text_scale,
 	})
+	if boss_correction_only:
+		await gateway.set_world_fixture({"kind":&"boss_correction"})
+		finish_capture(gateway, 0)
+		return
 	if report_only:
 		gateway.prepare_stage(0, true)
 		if not await _capture_ui(gateway, &"stage_report", "91-stage-report.png", 0.36):
@@ -497,7 +515,9 @@ func _run_world_fixture(
 
 func _validate_manifest(gateway: RefCounted) -> bool:
 	var expected: Array = (
-		REPORT_CAPTURE_FILES
+		BOSS_CORRECTION_CAPTURE_FILES
+		if boss_correction_only
+		else REPORT_CAPTURE_FILES
 		if report_only
 		else FULL_CAPTURE_FILES
 		if is_full_evidence(gateway.snapshot(&"viewport"))
@@ -527,7 +547,9 @@ func _validate_manifest(gateway: RefCounted) -> bool:
 func _write_manifest(gateway: RefCounted) -> bool:
 	var full_evidence := is_full_evidence(gateway.snapshot(&"viewport"))
 	var files: Array = (
-		REPORT_CAPTURE_FILES
+		BOSS_CORRECTION_CAPTURE_FILES
+		if boss_correction_only
+		else REPORT_CAPTURE_FILES
 		if report_only
 		else FULL_CAPTURE_FILES if full_evidence else CORE_CAPTURE_FILES
 	)
@@ -548,7 +570,7 @@ func _write_manifest(gateway: RefCounted) -> bool:
 		"locale":locale,
 		"viewport_size":[viewport_size.x, viewport_size.y],
 		"text_scale":text_scale,
-		"evidence_mode":"full" if full_evidence else "core",
+		"evidence_mode":"boss_correction" if boss_correction_only else ("full" if full_evidence else "core"),
 		"files":files.duplicate(),
 	}
 	var path := directory.path_join("capture-manifest.json")

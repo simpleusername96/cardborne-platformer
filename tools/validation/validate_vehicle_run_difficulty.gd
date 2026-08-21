@@ -5,6 +5,7 @@ const StageCatalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const StageScene = preload("res://scenes/run/VehicleRun.tscn")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 
 var failures: Array[String] = []
@@ -60,7 +61,7 @@ func _run() -> void:
 	_expect(
 		_near(
 			hard_boss.speed,
-			StageDifficulty.BOSS_MOVE_SPEEDS[0],
+			BossProfiles.move_speed(0),
 			0.001
 		),
 		"boss movement uses the cycle-owned base speed"
@@ -68,12 +69,10 @@ func _run() -> void:
 	var health_curve := [1.00, 1.10, 1.20, 1.35, 1.50, 1.65, 1.82, 2.00, 2.00, 2.00, 2.00, 2.00]
 	var speed_curve := [1.00, 1.04, 1.08, 1.12, 1.17, 1.21, 1.26, 1.30, 1.30, 1.30, 1.30, 1.30]
 	var health_pressure := [1.00, 1.00, 1.00, 1.06, 1.12, 1.19, 1.25, 1.31, 1.38, 1.44, 1.47, 1.50]
-	var boss_bases := StageDifficulty.BOSS_BASE_HEALTH
-	var boss_health_multipliers := StageDifficulty.BOSS_HEALTH_MULTIPLIERS
 	_expect(
-		StageDifficulty.BOSS_MOVE_SPEEDS
+		BossProfiles.PROFILES.map(func(profile): return float(profile["move_speed"]))
 			== [405.0, 420.0, 435.0, 450.0, 465.0, 480.0, 500.0, 515.0, 525.0, 535.0, 545.0, 555.0],
-		"boss movement uses the locked six-percent rounded speed ladder"
+		"boss movement uses twelve independently authored speeds"
 	)
 	_expect(StageDifficulty.HEALTH == health_curve, "ordinary base health stays near baseline early and reaches exactly 2.00x")
 	_expect(StageDifficulty.SPEED == speed_curve, "ordinary movement stays bounded by the exact 1.30x cycle curve")
@@ -131,11 +130,10 @@ func _run() -> void:
 		_expect(
 			_near(
 				boss_actor.health,
-				boss_bases[stage_index]
-					* boss_health_multipliers[stage_index],
+				BossProfiles.health(stage_index),
 				0.001
 			),
-			"Stage %d applies the exact monotonic boss-health profile"
+			"Stage %d reads the exact independent boss-health profile"
 				% (stage_index + 1)
 		)
 	var damage_curve := [1.00, 1.03, 1.06, 1.09, 1.12, 1.15, 1.18, 1.21, 1.24, 1.27, 1.30, 1.33]

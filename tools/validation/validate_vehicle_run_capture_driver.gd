@@ -129,6 +129,11 @@ func _initialize() -> void:
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 43, "core manifest has 43 captures")
 	_expect(Driver.FULL_CAPTURE_FILES.size() == 160, "full manifest has 160 captures")
+	_expect(
+		Driver.BOSS_CORRECTION_CAPTURE_FILES.size() == 9
+			and _unique_count(Driver.BOSS_CORRECTION_CAPTURE_FILES) == 9,
+		"boss-correction mode owns one bounded nine-image evidence batch"
+	)
 	for required_capture in [
 		"01i-guidebook-elite-stats.png",
 		"01j-guidebook-field-objects.png",
