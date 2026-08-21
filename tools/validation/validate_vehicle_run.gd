@@ -954,7 +954,16 @@ func _check_boss_committed_recovery(run) -> void:
 	var warned_position := Vector2(boss["pos"])
 	var warned_direction := Vector2(boss["committed_dir"])
 	var warned_target := Vector2(boss["committed_target"])
-	var warned_endpoint := Vector2(boss.attack_telegraphs[0]["to"])
+	var warned_descriptor := Dictionary(boss.attack_telegraphs[0])
+	var warned_origin := Vector2(warned_descriptor["origin"])
+	var warned_projectile_direction := Vector2(warned_descriptor["direction"])
+	_expect(
+		StringName(warned_descriptor.get("shape", &"")) == &"source"
+			and not warned_descriptor.has("from")
+			and not warned_descriptor.has("to")
+			and not warned_descriptor.has("half_width"),
+		"boss projectile startup keeps source readiness without a predicted route"
+	)
 	var player_before_warning_test := Vector2(run.player_position)
 	run.player_position += Vector2(180.0, 120.0)
 	run.player_velocity = Vector2(0.0, 180.0)
@@ -963,8 +972,13 @@ func _check_boss_committed_recovery(run) -> void:
 		Vector2(boss["pos"]).is_equal_approx(warned_position)
 			and Vector2(boss["committed_dir"]).is_equal_approx(warned_direction)
 			and Vector2(boss["committed_target"]).is_equal_approx(warned_target)
-			and Vector2(boss.attack_telegraphs[0]["to"]).is_equal_approx(warned_endpoint),
-		"boss attack geometry remains fixed after its warning becomes visible"
+			and Vector2(boss.attack_telegraphs[0]["origin"]).is_equal_approx(
+				warned_origin
+			)
+			and Vector2(boss.attack_telegraphs[0]["direction"]).is_equal_approx(
+				warned_projectile_direction
+			),
+		"boss projectile source remains fixed after its warning becomes visible"
 	)
 	_expect(
 		float(boss.attack_telegraphs[0]["readiness"]) > 0.0,
