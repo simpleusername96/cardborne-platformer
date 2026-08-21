@@ -24,8 +24,18 @@ func _run() -> void:
 		_expect(sequence == expected_sequences[stage_id], "%s uses only its dedicated sequence" % stage_id)
 		_expect("common_charge" not in sequence and "common_broad_barrage" not in sequence, "%s removes common attacks" % stage_id)
 
-	_expect(LateMechanics.reflection_active(0.0) and not LateMechanics.reflection_active(6.0) and LateMechanics.reflection_active(8.0), "reflection uses a six-on two-off cycle")
-	_expect(LateMechanics.hits_reflection_plate(Vector2.RIGHT, Vector2.LEFT, 0.0), "reflection accepts a frontal direct projectile")
+	_expect(
+		not LateMechanics.reflection_active(0.0)
+			and not LateMechanics.reflection_cue_active(13.99)
+			and LateMechanics.reflection_cue_active(14.0)
+			and not LateMechanics.reflection_active(14.99)
+			and LateMechanics.reflection_active(15.0)
+			and LateMechanics.reflection_active(19.99)
+			and not LateMechanics.reflection_active(20.0),
+		"reflection starts exposed, cues for one second, then activates for five seconds"
+	)
+	_expect(LateMechanics.hits_reflection_plate(Vector2.RIGHT, Vector2.LEFT, 15.0), "reflection accepts a frontal direct projectile only while active")
+	_expect(not LateMechanics.hits_reflection_plate(Vector2.RIGHT, Vector2.LEFT, 0.0), "reflection begins exposed")
 	_expect(not LateMechanics.hits_reflection_plate(Vector2.RIGHT, Vector2.UP, 0.0), "reflection leaves the flank open")
 	_expect(is_equal_approx(LateMechanics.reflected_damage(100.0), 24.0), "reflection damage is capped at 24")
 	_expect(is_equal_approx(LateMechanics.resonance_damage_multiplier(500.0, 0.0), 1.0) and is_equal_approx(LateMechanics.resonance_damage_multiplier(300.0, 0.0), 0.2), "base resonance band applies full and reduced damage")
@@ -42,6 +52,7 @@ func _run() -> void:
 	stage.current_stage_index = 9
 	var reflect_boss = stage.call("_make_enemy", {"id":"reflect_boss", "role":&"boss_actor", "pos":Vector2.ZERO})
 	reflect_boss.presentation_facing = Vector2.RIGHT
+	reflect_boss.pattern_timer = 15.0
 	var projectile := ProjectileState.new()
 	projectile.configure({"pos":Vector2(100.0, 0.0), "velocity":Vector2.LEFT * 700.0, "radius":6.0, "damage":100.0, "life":1.4, "owner":"player_primary", "affinity":&"kinetic"}, &"player", 1)
 	var hostile_before: int = stage.hostile_projectiles.size()

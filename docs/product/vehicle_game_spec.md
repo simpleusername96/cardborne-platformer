@@ -297,23 +297,22 @@ second global elite-stat layer.
    seconds, use collision-matching committed geometry, and leave an escape corridor at
    least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
    No true instant-kill attack exists.
-9. Boss maximum health is directly authored as
-   `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890`; damage scales
-   `1.00/1.06/1.12/1.18/1.24/1.31/1.38/1.46/1.54/1.62/1.70/1.78`; move speeds
-   `405/420/435/450/465/480/500/515/525/535/545/555`; cadence scales
-   `.67/.65/.63/.61/.59/.57/.55/.53/.52/.51/.50/.49`; coverage scales
-   `1.00/1.04/1.08/1.12/1.16/1.20/1.24/1.28/1.30/1.32/1.34/1.36`. Bosses approach above 240 pixels,
+9. Every boss owns an independent absolute profile. Maximum health is
+   `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890` and move speed is
+   `405/420/435/450/465/480/500/515/525/535/545/555`. Each profile also directly records
+   attack-movement speed, phase read gaps, initial autonomous delay, autonomous intervals,
+   default footprint, lane spacing, and fan angles. Each selected pattern directly records
+   its damage, startup, active, recovery, radius, and width for that boss. Boss values are
+   never reconstructed from the ordinary-enemy stage curves or a boss stage multiplier.
+   Bosses approach above 240 pixels,
    strafe from 140 through 240 pixels, and retreat only below 140 pixels. Movement slow
    affects boss movement but not attack timers.
-   Cadence scales apply to direct read gaps, direct recovery, and autonomous intervals;
-   startup/active scales are
-   `1.00/.98/.96/.94/.92/.90/.88/.86/.85/.84/.83/.82`, with minimum startup `0.65s`
-   and minimum active `0.45s`. Attack movement scales are
-   `.62/.64/.66/.68/.70/.72/.74/.76/.78/.80/.81/.82`. Boss projectile
-   speed uses `1.40x`, beam reach `1.45x`, committed charge speed
-   `1.30x`, and circular or wedge radius `1.25x`; warning time is never reduced.
-   Direct recovery uses `0.72x`; phase gaps are `0.40/0.30/0.24 s` and autonomous
-   gaps are `4.8/3.9/3.1 s` across the three boss phases.
+   Temporary encounter states such as shield countercharge and Stage 12 overload may apply
+   their explicit state modifiers; these are mechanics, not stage scaling. Boss projectile
+   speed, beam reach, and committed charge speed remain attack-family constants.
+   Every hostile boss-emitted beam uses a `0.45 s` source-only charge followed by `0.20 s`
+   collision-matched growth. Stage 4 `switch_sweep` releases three forward headings at
+   `0.00/0.18/0.36 s` within its active window.
    Cross Beam commits two clipped perpendicular X corridors. Stage 6 Boss alone
    uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed
    `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
@@ -325,9 +324,11 @@ second global elite-stat layer.
    ring damage, warning zone, predicted route, impact preview, or other pre-fire world
    effect; only the live projectile bodies appear when each volley is emitted. Stage 9 uses 180-unit-deep moving
    compression slabs with a 360-unit gap that can shift by at most 280 units; paired slabs
-   enter at least 0.45 seconds apart and never close every route together. Stage 10 carries
-   a body-attached 100-degree frontal reflection plate for six seconds followed by two
-   seconds exposed. It reflects only direct player projectiles, preserving speed and life;
+   enter at least 0.45 seconds apart and never close every route together. Stage 10 starts
+   exposed and carries a body-attached 100-degree frontal reflection plate for five seconds
+   after fifteen exposed seconds in each twenty-second cycle. The final exposed second shows
+   a body-attached activation cue. It reflects only direct player projectiles while active,
+   preserving speed and life;
    reflected damage is 35% capped at 24, cannot reflect again, and a full hostile store
    absorbs the shot without boss damage. Stage 11 takes full damage only at radius 420-760
    and 20% inside or outside; every eight seconds a one-second module cue shifts the band
@@ -457,7 +458,7 @@ second global elite-stat layer.
 - Korean is default and Korean/English coverage is complete on every reachable surface.
   Deployment, Pause, Upgrade, Guidebook, Settings, Result, and Failure Report preserve
   their existing flow. Pause abort and terminal primary actions return to Deployment.
-- HUD progression reads `보스 N/8` / `Boss N/8` with remaining ordinary quota. The
+- HUD progression reads `보스 N/12` / `Boss N/12` with remaining ordinary quota. The
   panel-free top-left row contains progression, total defeats, Dash, and Active, followed
   by at most five meaningful conditional status icon/value slots; full upgrade names stay
   in Ship Status. No

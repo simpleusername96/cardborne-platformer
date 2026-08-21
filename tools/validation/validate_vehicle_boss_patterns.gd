@@ -41,7 +41,12 @@ func _initialize() -> void:
 				not Patterns.behavior_family(pattern).is_empty(),
 				"%s resolves a canonical behavior family" % pattern
 			)
-			_expect(Patterns.startup_seconds(pattern, stage_index) >= 0.65, "%s startup is visible" % pattern)
+			_expect(
+				Patterns.startup_seconds(pattern, stage_index) >= (
+					0.45 if Patterns.kind(pattern) in [&"beam", &"switch_sweep", &"cross_corridors"] else 0.65
+				),
+				"%s startup is visible" % pattern
+			)
 			_expect(Patterns.active_seconds(pattern, stage_index) >= 0.4, "%s active window is explicit" % pattern)
 			_expect(
 				Patterns.recovery_seconds(pattern, stage_index) > 0.0

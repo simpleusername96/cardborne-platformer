@@ -167,13 +167,13 @@ Preconditions:
 
 Source owners: `scripts/combat/vehicle_attack_contract.gd`, `scripts/presentation/vehicle_combat_renderer.gd`, `scripts/bosses/vehicle_late_boss_mechanics.gd`, `scripts/vehicle/vehicle_run.gd`, `docs/design/VISUAL_SYSTEM.md`
 
-- [ ] **3.1** Make radial readiness visually monotonic across the full footprint.
+- [x] **3.1** Make radial readiness visually monotonic across the full footprint.
   - Change: use one danger fill ramp from alpha `0.06` to `0.30`; keep the thin outer perimeter and gameplay damage-band rings without nested filled-disk emphasis.
   - Accept: renderer fixtures prove the same radius at start/mid/end, strictly increasing full-footprint alpha, and unchanged boundary radii.
-- [ ] **3.2** Apply hostile boss-emitted beams sooner.
+- [x] **3.2** Apply hostile boss-emitted beams sooner.
   - Change: set absolute `0.45 s` charge and `0.20 s` collision/presentation growth for every boss-emitted beam family, including the Stage 4 sweep.
   - Accept: no beam damage occurs before `0.45 s`; collision and pixels begin together at active start; full length is reached at `0.65 s` from initial charge.
-- [ ] **3.3** Reduce and signal Stage 10 reflection uptime.
+- [x] **3.3** Reduce and signal Stage 10 reflection uptime.
   - Change: begin exposed, cue for the final one second of the exposed interval, activate for five seconds, then return to fifteen seconds exposed.
   - Accept: schedule fixtures prove exposed at `0–14 s`, cue at `14–15 s`, active at `15–20 s`, exposed again at `20 s`, and 25% long-run active uptime.
 
@@ -247,11 +247,12 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3.
-- Next task: 3.1, simplify the radial warning to one monotonically darkening full-area fill.
-- Last completed gate: Phase 2 batch gate (`validate_vehicle_boss_runtime` and `validate_vehicle_late_boss_mechanics_correction`).
+- Current phase: Phase 4.
+- Next task: 4.1, finish report/spec synchronization and remove remaining obsolete terminology.
+- Last completed gate: Phase 3 batch gate (`validate_vehicle_combat_renderer`, `validate_vehicle_boss_identity_cues`, and visual-authority validation).
 - Phase 1 evidence: all 12 profiles and every selected pattern resolve absolute values; the two walk-out failures found during migration were corrected to 1.28 s and 1.31 s; the report renders 12 boss cards and 12 production images with no unresolved values or boss multiplier readouts.
 - Phase 2 evidence: every selection kind resolves an explicit direct/autonomous route; Stage 6 direct long banks emit one ten-projectile receipt; Stage 4 builds three forward collision beams at release delays `0.00/0.18/0.36 s` and uses a distinct signature family.
+- Phase 3 evidence: one exact-radius disk remains constant while alpha rises `0.06/0.18/0.30`; beam collision and pixels use a shared `0.20 s` growth after `0.45 s` source charge; reflection fixtures prove exposed/cue/active boundaries at `0/14/15/20 s`.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions

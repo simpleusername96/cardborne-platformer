@@ -496,7 +496,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   topology를 순환한다. Startup은 전체 경로를 표시하지 않고 각 committed
   muzzle 바로 앞에 붙은 danger-red 충전 구체만 표시한다.
   predicted line, corridor fill, floor tint, endpoint와 target marker는 startup 동안
-  모두 금지한다. Active 첫 `0.30s`에는 같은 구체에서 borderless filled beam이 실제
+  모두 금지한다. Source-only charge는 `0.45s`이며 Active 첫 `0.20s`에는 같은 구체에서 borderless filled beam이 실제
   피해 길이와 함께 maximum endpoint까지 선형으로 자라며, 이후 남은 active window
   동안 전체 길이를 유지한다. boss-side origin과 움직이는 선단은 둥글고 body, inner
   energy plane, hot core 최대 세 겹은 모두 같은 성장 비율을 사용한다. 별도 dark
@@ -518,7 +518,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
   committed footprint를 danger-red full area로 채우고 thin near-black perimeter와
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라
-  `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. Coordinator와 Emitter는
+  `0.06 -> 0.30`으로 단조롭게 증가하고 damaging window는 `0.30`을 유지한다. 내부 damage-band를
+  추가 filled disk로 겹치지 않는다. Coordinator와 Emitter는
   projectile을 발사하며 Self-Destruct는 fuse 중에만 실제 위험 범위를 표시한다.
   affinity별 inner ring, diamond, center line, tick bar, commit marker는 만들지 않는다.
   단, gameplay-owned radial damage boundary는 예외다. radius `120` 미만은 `50%`
@@ -555,7 +556,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   표시하지 않는다.
 - Stage 9 compression uses a 180-world-unit matte danger slab, one dark mass separator,
   and one large directional edge cut. It never uses a bright laser core. Stage 10 reflection
-  uses one body-attached frontal plate boundary. Stage 11 shows exactly one filled annulus and
+  is absent during the first 14 exposed seconds, uses a restrained half-alpha body-attached
+  frontal plate cue during the final exposed second, and uses one full body-attached frontal
+  plate boundary during its five active seconds. Stage 11 shows exactly one filled annulus and
   its two boundaries, with no decorative repeated circles. Stage 12 overload preserves the
   authored silhouette and facing while the body becomes near-black with one coral hot edge.
 - Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
@@ -731,7 +734,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   표시한다. gameplay owner는 `id`, `phase`, `current_stacks`, `max_stacks`,
   `bonus_percent`, `remaining_seconds`, `next_hit_bonus_percent` 구조를 제공하며 UI는 이를
   다시 계산하지 않는다. full upgrade name은 paused Ship Status만 소유한다. 각 item 내부의
-  icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage_progress는 `보스 N/8` / `Boss N/8` plus remaining ordinary quota, 누적 격파는
+  icon과 값만 중앙 정렬하고 cluster 자체는 좌측 정렬한다. stage_progress는 `보스 N/12` / `Boss N/12` plus remaining ordinary quota, 누적 격파는
   숫자, Dash는 `READY` 또는 `N.Ns`, Active는 미획득 시 `LOCKED`이고 획득 뒤
   `READY` 또는 `N.Ns`를 표시한다. generic Active glyph는 획득 뒤 해당 무기 glyph로
   바뀐다. visible label, backing, panel, section,
@@ -786,7 +789,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   boss/target health를 중복 표시하지 않는다.
 - shield와 barrier는 보호받는 body에 붙은 하나의 closed boundary만 사용한다.
   hostile emitted damaging beam은 startup에는 source-attached charge orb만 사용하고 active
-  첫 `0.30s`에는 collision-owned 길이와 함께 자라는 borderless filled capsule을 사용한다. Repair
+  첫 `0.20s`에는 collision-owned 길이와 함께 자라는 borderless filled capsule을 사용한다. Repair
   Tender healing은 source에서 recipient로 향하는 segmented mint packet과 recipient
   쪽 open chevron을 사용한다. heal은 continuous solid beam이나 closed ring을
   사용하지 않으며 reduced motion에서는 packet travel만 멈춘다.
@@ -897,7 +900,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
   72/72/48 retained instances with no collision, navigation, or per-frame update owner.
 - The boss-owned Fixed Beam Pattern and all hostile boss-emitted beams share the retained code-native beam and
   disk batches. Runtime tint, per-muzzle charge-orb scale, forward/bidirectional emission
-  mode, rounded active planes and the gameplay-owned `0.30s` grown segments remain
+  mode, rounded active planes and the gameplay-owned `0.20s` grown segments remain
   presentation inputs; startup publishes no path geometry. Translating laser walls remain
   placed moving hazards and do not claim a boss muzzle.
 - Five ordinary families use forty-five production body PNGs: each T1/T2/T3 body for

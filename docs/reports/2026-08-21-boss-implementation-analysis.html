@@ -14,7 +14,7 @@
 <div class="meta"><span class="chip">조사일 2026-08-21</span><span class="chip">기준: 현재 작업 트리</span><span class="chip">엔진: Godot 4.7.1</span><span class="chip">범위: Stage 1–12 Boss</span></div>
 
 <h2>수정 계획과 진행 상태</h2>
-<div class="card"><p class="plain"><b>데이터·패턴 실행 수정 완료, 시각·후반 보스 수정 진행 중.</b> 공격 이름이 아니라 실제 실행 코드로 패턴을 다시 묶었고, 보스별 수치를 Stage 배율 계산이 없는 독립 값으로 이관했습니다.</p><ul><li><b class="ok">구현·검증 완료 — 공유 패턴:</b> 두 개 이상의 보스가 같은 실행 알고리즘을 사용하면 이름이 달라도 공유 동작 계열로 분류합니다.</li><li><b class="ok">구현·검증 완료 — 보스 수치:</b> HP, 이동, 공격 중 이동, 공격 간격과 각 패턴의 피해·범위·시간을 보스별 절대값으로 기록합니다. 일반 적의 Stage 성장 곡선은 그대로 유지합니다.</li><li><b class="ok">구현·검증 완료 — 실행 결함:</b> Stage 6 직접 <code>long_bank_barrage</code>가 거리 성장 투사체 10발을 한 번 생성하도록 연결했고, 모든 직접·자율 선택 ID가 지원 실행 경로를 갖는지 검사합니다.</li><li><b class="ok">구현·검증 완료 — 패턴 보강:</b> Stage 4 <code>switch_sweep</code>는 이제 같은 레이저의 별칭이 아니라 -0.34/0/+0.34rad 세 방향이 0.18초 간격으로 순차 발동하는 고유 패턴입니다.</li><li><b class="ok">추가 교정:</b> 실제 범위에 비해 걸어서 벗어날 시간이 부족했던 Stage 3 <code>radial_pulse</code>와 Stage 5 <code>relay_pulse_rings</code>의 예고를 각각 1.28초와 1.31초로 늘렸습니다.</li><li><b class="warn">수정 예정:</b> 원형 공격 전체 면의 명도 진행, 빠른 레이저 판정, Stage 10의 15초 노출·5초 활성 주기.</li></ul></div>
+<div class="card"><p class="plain"><b>요청한 코드 수정과 집중 검증 완료.</b> 공격 이름이 아니라 실제 실행 코드로 패턴을 다시 묶었고, 보스별 수치를 Stage 배율 계산이 없는 독립 값으로 이관했습니다.</p><ul><li><b class="ok">구현·검증 완료 — 공유 패턴:</b> 두 개 이상의 보스가 같은 실행 알고리즘을 사용하면 이름이 달라도 공유 동작 계열로 분류합니다.</li><li><b class="ok">구현·검증 완료 — 보스 수치:</b> HP, 이동, 공격 중 이동, 공격 간격과 각 패턴의 피해·범위·시간을 보스별 절대값으로 기록합니다. 일반 적의 Stage 성장 곡선은 그대로 유지합니다.</li><li><b class="ok">구현·검증 완료 — 실행 결함:</b> Stage 6 직접 <code>long_bank_barrage</code>가 거리 성장 투사체 10발을 한 번 생성하도록 연결했고, 모든 직접·자율 선택 ID가 지원 실행 경로를 갖는지 검사합니다.</li><li><b class="ok">구현·검증 완료 — 패턴 보강:</b> Stage 4 <code>switch_sweep</code>는 이제 같은 레이저의 별칭이 아니라 -0.34/0/+0.34rad 세 방향이 0.18초 간격으로 순차 발동하는 고유 패턴입니다.</li><li><b class="ok">구현·검증 완료 — 원형 경고:</b> 반경은 그대로 유지하면서 전체 면의 알파가 준비도에 따라 0.06→0.30으로 증가합니다. 피해 구간 경계선만 남기고 내부 채움 중첩은 제거했습니다.</li><li><b class="ok">구현·검증 완료 — 레이저:</b> 보스 발사 레이저는 0.45초 동안 발사점만 충전한 뒤 피해가 시작되고, 실제 충돌 길이와 화면 길이가 0.20초에 함께 완성됩니다.</li><li><b class="ok">구현·검증 완료 — Stage 10:</b> 처음부터 공격 가능한 상태이며, 14–15초에 얇은 반사판 예고가 나온 뒤 15–20초에만 반사판이 활성화됩니다.</li><li><b class="ok">추가 교정:</b> 실제 범위에 비해 걸어서 벗어날 시간이 부족했던 Stage 3 <code>radial_pulse</code>와 Stage 5 <code>relay_pulse_rings</code>의 예고를 각각 1.28초와 1.31초로 늘렸습니다.</li></ul></div>
 
 <h2>핵심 결론</h2>
 <div class="grid"><div class="stat"><b>12</b>보스 사이클</div><div class="stat"><b>16,900 → 136,890</b>독립 최대 HP</div><div class="stat"><b>동작 기준</b>공유 패턴 재분류</div><div class="stat"><b>65% · 30%</b>단계 전환 임계값</div><div class="stat"><b>최대 12기</b>보스 소환 적</div><div class="stat"><b>2.00초</b>사망 안전 정리</div></div>
@@ -35,7 +35,7 @@
 <tr><td>이동</td><td>거리 &gt;240 접근, 140–240 좌/우 선회, &lt;140 후퇴. 기본 이동과 공격 중 이동 속도를 각각 직접 기록.</td><td>이동 둔화는 이동만 줄이고 공격 타이머는 줄이지 않는다.</td></tr>
 <tr><td>피해</td><td>각 패턴에 방어 적용 전 피해를 직접 기록. Stage 12 과부하는 일시 상태 규칙으로 1.30×를 추가 적용한다.</td><td>광역은 중심/중간/가장자리 100/70/40%로 감소한다.</td></tr>
 <tr><td>투사체</td><td>차선 1008, 부채/십자 868 px/s(모두 1.40×). 수명 2.2초.</td><td>피해 등급에 따라 반지름 6/7.5/9px이며 플레이어 반지름을 더해 충돌을 판정한다.</td></tr>
-<tr><td>빔·돌진</td><td>빔 경로 최대 1334px(장애물에 맞춰 절단), 활성 첫 0.30초 성장. 돌진 1027×1.20=1232.4 px/s.</td><td>빔은 성장한 실제 구간만 피해 판정한다. 돌진은 반지름 146+플레이어 반지름+10의 접촉 판정이다.</td></tr>
+<tr><td>빔·돌진</td><td>빔은 0.45초 발사점 충전 뒤 판정 시작, 최대 1334px 경로까지 0.20초 성장. 돌진 속도 1232.4 px/s.</td><td>빔 화면과 충돌이 같은 길이로 성장한다. 돌진은 반지름 146+플레이어 반지름+10의 접촉 판정이다.</td></tr>
 <tr><td>사망</td><td>2.00초 동안 본체만 남기고 보스 위험·AI·충돌·소환을 즉시 정지한다.</td><td>보스가 소환한 적과 위험 지대는 보상·XP·처치 수 없이 퇴장한다.</td></tr>
 </tbody></table></div>
 
@@ -44,14 +44,15 @@
 <h2>보스별 구현</h2><p class="note">각 항목은 현재 이미지, 고유 상태, 단계 전환 소환, 공유 동작 계열, 시그니처 동작 계열 순서입니다. 피해와 시간은 해당 보스 패턴이 직접 소유하는 절대값입니다.</p><section id="bosses"></section>
 
 <h2>문서 대비 구현 차이</h2><div class="card"><table><thead><tr><th>판정</th><th>항목</th><th>문서 계약</th><th>현재 구현</th><th>영향</th></tr></thead><tbody>
-<tr><td class="ok">일치</td><td>캠페인·기본 곡선</td><td>12개 보스와 HP·피해·속도·공격 간격·범위 배열</td><td>동일한 12개 배열과 출현 처치 수가 코드에 존재</td><td>기본 진행·스케일은 명세와 일치.</td></tr>
+<tr><td class="ok">일치</td><td>독립 보스 수치</td><td>12개 보스가 HP·이동·간격과 패턴 피해·시간·범위를 절대값으로 소유</td><td><code>VehicleBossProfileCatalog</code>와 보스별 resolved pattern table이 같은 값을 소유</td><td>일반 적 Stage 성장과 보스 수치가 분리됨.</td></tr>
 <tr><td class="ok">일치</td><td>Stage 3 방패</td><td>3개 80° 세그먼트/40° 틈, 8초 방어·2초 노출, 피격 15%, 반격 충전</td><td>동일 상수와 동작. 직접 피해만 방향 방패 판정을 받음.</td><td>문서의 유일한 방어 보스 계약이 구현됨.</td></tr>
 <tr><td class="ok">일치</td><td>Stage 8 방사 탄막</td><td>12발, 교대 각도, 사전 지면 경고·링 피해 없음</td><td>12발, 회전 ±0.18rad, 보이지 않는 <code>startup+0.55초</code> 후 투사체만 생성</td><td>시각 경고 없음은 일치. 단, 발사 지연은 내부적으로 존재.</td></tr>
 <tr><td class="warn">차이</td><td>고위협 피해 범위</td><td>고위협 공격 60–85 피해</td><td>Stage 7 이동벽은 93.84/99.36, Stage 9 쌍 압축판은 101.64, Stage 12 과부하 복귀 돌진은 약 97.19로 배율 적용 후 85를 초과</td><td>문서의 상한은 현재 구현을 설명하지 못한다. <b>문서 갱신 또는 코드 조정 필요.</b></td></tr>
 <tr><td class="warn">차이</td><td>고위협 경고 하한</td><td>최소 1.30초</td><td>Stage 7 이동벽의 계산된 startup은 1.144초, 압축판 가장자리 신호는 0.75초(쌍의 두 번째는 1.20초), Stage 12의 고피해 직접 패턴 startup은 약 0.67–0.75초</td><td>모든 고위협을 1.30초로 보장한다는 문서 문구와 충돌한다.</td></tr>
-<tr><td class="warn">차이</td><td>경고 시간 불감소</td><td>"warning time is never reduced"</td><td>패턴 startup 자체는 attack-time 배율로 Stage 12에 0.82×까지 감소한다. 광역 자율 패턴만 +0.75초를 별도로 더한다.</td><td>startup을 경고로 해석한다면 문서와 불일치. 표현용 최소 경고를 별도 보장하는지 코드상 명확하지 않다.</td></tr>
-<tr><td class="ok">일치</td><td>Stage 6 성장 탄약</td><td>Stage 6 Boss만 360–880 이동 거리 성장</td><td><code>_spawn_boss_long_banks()</code>가 성장 플래그를 전달하며, 투사체 상태가 속도·반경·피해를 이동 거리에 따라 보간</td><td>장거리 탄막에 문서의 성장 계약이 실제 적용된다.</td></tr>
-<tr><td class="bad">오류</td><td>HUD 표기</td><td>본문에 <code>보스 N/8</code> 표기</td><td>현재 캠페인은 12 보스이며 문서의 다른 곳·코드도 12 사이클</td><td>명세 내부의 구식 표기다. <b>N/12로 정정 필요.</b></td></tr>
+<tr><td class="ok">일치</td><td>레이저 시간</td><td>0.45초 발사점 충전 뒤 0.20초 실제 길이 성장</td><td>충돌과 renderer가 같은 상수·release delay를 사용</td><td>예고 경로 없이 판정과 화면이 동시에 시작함.</td></tr>
+<tr><td class="ok">일치</td><td>Stage 6 성장 탄약</td><td>Stage 6 Boss만 360–880 이동 거리 성장</td><td>직접·자율 경로 모두 <code>_spawn_boss_long_banks()</code>로 10발을 생성하고 거리 성장 상태를 전달</td><td>이전의 직접 경로 무발사 오류를 수정함.</td></tr>
+<tr><td class="ok">일치</td><td>Stage 10 반사판</td><td>15초 노출, 마지막 1초 예고, 5초 활성</td><td>0–14초 노출, 14–15초 cue, 15–20초 active 상태와 실제 반사 판정이 일치</td><td>장기 반사 가동률 25%.</td></tr>
+<tr><td class="ok">일치</td><td>HUD 표기</td><td><code>보스 N/12</code></td><td>현재 캠페인과 HUD 모두 12 보스</td><td>구식 N/8 문구를 정정함.</td></tr>
 </tbody></table></div>
 
 <h2>조사 경계·근거</h2><div class="card"><ul><li><b>검증한 것:</b> 데이터 정의, 런타임 상태 전환, 공격 생성/충돌 코드, 단계 전환 검증 스크립트, production asset manifest. 런타임 렌더링·사람 조작 플레이는 이 리포트의 증거 범위 밖이다. production 보스 PNG 12종은 파일과 manifest 연결을 확인했다.</li><li><b>피해 표기:</b> 방어력·플레이어 감쇠가 적용되기 전에 각 보스 패턴이 전달하는 독립 피해값이다. 충돌은 대부분 패턴 실행당 1회로 잠긴다. Stage 12 과부하 중에는 +30%가 더해진다.</li><li><b>출처:</b> <code>scripts/bosses/vehicle_boss_patterns.gd</code>, <code>vehicle_boss_runtime.gd</code>, <code>vehicle_boss_phase_catalog.gd</code>, <code>vehicle_boss_shield_runtime.gd</code>, <code>vehicle_late_boss_mechanics.gd</code>, <code>scripts/enemies/vehicle_stage_difficulty.gd</code>, <code>scripts/vehicle/vehicle_run.gd</code>, <code>docs/product/vehicle_game_spec.md</code>.</li></ul></div>
@@ -85,7 +86,7 @@ const bossMechanics=[
 'crossing_weave는 중앙 200px 간격을 둔 이동벽을 만들고, 0.65초 뒤 직교 방향의 두 번째 이동벽을 생성한다.',
 'radial_volley는 12발을 원형으로 동시에 생성한다. A와 B의 시작 각도는 ±0.18rad이며, 투사체 생성 전 월드 경고 효과를 만들지 않는다.',
 '압축판 깊이는 180px, 중앙 간격은 360px, 간격 이동량 상한은 280px이다. pair의 두 번째 판은 0.45초 뒤 반대쪽에서 생성된다.',
-'정면 100° 반사판이 6초 활성·2초 비활성으로 반복된다. 반사 피해는 원래 피해의 35%, 최대 24이며 속도와 남은 수명을 유지한다. 반사된 탄은 다시 반사되지 않는다.',
+'정면 100° 반사판은 처음 14초 동안 없고, 14–15초에 얇게 예고된 뒤 15–20초에 활성화된다. 반사 피해는 원래 피해의 35%, 최대 24이며 속도와 남은 수명을 유지한다. 반사된 탄은 다시 반사되지 않는다.',
 '공명 유효 거리는 기본 420–760, 전환 상태 520–880이다. 범위 밖에서 받는 피해는 20%이며, 8초마다 전환하고 1초 신호 시간을 사용한다.',
 '첫 과부하는 출현 12초 뒤 시작한다. 이후 18초마다 6초간 이동 1.35배, 공격 간격 0.75배, 주는 피해 1.30배, 받는 피해 1.50배를 적용한다.'
 ];
@@ -105,16 +106,16 @@ overload_rush:'고피해 고속 돌진이다.',overload_crossfire:'전기 십자
 };
 const R=[
 {common_charge:[1.3,.65,.4824,30],thermal_gates:[1,.9,.43416,22],common_broad_barrage:[1.3,1.14,.43416,14],heated_fan:[.85,.7,.43416,20],thermal_ring:[1.2,.6,.4824,28],slag_ring:[1.15,.7,0,20],forge_vent:[1,2.4,0,20]},
-{common_charge:[1.274,.637,.468,31.8],cross_corridors:[1.274,.686,.4446,27.56],common_broad_barrage:[1.274,1.1172,.4212,14.84],depth_area:[1.078,.539,.5148,33.92],current_fan:[.882,.686,.4212,21.2],opposing_lanes:[1.078,1.372,0,21.2],depth_charges:[1.127,.588,0,31.8]},
+{common_charge:[1.274,.637,.468,31.8],cross_corridors:[.45,.686,.4446,27.56],common_broad_barrage:[1.274,1.1172,.4212,14.84],depth_area:[1.078,.539,.5148,33.92],current_fan:[.882,.686,.4212,21.2],opposing_lanes:[1.078,1.372,0,21.2],depth_charges:[1.127,.588,0,31.8]},
 {common_charge:[1.248,.624,.4536,33.6],grounding_grid:[.96,.816,.43092,24.64],common_broad_barrage:[1.248,1.0944,.40824,15.68],shield_counterburst:[1.248,.672,.4536,35.84],radial_pulse:[1.28,.576,.54432,33.6],thunder_chain:[1.152,.528,0,35.84],boss_pattern_fixed_beam_01_call:[.96,2.4,0,0]},
-{common_charge:[1.222,.611,.4392,35.4],switch_sweep:[.987,.752,.50508,35.4],common_broad_barrage:[1.222,1.0716,.39528,16.52],gate_shockwave:[1.645,.517,.46116,33.04],ricochet_volley:[.94,.705,.46116,25.96],switchyard_mines:[1.081,.564,0,30.68],switch_sweeps:[1.081,.705,0,33.04]},
-{common_charge:[1.196,.598,.4248,37.2],focused_beam:[1.058,.736,.531,42.16],common_broad_barrage:[1.196,1.0488,.38232,17.36],mirror_cross:[.874,.598,.4248,34.72],carrier_wave:[1.012,.782,.531,0],parallel_beams:[1.104,1.288,0,27.28],relay_pulse_rings:[1.31,.552,0,37.2]},
+{common_charge:[1.222,.611,.4392,35.4],switch_sweep:[.45,.752,.50508,35.4],common_broad_barrage:[1.222,1.0716,.39528,16.52],gate_shockwave:[1.645,.517,.46116,33.04],ricochet_volley:[.94,.705,.46116,25.96],switchyard_mines:[1.081,.564,0,30.68],switch_sweeps:[.45,.705,0,33.04]},
+{common_charge:[1.196,.598,.4248,37.2],focused_beam:[.45,.736,.531,42.16],common_broad_barrage:[1.196,1.0488,.38232,17.36],mirror_cross:[.874,.598,.4248,34.72],carrier_wave:[1.012,.782,.531,0],parallel_beams:[1.104,1.288,0,27.28],relay_pulse_rings:[1.31,.552,0,37.2]},
 {common_charge:[1.17,.585,.4104,39.3],long_bank_barrage:[1.17,1.17,0,20.96],common_broad_barrage:[1.17,1.026,.36936,18.34],ricochet_volley:[.9,.675,.43092,28.82],gate_shockwave:[1.575,.495,.43092,36.68]},
 {common_charge:[1.144,.572,.396,41.4],crossing_weave_a:[1.144,1.364,.396,93.84],common_broad_barrage:[1.144,1.0032,.3564,19.32],crossing_weave_b:[1.144,1.364,.396,99.36],ricochet_volley:[.88,.66,.4158,30.36]},
-{common_charge:[1.118,.559,.3816,43.8],radial_volley_a:[1.118,1.247,.3816,26.28],common_broad_barrage:[1.118,.9804,.34344,20.44],radial_volley_b:[1.118,1.247,.3816,29.2],focused_beam:[.989,.688,.477,49.64]},
+{common_charge:[1.118,.559,.3816,43.8],radial_volley_a:[1.118,1.247,.3816,26.28],common_broad_barrage:[1.118,.9804,.34344,20.44],radial_volley_b:[1.118,1.247,.3816,29.2],focused_beam:[.45,.688,.477,49.64]},
 {compression_single:[.65,1.02,.35568,86.24],compression_shift:[.697,1.105,.3744,92.4],compression_pair:[.765,1.2325,.41184,101.64],compression_reverse:[.68,1.0625,.35568,89.32],compression_break:[.697,.527,.35568,36.96]},
-{reflect_lance:[.7392,.6048,.34884,55.08],reflect_fan:[.672,.5208,.33048,40.5],reflect_break:[.84,.462,.3672,58.32],reflect_crossfire:[.7224,.5376,.337824,43.74],reflect_reposition:[.6888,.5544,.33048,37.26]},
-{resonance_lanes:[.6806,.5644,.3312,42.5],resonance_pulse:[.7968,.4565,.342,59.5],resonance_fan:[.664,.5146,.324,40.8],resonance_cross:[.7138,.5312,.3312,45.9],resonance_break:[.747,.5976,.36,61.2]},
+{reflect_lance:[.45,.6048,.34884,55.08],reflect_fan:[.672,.5208,.33048,40.5],reflect_break:[.84,.462,.3672,58.32],reflect_crossfire:[.7224,.5376,.337824,43.74],reflect_reposition:[.6888,.5544,.33048,37.26]},
+{resonance_lanes:[.6806,.5644,.3312,42.5],resonance_pulse:[.7968,.4565,.342,59.5],resonance_fan:[.664,.5146,.324,40.8],resonance_cross:[.7138,.5312,.3312,45.9],resonance_break:[.45,.5976,.36,61.2]},
 {overload_rush:[.6724,.4756,.31752,71.2],overload_crossfire:[.65,.5084,.310464,53.4],overload_break:[.7544,.45,.324576,67.64],overload_crossfire_shift:[.656,.5248,.31752,49.84],overload_rush_return:[.7052,.492,.331632,74.76]}
 ];
 const f=n=>Number(n).toFixed(2).replace(/\.00$/,'');

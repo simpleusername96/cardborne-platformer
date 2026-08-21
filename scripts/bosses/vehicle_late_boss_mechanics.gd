@@ -5,8 +5,9 @@ extends RefCounted
 ## sequencing stays in VehicleBossPatterns and collision stays in VehicleRun.
 
 const REFLECT_ARC_RADIANS := deg_to_rad(100.0)
-const REFLECT_ACTIVE_SECONDS := 6.0
-const REFLECT_EXPOSED_SECONDS := 2.0
+const REFLECT_ACTIVE_SECONDS := 5.0
+const REFLECT_EXPOSED_SECONDS := 15.0
+const REFLECT_CUE_SECONDS := 1.0
 const REFLECT_DAMAGE_SCALE := 0.35
 const REFLECT_DAMAGE_CAP := 24.0
 
@@ -34,7 +35,19 @@ const COMPRESSION_EDGE_CUE_SECONDS := 0.75
 
 
 static func reflection_active(elapsed_seconds: float) -> bool:
-	return fposmod(maxf(0.0, elapsed_seconds), REFLECT_ACTIVE_SECONDS + REFLECT_EXPOSED_SECONDS) < REFLECT_ACTIVE_SECONDS
+	return reflection_cycle_time(elapsed_seconds) >= REFLECT_EXPOSED_SECONDS
+
+
+static func reflection_cue_active(elapsed_seconds: float) -> bool:
+	var cycle_time := reflection_cycle_time(elapsed_seconds)
+	return cycle_time >= REFLECT_EXPOSED_SECONDS - REFLECT_CUE_SECONDS \
+		and cycle_time < REFLECT_EXPOSED_SECONDS
+
+
+static func reflection_cycle_time(elapsed_seconds: float) -> float:
+	return fposmod(
+		maxf(0.0, elapsed_seconds), REFLECT_EXPOSED_SECONDS + REFLECT_ACTIVE_SECONDS
+	)
 
 
 static func hits_reflection_plate(

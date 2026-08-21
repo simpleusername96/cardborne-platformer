@@ -121,7 +121,7 @@ const RESOLVED_STAGE_STATS: Array[Dictionary] = [
 		&"forge_vent":[1.0, 2.4, 0.0, 20.0, 237.5],
 	},
 	{
-		&"common_charge":[1.274, .637, .468, 31.8], &"cross_corridors":[1.274, .686, .4446, 27.56, 0.0, 87.36],
+		&"common_charge":[1.274, .637, .468, 31.8], &"cross_corridors":[.45, .686, .4446, 27.56, 0.0, 87.36],
 		&"common_broad_barrage":[1.274, 1.1172, .4212, 14.84], &"depth_area":[1.078, .539, .5148, 33.92, 240.5],
 		&"current_fan":[.882, .686, .4212, 21.2], &"opposing_lanes":[1.078, 1.372, 0.0, 21.2],
 		&"depth_charges":[1.127, .588, 0.0, 31.8, 227.5],
@@ -133,13 +133,13 @@ const RESOLVED_STAGE_STATS: Array[Dictionary] = [
 		&"boss_pattern_fixed_beam_01_call":[.96, 2.4, 0.0, 0.0],
 	},
 	{
-		&"common_charge":[1.222, .611, .4392, 35.4], &"switch_sweep":[.987, .752, .50508, 35.4, 0.0, 87.36],
+		&"common_charge":[1.222, .611, .4392, 35.4], &"switch_sweep":[.45, .752, .50508, 35.4, 0.0, 87.36],
 		&"common_broad_barrage":[1.222, 1.0716, .39528, 16.52], &"gate_shockwave":[1.645, .517, .46116, 33.04, 336.0],
 		&"ricochet_volley":[.94, .705, .46116, 25.96], &"switchyard_mines":[1.081, .564, 0.0, 30.68, 203.0],
-		&"switch_sweeps":[1.081, .705, 0.0, 33.04, 0.0, 80.64],
+		&"switch_sweeps":[.45, .705, 0.0, 33.04, 0.0, 80.64],
 	},
 	{
-		&"common_charge":[1.196, .598, .4248, 37.2], &"focused_beam":[1.058, .736, .531, 42.16, 0.0, 95.12],
+		&"common_charge":[1.196, .598, .4248, 37.2], &"focused_beam":[.45, .736, .531, 42.16, 0.0, 95.12],
 		&"common_broad_barrage":[1.196, 1.0488, .38232, 17.36], &"mirror_cross":[.874, .598, .4248, 34.72],
 		&"carrier_wave":[1.012, .782, .531, 0.0], &"parallel_beams":[1.104, 1.288, 0.0, 27.28],
 		&"relay_pulse_rings":[1.31, .552, 0.0, 37.2, 326.25],
@@ -157,7 +157,7 @@ const RESOLVED_STAGE_STATS: Array[Dictionary] = [
 	{
 		&"common_charge":[1.118, .559, .3816, 43.8], &"radial_volley_a":[1.118, 1.247, .3816, 26.28],
 		&"common_broad_barrage":[1.118, .9804, .34344, 20.44], &"radial_volley_b":[1.118, 1.247, .3816, 29.2],
-		&"focused_beam":[.989, .688, .477, 49.64, 0.0, 104.96],
+		&"focused_beam":[.45, .688, .477, 49.64, 0.0, 104.96],
 	},
 	{
 		&"compression_single":[.65, 1.02, .35568, 86.24], &"compression_shift":[.697, 1.105, .3744, 92.4],
@@ -165,14 +165,14 @@ const RESOLVED_STAGE_STATS: Array[Dictionary] = [
 		&"compression_break":[.697, .527, .35568, 36.96],
 	},
 	{
-		&"reflect_lance":[.7392, .6048, .34884, 55.08, 0.0, 110.88], &"reflect_fan":[.672, .5208, .33048, 40.5],
+		&"reflect_lance":[.45, .6048, .34884, 55.08, 0.0, 110.88], &"reflect_fan":[.672, .5208, .33048, 40.5],
 		&"reflect_break":[.84, .462, .3672, 58.32], &"reflect_crossfire":[.7224, .5376, .337824, 43.74],
 		&"reflect_reposition":[.6888, .5544, .33048, 37.26],
 	},
 	{
 		&"resonance_lanes":[.6806, .5644, .3312, 42.5], &"resonance_pulse":[.7968, .4565, .342, 59.5, 385.25],
 		&"resonance_fan":[.664, .5146, .324, 40.8], &"resonance_cross":[.7138, .5312, .3312, 45.9],
-		&"resonance_break":[.747, .5976, .36, 61.2, 0.0, 115.24],
+		&"resonance_break":[.45, .5976, .36, 61.2, 0.0, 115.24],
 	},
 	{
 		&"overload_rush":[.6724, .4756, .31752, 71.2], &"overload_crossfire":[.65, .5084, .310464, 53.4],

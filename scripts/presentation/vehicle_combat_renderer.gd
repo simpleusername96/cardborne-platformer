@@ -1400,18 +1400,22 @@ func _sync_late_mechanic_overlay(
 	forward: Vector2
 ) -> void:
 	var reflect_module := (
-		enemy.mechanic_state == &"reflect_active"
+		enemy.mechanic_state in [&"reflect_active", &"reflect_cue"]
 		or enemy.archetype == &"ordinary_reflect_01"
 	)
 	if reflect_module:
+		var reflect_active := (
+			enemy.mechanic_state == &"reflect_active"
+			or enemy.archetype == &"ordinary_reflect_01"
+		)
 		_write_arc_segments(
 			position,
 			radius + 9.0,
 			forward.angle() - deg_to_rad(50.0),
 			forward.angle() + deg_to_rad(50.0),
-			Color(Art.CORAL, 0.72),
+			Color(Art.CORAL, 0.72 if reflect_active else 0.34),
 			12,
-			10.0
+			10.0 if reflect_active else 5.0
 		)
 	var resonance_module := (
 		enemy.mechanic_state in [&"resonance_base", &"resonance_cue", &"resonance_shifted"]
@@ -1623,11 +1627,12 @@ func _sync_active_beam(
 	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
 	var growth_seconds := float(telegraph.get("beam_growth_seconds", 0.0))
 	if hostile and growth_seconds > 0.0:
-		var growth_ratio := AttackContract.emitted_beam_growth_ratio(
-			active_remaining,
-			float(telegraph.get("active_seconds", growth_seconds)),
-			growth_seconds
-		)
+		var active_total := float(telegraph.get("active_seconds", growth_seconds))
+		var elapsed := maxf(0.0, active_total - active_remaining)
+		var release_delay := float(telegraph.get("beam_release_delay", 0.0))
+		if elapsed < release_delay:
+			return
+		var growth_ratio := clampf((elapsed - release_delay) / growth_seconds, 0.0, 1.0)
 		var emission_mode := StringName(telegraph.get(
 			"beam_emission_mode", AttackContract.EMITTED_BEAM_FORWARD
 		))
@@ -1664,17 +1669,8 @@ func _sync_area_telegraph(telegraph: Dictionary) -> void:
 	var boundary_alpha := lerpf(0.58, 0.82, intensity)
 	var hostile := StringName(telegraph.get("owner", &"hostile")) == &"hostile"
 	var fill_color := Art.DANGER if hostile else Art.THERMAL
-	_write_disk(center, radius, Color(fill_color, lerpf(0.10, 0.20, readiness)))
+	_write_disk(center, radius, Color(fill_color, lerpf(0.06, 0.30, readiness)))
 	var boundaries := AttackContract.radial_band_boundaries(radius)
-	for reverse_index in boundaries.size():
-		var boundary_index := boundaries.size() - reverse_index - 1
-		var ratio := float(boundaries[boundary_index])
-		var depth := float(reverse_index + 1) / float(boundaries.size())
-		_write_disk(
-			center,
-			radius * ratio,
-			Color(fill_color, lerpf(0.035, 0.10, intensity) * depth)
-		)
 	_write_danger_ring(center, radius, Color(Art.SPACE_BLACK, boundary_alpha))
 	for ratio in boundaries:
 		_write_danger_ring(

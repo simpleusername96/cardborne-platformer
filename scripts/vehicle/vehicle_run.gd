@@ -7048,11 +7048,8 @@ func _refresh_late_boss_mechanic_state(boss: EnemyState) -> void:
 		8:
 			boss.mechanic_state = &"compression"
 		9:
-			boss.mechanic_state = (
-				&"reflect_active"
-				if LateBossMechanics.reflection_active(boss.pattern_timer)
-				else &"reflect_exposed"
-			)
+			boss.mechanic_cue_active = LateBossMechanics.reflection_cue_active(boss.pattern_timer)
+			boss.mechanic_state = &"reflect_active" if LateBossMechanics.reflection_active(boss.pattern_timer) else (&"reflect_cue" if boss.mechanic_cue_active else &"reflect_exposed")
 		10:
 			var band := LateBossMechanics.resonance_band(boss.pattern_timer)
 			boss.mechanic_state = &"resonance_shifted" if LateBossMechanics.resonance_shifted(boss.pattern_timer) else &"resonance_base"

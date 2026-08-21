@@ -779,9 +779,28 @@ func _run() -> void:
 		"off-screen attacker body remains culled"
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 3
+		area_disk.multimesh.visible_instance_count == 1
 			and area_ring.multimesh.visible_instance_count == 3,
-		"off-screen artillery sources still draw the exact three-band warning footprint"
+		"off-screen artillery draws one full-area fill and three exact boundaries"
+	)
+	var early_area_buffer := area_disk.multimesh.buffer
+	var early_area_radius := Vector2(early_area_buffer[0], early_area_buffer[4]).length()
+	var early_area_alpha := early_area_buffer[11]
+	offscreen_enemy.attack_telegraphs[0]["readiness"] = 0.5
+	renderer.sync(
+		[offscreen_enemy], no_projectiles, no_projectiles, [], [],
+		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
+	)
+	var middle_area_buffer := area_disk.multimesh.buffer
+	_expect(
+		is_equal_approx(early_area_radius, 175.0)
+			and is_equal_approx(
+				Vector2(middle_area_buffer[0], middle_area_buffer[4]).length(),
+				175.0
+			)
+			and is_equal_approx(early_area_alpha, 0.06)
+			and is_equal_approx(middle_area_buffer[11], 0.18),
+		"radial readiness darkens the same full footprint from start to midpoint"
 	)
 	var armed_mine := EnemyState.new()
 	armed_mine.id = "armed_mine"
@@ -808,9 +827,9 @@ func _run() -> void:
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 3
+		area_disk.multimesh.visible_instance_count == 1
 			and area_ring.multimesh.visible_instance_count == 3,
-		"boss bombardment startup exposes its exact three-band impact footprint"
+		"boss bombardment startup keeps one exact full-area body and band boundaries"
 	)
 	offscreen_enemy.attack_telegraphs[0]["readiness"] = 1.0
 	offscreen_enemy.phase = &"boss_active"
@@ -833,7 +852,7 @@ func _run() -> void:
 		late_area_buffer[11]
 	)
 	_expect(
-		area_disk.multimesh.visible_instance_count == 3
+		area_disk.multimesh.visible_instance_count == 1
 			and area_ring.multimesh.visible_instance_count == 3
 			and Vector2(late_disk_buffer[3], late_disk_buffer[7])
 				.is_equal_approx(Vector2(640.0, 360.0))
@@ -841,11 +860,11 @@ func _run() -> void:
 				Vector2(late_disk_buffer[0], late_disk_buffer[4]).length(),
 				175.0
 			)
-			and is_equal_approx(late_disk_color.a, 0.20)
+			and is_equal_approx(late_disk_color.a, 0.30)
 			and Color(late_disk_color, 1.0).is_equal_approx(Color(Art.DANGER, 1.0))
 			and Color(late_area_color, 1.0).is_equal_approx(Color(Art.SPACE_BLACK, 1.0))
 			and is_equal_approx(late_area_color.a, 0.82),
-		"boss active area preserves its exact three-band damage footprint"
+		"boss active area reaches the darkest full-footprint readiness state"
 	)
 	offscreen_enemy.phase = &"active"
 	offscreen_enemy.role = &"ordinary_gap_01"
@@ -905,7 +924,7 @@ func _run() -> void:
 	_expect(
 		is_equal_approx(
 			Vector2(active_beam_buffer[0], active_beam_buffer[4]).length(),
-			162.0
+			252.0
 		)
 			and is_equal_approx(active_beam_buffer[5], 54.0 * 0.5)
 			and is_equal_approx(active_beam_buffer[17], minf(20.0, 54.0 * 0.34) * 0.5)
@@ -913,7 +932,7 @@ func _run() -> void:
 			and is_equal_approx(active_beam_buffer[11], 0.92)
 			and is_equal_approx(active_beam_buffer[23], 0.88)
 			and is_equal_approx(active_beam_buffer[35], 1.0),
-		"at 0.15 seconds the visible beam reaches only the collision-owned half length"
+		"at 0.15 seconds the visible beam reaches the collision-owned three-quarter length"
 	)
 	offscreen_enemy.pos = Vector2(540.0, 360.0)
 	offscreen_enemy.attack_telegraphs = [{
