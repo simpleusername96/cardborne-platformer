@@ -4,7 +4,8 @@ signal discovery_changed(entry_id: StringName)
 
 const Catalog = preload("res://scripts/progression/vehicle_guidebook_catalog.gd")
 const SAVE_PATH := "user://vehicle-guidebook.cfg"
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
+const LEGACY_SCHEMA_VERSION := 1
 
 var known: Dictionary = {}
 var save_path := SAVE_PATH
@@ -52,10 +53,26 @@ func load_discovery() -> void:
 	var error := config.load(save_path)
 	if error == ERR_FILE_NOT_FOUND:
 		return
-	if error != OK or int(config.get_value("meta", "version", 0)) != SCHEMA_VERSION:
+	var stored_version := int(config.get_value("meta", "version", 0))
+	if error != OK or stored_version not in [LEGACY_SCHEMA_VERSION, SCHEMA_VERSION]:
 		push_warning("Guidebook discovery could not be loaded; using an empty catalog.")
 		return
+	var migrated := false
 	for value in config.get_value("discovery", "known", PackedStringArray()):
-		var entry_id := StringName(value)
+		var entry_id := _migrated_entry_id(String(value), stored_version)
+		migrated = migrated or String(entry_id) != String(value)
 		if _valid_ids.has(entry_id):
 			known[entry_id] = true
+	if stored_version != SCHEMA_VERSION or migrated:
+		save_discovery()
+
+
+func _migrated_entry_id(raw_id: String, stored_version: int) -> StringName:
+	if stored_version != LEGACY_SCHEMA_VERSION:
+		return StringName(raw_id)
+	var retired_family_token := "gun" + "ner"
+	for tier in range(1, 4):
+		var retired_id := "enemy_ordinary_%s_t%d" % [retired_family_token, tier]
+		if raw_id == retired_id:
+			return StringName("enemy_ordinary_emitter_t%d" % tier)
+	return StringName(raw_id)

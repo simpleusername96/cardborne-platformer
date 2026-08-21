@@ -163,7 +163,7 @@ production 파일의 해시도 모두 아래 값과 일치한다.
 | 보스 | `boss_vector_loom.png` | `6a14321073406be7c3b3778b1155fa27031fa2144a3fe2342e49e58bc41be26e` |
 | 보스 | `boss_pulse_core.png` | `ca71f170b1b527559a758540eb5dc10aef7fd6babd1c4f51af1801d8a139a21a` |
 | 일반 적 | `enemy_mobile_rail_sniper.png` | `4ee8d491a432fa6eeda907eb32bd9b023e7114737daa8f3386543df3795d0a81` |
-| 일반 적 | `enemy_orbit_gunner.png` | `25fec951ea0714062feb9ff6d4177c5e3da200b4a5d070be4878c3b6a96cdef7` |
+| 일반 적 | `enemy_orbit_emitter.png` | `25fec951ea0714062feb9ff6d4177c5e3da200b4a5d070be4878c3b6a96cdef7` |
 | 일반 적 | `enemy_bombing_runner.png` | `90423e781d86330345fe1c4ad9c29ece4f22b8bbbc069cc1d946c4cd5028d1b1` |
 | 일반 적 | `enemy_wreck_scavenger.png` | `6b7be8946dd5af03c5f785dfbec6e6b3500f44587d88b400e36508ff9361cee1` |
 | 시설 | `facility_repair_beacon.png` | `62b4b1b0240940d09ca0ecb28ade36b811865770b84dd594a7727397f79ce80c` |

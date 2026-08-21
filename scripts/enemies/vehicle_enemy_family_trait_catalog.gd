@@ -5,12 +5,12 @@ extends RefCounted
 ## Shared trait cadence belongs to the pack runtime; this catalog owns no live state.
 
 const FAMILIES: Array[StringName] = [
-	&"pursuer", &"charger", &"gunner", &"defender", &"coordinator",
+	&"pursuer", &"charger", &"emitter", &"defender", &"coordinator",
 ]
 const TRAITS_BY_FAMILY := {
 	&"pursuer": [&"splitter", &"frenzy"],
 	&"charger": [&"double", &"self_destruct"],
-	&"gunner": [&"artillery", &"slow"],
+	&"emitter": [&"artillery", &"slow"],
 	&"defender": [&"bulwark", &"reflector"],
 	&"coordinator": [&"blink", &"pack_feed"],
 }
@@ -20,11 +20,11 @@ const TRAIT_WEIGHT_TOTAL := BASE_TRAIT_WEIGHT + SPECIAL_TRAIT_WEIGHT * 2
 const SIZE_PERCENT_BY_TIER := {1: 100, 2: 125, 3: 150}
 const PACK_MIN_SIZE := 4
 const PACK_MAX_SIZE := 8
-const GUNNERS_PER_DEFENDER := 4
+const EMITTERS_PER_DEFENDER := 4
 const TACTIC_BY_FAMILY := {
 	&"pursuer": &"swarm_screen",
 	&"charger": &"spearhead",
-	&"gunner": &"crossfire_convoy",
+	&"emitter": &"crossfire_convoy",
 	&"defender": &"shielded_column",
 	&"coordinator": &"shepherd_pack",
 }
@@ -87,8 +87,8 @@ static func tactic_for_family(family: StringName) -> StringName:
 	return StringName(TACTIC_BY_FAMILY.get(family, &"swarm_screen"))
 
 
-static func required_defenders(gunner_count: int) -> int:
-	return ceili(float(maxi(0, gunner_count)) / float(GUNNERS_PER_DEFENDER))
+static func required_defenders(emitter_count: int) -> int:
+	return ceili(float(maxi(0, emitter_count)) / float(EMITTERS_PER_DEFENDER))
 
 
 static func validate_contract() -> PackedStringArray:

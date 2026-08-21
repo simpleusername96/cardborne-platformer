@@ -490,7 +490,7 @@ func _role_distance_lane(score_identity: String, role: StringName) -> int:
 	var family := StringName(definition.get("family", &""))
 	if family in [&"pursuer", &"charger", &"defender"]:
 		return 1 + posmod(hash(score_identity + ":pursuit-distance"), 2)
-	if family == &"gunner":
+	if family == &"emitter":
 		return posmod(hash(score_identity + ":standoff-distance"), 2)
 	if family == &"coordinator":
 		return 0

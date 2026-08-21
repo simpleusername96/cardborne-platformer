@@ -24,8 +24,8 @@ func _init() -> void:
 		},
 		"status_applications":{&"chill":3},
 		"incoming":{&"projectile":20.0, &"contact":5.0},
-		"defeats":{&"ordinary_pursuer_t1":12, &"ordinary_gunner_t1":4},
-		"traits":{&"ordinary_gunner_t1:slow":1},
+		"defeats":{&"ordinary_pursuer_t1":12, &"ordinary_emitter_t1":4},
+		"traits":{&"ordinary_emitter_t1:slow":1},
 		"boss":{
 			"id":&"BOSS_STAGE_02",
 			"cleanup_started":true,

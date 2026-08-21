@@ -87,6 +87,8 @@ func _run() -> void:
 		)
 	)
 	compatibility_ids.append("object_crate")
+	compatibility_ids.append("enemy_ordinary_%s_t2" % ["gun" + "ner"])
+	compatibility_config.set_value("meta", "version", 1)
 	compatibility_config.set_value("discovery", "known", compatibility_ids)
 	_expect(
 		compatibility_config.save(TEST_PATH) == OK,
@@ -97,9 +99,16 @@ func _run() -> void:
 	loaded.load_discovery()
 	_expect(
 		loaded.known.has(&"enemy_ordinary_pursuer_t1")
+			and loaded.known.has(&"enemy_ordinary_emitter_t2")
 			and not loaded.known.has(&"object_crate")
-			and loaded.known.size() == 5,
-		"schema-v1 load ignores the retired crate ID and preserves live IDs"
+			and loaded.known.size() == 6,
+		"schema-v1 load migrates the renamed family and ignores retired IDs"
+	)
+	var migrated_config := ConfigFile.new()
+	_expect(
+		migrated_config.load(TEST_PATH) == OK
+			and int(migrated_config.get_value("meta", "version", 0)) == 2,
+		"schema-v1 discovery data is rewritten at the current version"
 	)
 
 	var panel := GuidePanel.new()
@@ -172,7 +181,7 @@ func _run() -> void:
 	get_root().add_child(preview)
 	await process_frame
 	for archetype in [
-		&"ordinary_pursuer_t1", &"ordinary_charger_t2", &"ordinary_gunner_t3",
+		&"ordinary_pursuer_t1", &"ordinary_charger_t2", &"ordinary_emitter_t3",
 		&"ordinary_defender_t1", &"ordinary_coordinator_t2",
 	]:
 		preview.show_preview({"kind":&"enemy", "id":archetype})

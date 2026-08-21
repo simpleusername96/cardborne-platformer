@@ -141,7 +141,7 @@ second global elite-stat layer.
   at most once per warned active attack. Defender and Coordinator use persistent
   hull contact with a `0.8 s` per-enemy retry cooldown that starts only when barrier
   or hull accepts damage; an invulnerability rejection leaves the contact armed.
-  Gunner uses low hull-scrape contact for `6` damage with a `1.0 s` per-enemy
+  Emitter uses low hull-scrape contact for `6` damage with a `1.0 s` per-enemy
   accepted-hit cooldown. Overlap outside a family's authored contact attack remains
   damage-inert. Boss contact remains independently authored.
 - Every hostile attack has a startup descriptor produced from simulation
@@ -163,7 +163,7 @@ second global elite-stat layer.
   Non-damaging support descriptors create no warning.
 - All hostile circles, wedges, shockwaves, and damaging corridors use a danger-red full
   footprint, one thin near-black perimeter, and four inward boundary notches, regardless
-  of affinity. Coordinator and Gunner attacks are projectiles. Self-Destruct uses its
+  of affinity. Coordinator and Emitter attacks are projectiles. Self-Destruct uses its
   warned fuse footprint and no permanent world range ring. Affinity-specific inner rings,
   diamonds, center lines, tick bars, endpoint caps, and commit markers are absent.
   Circular damage falls linearly from 100% at the center to 45% at the boundary
@@ -273,7 +273,7 @@ second global elite-stat layer.
    facilities, and boss-cleanup retirement do not. Living ordinary enemies never block
    the quota-triggered boss. Every authored ordinary squad is one persistent semantic pack
    of four to eight actors with one primary family, one tier, and at most one family trait.
-   A Gunner pack contains at least one Defender; packs with more than four Gunners contain
+   A Emitter pack contains at least one Defender; packs with more than four Emitters contain
    two. The required Defender replaces a filler and never raises population or capacity.
    Cycle 1 establishes base silhouettes. Later cycles apply a family trait to one third of
    packs. A cycle change affects future admissions only and never deletes already-living
@@ -326,7 +326,7 @@ second global elite-stat layer.
    to 520-880 for the next interval, then back. Stage 12 first overloads 12 seconds after
    arrival and then every 18 seconds for six seconds: movement `1.35x`, cadence `0.75x`,
    dealt damage `1.30x`, and received damage `1.50x`. Their ordinary teaching families are
-   Gunner T3, Defender T3, Coordinator T3, and Pursuer T3, respectively.
+   Emitter T3, Defender T3, Coordinator T3, and Pursuer T3, respectively.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
@@ -356,7 +356,7 @@ second global elite-stat layer.
 ### Ordinary enemy families, tiers, packs, and traits
 
 - The complete player-facing ordinary catalog is five families multiplied by three tiers:
-  Pursuer, Charger, Gunner, Defender, and Coordinator at T1, T2, and T3. Controller,
+  Pursuer, Charger, Emitter, Defender, and Coordinator at T1, T2, and T3. Controller,
   Sustainer, Bomber, separate Artillery, and global Armored/Overclocked/Heavy identities
   do not exist. The Stage 3 fixed-beam summon is the boss-owned
   `boss_pattern_fixed_beam_01`, not an ordinary family.
@@ -367,7 +367,7 @@ second global elite-stat layer.
   Frenzy increases speed to `1.15x` and attack cadence to `0.85x` of the base interval.
 - Charger owns Double and Self-Destruct. Double performs one additional warned charge;
   Self-Destruct enters a visible fuse that the player can interrupt by killing it.
-- Gunner owns Artillery and Slow. Artillery substitutes a marked-impact attack; Slow
+- Emitter owns Artillery and Slow. Artillery substitutes a marked-impact attack; Slow
   applies one non-stacking `0.65x` player movement modifier for `1.5 s` and refreshes it.
 - Defender owns Bulwark and Reflector. Bulwark activates for `2.5 s` every `8 s`, grows
   its presentation to `135%`, and protects same-pack actors within `250` units. Reflector
@@ -512,7 +512,7 @@ second global elite-stat layer.
   or early transition. Reduced motion preserves state/timing while removing growth,
   impulse, and hit-stop.
 - Exactly fifteen family-tier ordinary identities are reachable. Every actor belongs to
-  one valid four-to-eight-member pack; every Gunner pack contains its required Defender.
+  one valid four-to-eight-member pack; every Emitter pack contains its required Defender.
   The ten traits remain family-exclusive, bounded, and readable through shared retained
   cues without a global elite layer.
 - Shock has no reachable data, runtime, status, offer, copy, telemetry, or image. Thermal,

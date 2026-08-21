@@ -518,7 +518,7 @@
     <div class="grid-2">
       <article class="card">
         <h3><code>ordinary_gap_01</code> · 이름보다 약한 제어</h3>
-        <p class="muted">Stage 7–9 일반 웨이브와 보스 add에 등장한다. 390–540 거리대를 유지하며 0.82초 준비 후 피해 9, 속도 440의 단발 <code>Controller bolt</code>를 쏜다. 현재 동작은 사실상 느린 Gunner에 가깝다.</p>
+        <p class="muted">Stage 7–9 일반 웨이브와 보스 add에 등장한다. 390–540 거리대를 유지하며 0.82초 준비 후 피해 9, 속도 440의 단발 <code>Controller bolt</code>를 쏜다. 현재 동작은 사실상 느린 Emitter에 가깝다.</p>
         <div class="chips"><span class="chip good">실제 등장</span><span class="chip warn">공간 제어 약함</span></div>
       </article>
       <article class="card">
@@ -583,7 +583,7 @@
         <thead><tr><th>불변 규칙</th><th>정의</th><th>실패 시 처리</th></tr></thead>
         <tbody>
           <tr><td>전원 팩 소속</td><td>일반 적은 예고부터 사망까지 정확히 한 팩에 속한다.</td><td>팩 ID 없는 일반 적 생성 거부.</td></tr>
-          <tr><td>원거리 + Defender</td><td>Gunner·Artillery·장거리 Controller가 있는 팩에는 Defender가 최소 1기 있다.</td><td>원거리만 먼저 만들지 않고 팩 전체를 지연·대체·취소.</td></tr>
+          <tr><td>원거리 + Defender</td><td>Emitter·Artillery·장거리 Controller가 있는 팩에는 Defender가 최소 1기 있다.</td><td>원거리만 먼저 만들지 않고 팩 전체를 지연·대체·취소.</td></tr>
           <tr><td>인원 수 보존</td><td>Defender는 기존 filler 한 자리를 교체한다. 적 수와 위협 예산 위에 추가하지 않는다.</td><td>예산에 맞는 다른 팩 청사진 사용.</td></tr>
           <tr><td>전열·후열</td><td>Defender는 전방/측면, 원거리 적은 보호받는 후방 슬롯을 사용한다.</td><td>진형이 깨지면 보호도 깨지고 각 유닛은 기본 행동으로 복귀.</td></tr>
           <tr><td>한 팩 한 트레잇</td><td>주 패밀리의 활성 트레잇 하나만 보인다. 필수 Defender는 기본 행동만 사용한다.</td><td>두 번째 트레잇 요청은 거부하거나 다음 팩으로 미룬다.</td></tr>
@@ -659,12 +659,12 @@
         <div class="comment-box" data-review="family-bomber"><div class="comment-head"><label for="comment-family-bomber">Bomber 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-bomber" placeholder="역할·트레잇·현재 ID 이관에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
       </article>
 
-      <article class="family" id="family-gunner" data-section-title="7-4. Gunner">
+      <article class="family" id="family-emitter" data-section-title="7-4. Emitter">
         <div class="family-head">
           <div>
-            <span class="family-id">04 · GUNNER</span>
+            <span class="family-id">04 · EMITTER</span>
             <h3>사격형 · 총열과 탄선을 읽고 자리를 바꾸게 한다</h3>
-            <p class="muted">중·장거리 직접 사격. 모든 Gunner 팩에는 기본 Defender가 최소 1기 포함된다.</p>
+            <p class="muted">중·장거리 직접 사격. 모든 Emitter 팩에는 기본 Defender가 최소 1기 포함된다.</p>
             <div class="trait-pair"><div class="trait"><strong>Burst · 점사</strong><p>짧은 간격으로 3발을 한 묶음으로 쏜다.</p></div><div class="trait"><strong>Piercing · 관통</strong><p>긴 단일 위험선으로 뒤 공간까지 압박한다.</p></div></div>
             <p class="seed-list"><strong>현재 씨앗:</strong> <code>ranged_01</code>, <code>lane_01</code>, <code>range_01</code>, <code>beam_01</code>. <strong>미래:</strong> Spread, Tracking, Suppressor.</p>
           </div>
@@ -674,7 +674,7 @@
             <div class="tier-sample" style="--tier-size:136px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_lane_01_base.png" alt="현재 사격형 PNG T3 크기 샘플"><span>T3 · 68</span></div>
           </div>
         </div>
-        <div class="comment-box" data-review="family-gunner"><div class="comment-head"><label for="comment-family-gunner">Gunner 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-gunner" placeholder="역할·트레잇·Defender 편성에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
+        <div class="comment-box" data-review="family-emitter"><div class="comment-head"><label for="comment-family-emitter">Emitter 의견</label><span class="save-state" data-status>저장된 의견 없음</span></div><textarea id="comment-family-emitter" placeholder="역할·트레잇·Defender 편성에 대한 의견"></textarea><div class="comment-actions"><button type="button" data-save>저장</button><button type="button" data-copy>복사</button><button type="button" data-clear>비우기</button></div></div>
       </article>
 
       <article class="family" id="family-artillery" data-section-title="7-5. Artillery">
@@ -702,7 +702,7 @@
             <h3>제어형 · 안전 통로를 새로 찾게 한다</h3>
             <p class="muted">피해량보다 공간 배치가 핵심이다. 장거리로 배치되는 Controller 팩에는 Defender가 필요하다.</p>
             <div class="trait-pair"><div class="trait"><strong>Compression · 압축</strong><p>움직이는 두 경계가 안전 폭을 줄인다.</p></div><div class="trait"><strong>Sweep · 휩쓸기</strong><p>예고된 방향을 따라 지면 위험이 순서대로 이동한다.</p></div></div>
-            <p class="seed-list"><strong>현재 씨앗:</strong> <code>compression_01</code>, <code>sweep_01</code>. <code>gap_01</code> 단발 탄환은 재설계 또는 Gunner 이관.</p>
+            <p class="seed-list"><strong>현재 씨앗:</strong> <code>compression_01</code>, <code>sweep_01</code>. <code>gap_01</code> 단발 탄환은 재설계 또는 Emitter 이관.</p>
           </div>
           <div class="tier-strip" aria-label="제어형 T1에서 T3 크기 비교">
             <div class="tier-sample" style="--tier-size:104px"><img src="../../art/visuals/production/gameplay/actors/enemies/actor_enemy_ordinary_gap_01_base.png" alt="현재 제어형 PNG T1 크기 샘플"><span>T1 · 52</span></div>
@@ -785,7 +785,7 @@
           <tr><td><code>fixed_support_01</code></td><td>미도달 Generator</td><td>수리 원리만 Sustainer에 필요하면 이관</td><td>회복·방벽 분기와 소비자 정리</td></tr>
           <tr><td><code>compression_01</code></td><td>도달 중복 ID</td><td>Controller의 Compression 트레잇</td><td>Stage 9–12·Guidebook·테스트 이관</td></tr>
           <tr><td><code>reflect_01</code></td><td>도달 중복 ID</td><td>Defender의 Reflector 트레잇</td><td>Stage 10–12·반사 테스트 이관</td></tr>
-          <tr><td><code>resonance_01</code></td><td>도달 중복 ID</td><td>미래 Gunner 후보 또는 제거</td><td>활성 2트레잇 유지와 Stage 11–12 대체</td></tr>
+          <tr><td><code>resonance_01</code></td><td>도달 중복 ID</td><td>미래 Emitter 후보 또는 제거</td><td>활성 2트레잇 유지와 Stage 11–12 대체</td></tr>
           <tr><td><code>overload_01</code></td><td>도달 중복 ID</td><td>Charger의 Overload 트레잇</td><td>Stage 12·취약 판정 테스트 이관</td></tr>
           <tr><td><code>armored / overclocked / heavy</code></td><td>현재 전역 elite</td><td>패밀리 전용 2트레잇으로 교체</td><td>선정·Guidebook·시각·통계 소비자 이관</td></tr>
         </tbody>
@@ -813,7 +813,7 @@
     <div class="figures">
       <figure>
         <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-design-concepts.png" alt="사용자가 제공한 7종 적 역할 콘셉트 시트">
-        <figcaption><strong>제공 PNG A.</strong> Swarm, Charger, Gunner, Controller, Guard, Support, Turret의 큰 실루엣 차이를 보여 주는 탐색 자료. 현재 production 승인 자산은 아니다.</figcaption>
+        <figcaption><strong>제공 PNG A.</strong> Swarm, Charger, Emitter, Controller, Guard, Support, Turret의 큰 실루엣 차이를 보여 주는 탐색 자료. 현재 production 승인 자산은 아니다.</figcaption>
       </figure>
       <figure>
         <img src="assets/2026-08-20-game-structure-ordinary-enemies/enemy-tier-family-lineup.png" alt="사용자가 제공한 적 패밀리와 티어 라인업">
@@ -839,14 +839,14 @@
 
   <section id="rollout" data-section-title="10. 가장 안전한 실행 순서">
     <p class="kicker">Implementation order</p>
-    <h2>10. 첫 구현은 Gunner + Defender 한 팩으로 닫는다</h2>
+    <h2>10. 첫 구현은 Emitter + Defender 한 팩으로 닫는다</h2>
     <div class="table-wrap">
       <table>
         <thead><tr><th>단계</th><th>변경</th><th>완료 증거</th><th>중단 조건</th></tr></thead>
         <tbody>
           <tr><td>0 · 승인</td><td>2트레잇 표, Coordinator 두 트레잇, 크기, 고정 4종 처리 승인</td><td>활성 plan의 open decision 종료</td><td>가족 역할이나 삭제 범위가 계속 바뀜</td></tr>
           <tr><td>1 · 데이터 계약</td><td>family/tier/trait/pack schema와 시각·피격·충돌 반지름 분리</td><td>중복 trait, 2개 초과, 팩 없는 적을 검출하는 validator</td><td>기존 행동의 소유자가 불명확함</td></tr>
-          <tr><td>2 · 첫 팩</td><td>Gunner 2–3 + Defender 1 + filler로 4–8기 팩 구성</td><td>팩 단위 예고·입장·진형·해체, 원거리 고아 스폰 없음</td><td>인원·위협 예산이 늘어나거나 공격 예고가 가려짐</td></tr>
+          <tr><td>2 · 첫 팩</td><td>Emitter 2–3 + Defender 1 + filler로 4–8기 팩 구성</td><td>팩 단위 예고·입장·진형·해체, 원거리 고아 스폰 없음</td><td>인원·위협 예산이 늘어나거나 공격 예고가 가려짐</td></tr>
           <tr><td>3 · 이동 이식</td><td>원격 브랜치의 현재 위치 목표·막힌 경로 우회·완화만 팩 앵커에 적용</td><td>원거리 후열 유지, Defender 전열 유지, 공격 예측 보존</td><td>모든 멤버가 다시 플레이어에게 겹쳐 달려듦</td></tr>
           <tr><td>4 · Coordinator</td><td>Blink와 몰아주기만 구현</td><td>예고·안전 도착·스택 상한·소환 제외·Coordinator 사망 해제 테스트</td><td>투명화·축소·방어 자세가 초기 범위로 섞임</td></tr>
           <tr><td>5 · ID 이관</td><td>Compression·Reflect·Overload를 trait으로 이동하고 미도달 prototype 정리</td><td>12-cycle·Guidebook·한/영·semantic asset·fixture 검증</td><td>기존 플레이에 등장하는 ID를 대체 없이 삭제</td></tr>
@@ -855,7 +855,7 @@
         </tbody>
       </table>
     </div>
-    <div class="callout good"><strong>권장 첫 슬라이스:</strong> 새 적을 만들지 않고 <code>ordinary_lane_01</code> 계열 Gunner와 <code>ordinary_shield_01</code> Defender를 한 팩으로 묶는다. 여기서 진형·스폰·공격 가독성·비용이 맞지 않으면 9개 패밀리 전체로 확장하지 않는다.</div>
+    <div class="callout good"><strong>권장 첫 슬라이스:</strong> 새 적을 만들지 않고 <code>ordinary_lane_01</code> 계열 Emitter와 <code>ordinary_shield_01</code> Defender를 한 팩으로 묶는다. 여기서 진형·스폰·공격 가독성·비용이 맞지 않으면 9개 패밀리 전체로 확장하지 않는다.</div>
     <div class="comment-box" data-review="rollout">
       <div class="comment-head"><label for="comment-rollout">실행 순서에 의견 남기기</label><span class="save-state" data-status>저장된 의견 없음</span></div>
       <textarea id="comment-rollout" placeholder="첫 구현 패밀리, 반드시 먼저 확인할 테스트, 삭제 시점을 적어 주세요."></textarea>

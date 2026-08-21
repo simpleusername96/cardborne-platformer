@@ -7,12 +7,12 @@ extends RefCounted
 const ORDINARY_ARCHETYPES: Array[StringName] = [
 	&"ordinary_pursuer_t1", &"ordinary_pursuer_t2", &"ordinary_pursuer_t3",
 	&"ordinary_charger_t1", &"ordinary_charger_t2", &"ordinary_charger_t3",
-	&"ordinary_gunner_t1", &"ordinary_gunner_t2", &"ordinary_gunner_t3",
+	&"ordinary_emitter_t1", &"ordinary_emitter_t2", &"ordinary_emitter_t3",
 	&"ordinary_defender_t1", &"ordinary_defender_t2", &"ordinary_defender_t3",
 	&"ordinary_coordinator_t1", &"ordinary_coordinator_t2", &"ordinary_coordinator_t3",
 ]
 const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = [
-	&"ordinary_gunner_t1", &"ordinary_gunner_t2", &"ordinary_gunner_t3",
+	&"ordinary_emitter_t1", &"ordinary_emitter_t2", &"ordinary_emitter_t3",
 	&"boss_pattern_fixed_beam_01", &"boss_actor",
 ]
 
@@ -28,9 +28,9 @@ const DEFINITIONS := {
 	&"ordinary_charger_t1": {"family": &"charger", "tier": 1, "size_percent": 100, "behavior": &"ordinary_pull_01", "asset": &"actor/ordinary_charger_t1", "health": 58.0, "speed": 185.0, "radius": 23.0, "name_key": "ORDINARY_CHARGER_T1", "health_class": &"standard", "threat_cost": 1.25, "threat_kind": &"melee", "active_cap": true},
 	&"ordinary_charger_t2": {"family": &"charger", "tier": 2, "size_percent": 125, "behavior": &"ordinary_pull_01", "asset": &"actor/ordinary_charger_t2", "health": 78.0, "speed": 192.0, "radius": 23.0, "name_key": "ORDINARY_CHARGER_T2", "health_class": &"standard", "threat_cost": 1.45, "threat_kind": &"melee", "active_cap": true},
 	&"ordinary_charger_t3": {"family": &"charger", "tier": 3, "size_percent": 150, "behavior": &"ordinary_pull_01", "asset": &"actor/ordinary_charger_t3", "health": 104.0, "speed": 199.0, "radius": 23.0, "name_key": "ORDINARY_CHARGER_T3", "health_class": &"priority", "threat_cost": 1.65, "threat_kind": &"melee", "active_cap": true},
-	&"ordinary_gunner_t1": {"family": &"gunner", "tier": 1, "size_percent": 100, "behavior": &"ordinary_lane_01", "asset": &"actor/ordinary_gunner_t1", "health": 42.0, "speed": 166.0, "radius": 18.0, "name_key": "ORDINARY_GUNNER_T1", "health_class": &"standard", "threat_cost": 1.0, "threat_kind": &"ranged", "active_cap": true},
-	&"ordinary_gunner_t2": {"family": &"gunner", "tier": 2, "size_percent": 125, "behavior": &"ordinary_lane_01", "asset": &"actor/ordinary_gunner_t2", "health": 57.0, "speed": 171.0, "radius": 18.0, "name_key": "ORDINARY_GUNNER_T2", "health_class": &"standard", "threat_cost": 1.2, "threat_kind": &"ranged", "active_cap": true},
-	&"ordinary_gunner_t3": {"family": &"gunner", "tier": 3, "size_percent": 150, "behavior": &"ordinary_lane_01", "asset": &"actor/ordinary_gunner_t3", "health": 76.0, "speed": 176.0, "radius": 18.0, "name_key": "ORDINARY_GUNNER_T3", "health_class": &"priority", "threat_cost": 1.4, "threat_kind": &"ranged", "active_cap": true},
+	&"ordinary_emitter_t1": {"family": &"emitter", "tier": 1, "size_percent": 100, "behavior": &"ordinary_lane_01", "asset": &"actor/ordinary_emitter_t1", "health": 42.0, "speed": 166.0, "radius": 18.0, "name_key": "ORDINARY_EMITTER_T1", "health_class": &"standard", "threat_cost": 1.0, "threat_kind": &"ranged", "active_cap": true},
+	&"ordinary_emitter_t2": {"family": &"emitter", "tier": 2, "size_percent": 125, "behavior": &"ordinary_lane_01", "asset": &"actor/ordinary_emitter_t2", "health": 57.0, "speed": 171.0, "radius": 18.0, "name_key": "ORDINARY_EMITTER_T2", "health_class": &"standard", "threat_cost": 1.2, "threat_kind": &"ranged", "active_cap": true},
+	&"ordinary_emitter_t3": {"family": &"emitter", "tier": 3, "size_percent": 150, "behavior": &"ordinary_lane_01", "asset": &"actor/ordinary_emitter_t3", "health": 76.0, "speed": 176.0, "radius": 18.0, "name_key": "ORDINARY_EMITTER_T3", "health_class": &"priority", "threat_cost": 1.4, "threat_kind": &"ranged", "active_cap": true},
 	&"ordinary_defender_t1": {"family": &"defender", "tier": 1, "size_percent": 100, "behavior": &"ordinary_shield_01", "asset": &"actor/ordinary_defender_t1", "health": 90.0, "speed": 158.0, "radius": 24.0, "name_key": "ORDINARY_DEFENDER_T1", "health_class": &"standard", "threat_cost": 1.5, "threat_kind": &"melee", "active_cap": true},
 	&"ordinary_defender_t2": {"family": &"defender", "tier": 2, "size_percent": 125, "behavior": &"ordinary_shield_01", "asset": &"actor/ordinary_defender_t2", "health": 122.0, "speed": 162.0, "radius": 24.0, "name_key": "ORDINARY_DEFENDER_T2", "health_class": &"priority", "threat_cost": 1.7, "threat_kind": &"melee", "active_cap": true},
 	&"ordinary_defender_t3": {"family": &"defender", "tier": 3, "size_percent": 150, "behavior": &"ordinary_shield_01", "asset": &"actor/ordinary_defender_t3", "health": 162.0, "speed": 166.0, "radius": 24.0, "name_key": "ORDINARY_DEFENDER_T3", "health_class": &"priority", "threat_cost": 1.9, "threat_kind": &"melee", "active_cap": true},
@@ -81,7 +81,7 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("invalid tier size percent: %s" % archetype)
 		if projectile_target_radius(archetype) != MOVING_PROJECTILE_TARGET_RADIUS:
 			errors.append("ordinary projectile target radius must remain 48: %s" % archetype)
-	for family in [&"pursuer", &"charger", &"gunner", &"defender", &"coordinator"]:
+	for family in [&"pursuer", &"charger", &"emitter", &"defender", &"coordinator"]:
 		for tier in range(1, 4):
 			if not family_tiers.has("%s:%d" % [family, tier]):
 				errors.append("missing family tier: %s t%d" % [family, tier])

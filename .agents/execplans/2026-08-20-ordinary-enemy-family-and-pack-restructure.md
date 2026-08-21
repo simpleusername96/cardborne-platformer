@@ -19,7 +19,7 @@ related:
 
 Replace the 26-ID ordinary-enemy catalog with fifteen playable family-tier actors,
 make every authored squad a persistent semantic pack, enforce Defender membership in
-every Gunner pack, ship the ten approved family traits, and integrate the approved
+every Emitter pack, ship the ten approved family traits, and integrate the approved
 five-family art without exceeding the retained renderer's 50-batch ceiling. The starting
 point is `master` after visual staging commit `d64eb57a`; the remote pursuit branch is a
 behavior reference only and is not merged.
@@ -40,12 +40,12 @@ behavior reference only and is not merged.
 
 In scope:
 
-- Families: Pursuer, Charger, Gunner, Defender, Coordinator.
+- Families: Pursuer, Charger, Emitter, Defender, Coordinator.
 - Tiers: T1/T2/T3 with integer `size_percent` values `100/125/150`.
-- Traits: Pursuer `splitter/frenzy`; Charger `double/self_destruct`; Gunner
+- Traits: Pursuer `splitter/frenzy`; Charger `double/self_destruct`; Emitter
   `artillery/slow`; Defender `bulwark/reflector`; Coordinator `blink/pack_feed`.
 - Authored pack blueprints, atomic pack admission, pack-owned shared timers/state, and the
-  Gunner-plus-Defender invariant.
+  Emitter-plus-Defender invariant.
 - Migration of useful current behavior primitives, removal of obsolete player-facing IDs,
   production integration of fifteen approved base PNGs, and retained code-native trait
   cues.
@@ -68,7 +68,7 @@ Constraints and invariants:
 - A pack contains four to eight actors and has one primary family, one tier, and at most one
   pack trait. A required Defender replaces a filler; it never raises authored population,
   threat budget, or active capacity.
-- Every Gunner pack contains at least one Defender. A pack with more than four Gunners
+- Every Emitter pack contains at least one Defender. A pack with more than four Emitters
   contains two Defenders.
 - Actor collision radius and projectile target radius remain gameplay-owned and do not
   scale with tier presentation. T1 uses the new shared ordinary presentation baseline;
@@ -125,7 +125,7 @@ Exact actions requiring owner or user approval:
 | Enemy identity | `VehicleEnemyArchetypes` owns 26 definitions; 18 mobile IDs are campaign-reachable and seven definitions are unreachable | `scripts/enemies/vehicle_enemy_archetypes.gd`; stage/boss roster trace | Replace normal ordinary identity with fifteen family-tier IDs; remove old player-facing identities | 1.1, 4.1 |
 | Tier size | `VehicleStageVisualProfile` publishes one 48-unit mobile visual radius; projectile target radius is separately 48 | visual profile, archetype catalog, renderer | Raise the shared T1 presentation baseline to 56, then apply integer 100/125/150 at the render boundary; keep collision and hit radius unchanged | 1.1, 3.2 |
 | Pack ownership | Every scheduled actor already has squad fields, but allocator redistributes a global role bag and only one squad per packet receives collective state | encounter runtime, spawn allocator, collective runtime | Preserve authored pack blueprints, register every normal pack, and admit a complete window atomically | 1.2, 2.1 |
-| Gunner defense | Current allocator limits shooters but does not guarantee a shield actor | spawn allocator | Every Gunner pack replaces filler slots with one/two base Defenders according to Gunner count | 1.2 |
+| Emitter defense | Current allocator limits shooters but does not guarantee a shield actor | spawn allocator | Every Emitter pack replaces filler slots with one/two base Defenders according to Emitter count | 1.2 |
 | Shared work and performance | Enemy store, update schedule, grid, and collective runtime are bounded; renderer currently allocates one batch per actor descriptor with a hard ceiling of 50 | performance policy/audit, renderer, performance scenarios | Extend the existing bounded pack runtime; use fifteen body textures and shared overlays; do not add per-pack Nodes or 45 actor batches | 2.1, 3.1, 5.2 |
 | Trait ownership | Current elite traits are per actor and globally shared; requested traits are family-exclusive and some are pack-wide | elite catalog, user decisions | Replace the global elite catalog with one family-trait catalog and pack metadata; Coordinator traits affect its complete pack | 1.1, 2.2 |
 | Trait behavior | Splitter, current mine, artillery, shield support, reflect, and death-stack prototypes contain reusable behavior seeds | specialist runtime and `VehicleRun` branches | Migrate seeds behind new family/trait terms; do not preserve their former actors | 2.2, 4.1 |
@@ -176,7 +176,7 @@ Source owners: `scripts/enemies/vehicle_enemy_archetypes.gd`, new
     counts and 4-8 pack sizes; derive squad role arrays without allocator role-bag
     redistribution; attach family/tier/trait metadata to every spawn spec.
   - Accept: all twelve stage definitions preserve population and quota; every pack is
-    valid; every Gunner pack contains the required Defender count; no pack exceeds the
+    valid; every Emitter pack contains the required Defender count; no pack exceeds the
     active-cap or threat-budget contract.
   - Guard: opening and reserve admission remain whole-window atomic and a failed geometry
     allocation emits no orphan actor.
@@ -225,7 +225,7 @@ Source owners: `scripts/encounters/vehicle_collective_tactic_catalog.gd`,
     destination; blocked direct approach may use the existing pursuit field; family attack
     standoff, formation slots, local separation, smoothing, and speed caps remain.
   - Accept: movement/targeting validators prove no movement prediction, no route request on
-    a clear path, preserved attack prediction, and protected rear placement for Gunners.
+    a clear path, preserved attack prediction, and protected rear placement for Emitters.
 
 Batch gate:
 
@@ -370,7 +370,7 @@ Validation rules:
 | Trigger | Required response | Boundary or escalation point |
 | --- | --- | --- |
 | Fifteen actor batches plus current retained batches exceed 50 | Stop promotion; keep approved files staged and use fewer runtime semantic textures through the locked three-assets-per-family model | Do not raise the threshold or add an atlas without user approval and render evidence |
-| A complete Gunner pack cannot be placed | Delay the complete pack and retry at the existing bounded interval | Never spawn an orphan Gunner or expand geometry/capacity |
+| A complete Emitter pack cannot be placed | Delay the complete pack and retry at the existing bounded interval | Never spawn an orphan Emitter or expand geometry/capacity |
 | Blink destination is invalid | Cancel that Blink cycle, keep the pack in place, and enter cooldown | Never clip, teleport into the player, or bypass collision |
 | Pack runtime reaches 32 registered packs | Leave the new pack in base formation state and record the bounded rejection | Do not grow the collection during combat; replan only if normal validated workload reaches the bound |
 | A legacy ID still has a live consumer | Keep its file/definition until that exact consumer migrates, then update this task's evidence | Do not delete first or retain a second player-facing authority |

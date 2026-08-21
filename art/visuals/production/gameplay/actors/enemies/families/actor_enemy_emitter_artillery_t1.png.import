@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c8gkmuyu8bfha"
-path="res://.godot/imported/actor_enemy_gunner_slow_t3.png-88d17d7d217e0e8e50bb89f65ee89c30.ctex"
+uid="uid://b76rbssae435c"
+path="res://.godot/imported/actor_enemy_emitter_artillery_t1.png-203ac09299701d059be41e86f3be7c1d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/visuals/production/gameplay/actors/enemies/families/actor_enemy_gunner_slow_t3.png"
-dest_files=["res://.godot/imported/actor_enemy_gunner_slow_t3.png-88d17d7d217e0e8e50bb89f65ee89c30.ctex"]
+source_file="res://art/visuals/production/gameplay/actors/enemies/families/actor_enemy_emitter_artillery_t1.png"
+dest_files=["res://.godot/imported/actor_enemy_emitter_artillery_t1.png-203ac09299701d059be41e86f3be7c1d.ctex"]
 
 [params]
 

@@ -111,7 +111,7 @@ Input images:
 Image 1 is Cardborne's mandatory style-grammar reference only. Follow its shape grammar, surface treatment, palette roles, top-down camera, and small-scale readability. Do not reproduce any example object, object layout, text, or decorative composition from Image 1.
 
 Family identity:
-All nine are compact ramming vehicles in exact top-down orthographic view, facing right. The family silhouette is a dense rear drive mass leading into one broad armored wedge nose. It must read as a direct lane attack, not as a gunner or defender.
+All nine are compact ramming vehicles in exact top-down orthographic view, facing right. The family silhouette is a dense rear drive mass leading into one broad armored wedge nose. It must read as a direct lane attack, not as a emitter or defender.
 T1/T2/T3 are three authored bodies with progressively heavier mass and at most one larger functional plate. Keep all source sprites in the same normalized bounding-box size and centered pivot; runtime applies 100%, 125%, and 150% size later.
 
 Trait rows:
@@ -129,12 +129,12 @@ Avoid:
 No perspective, white backdrop, checkerboard, decorative rivets, tiny circles, repeated lamps, random seams, concentric rings, nested frames, badges, symbols, UI, projectiles, charge lane, explosion, halo, bloom, text, logo, or watermark.
 ```
 
-### Gunner generation
+### Emitter generation
 
 ```text
 Use case: stylized-concept
 Asset type: Cardborne production-candidate top-down enemy sprite board
-Primary request: create one strict 3 by 3 sprite board for the GUNNER ordinary-enemy family. Exactly nine isolated vehicle bodies in nine equal invisible cells. Columns are T1, T2, T3. Rows are Base, Artillery trait, Slow trait. No text, numbers, labels, dividers, borders, or cell backgrounds.
+Primary request: create one strict 3 by 3 sprite board for the EMITTER ordinary-enemy family. Exactly nine isolated vehicle bodies in nine equal invisible cells. Columns are T1, T2, T3. Rows are Base, Artillery trait, Slow trait. No text, numbers, labels, dividers, borders, or cell backgrounds.
 
 Input images:
 Image 1 is Cardborne's mandatory style-grammar reference only. Follow its shape grammar, surface treatment, palette roles, top-down camera, and small-scale readability. Do not reproduce any example object, object layout, text, or decorative composition from Image 1.
@@ -196,7 +196,7 @@ Input images:
 Image 1 is Cardborne's mandatory style-grammar reference only. Follow its shape grammar, surface treatment, palette roles, exact top-down camera, and small-scale readability. Do not reproduce any example object, object layout, text, or decorative composition from Image 1.
 
 Family identity:
-Make this the simplest family. Each body is one compact round or softly octagonal command puck with one broad right-facing nose cut and no arms, legs, antennae, turret, barrel, radial pods, or repeated lamps. It should be visibly simpler than Pursuer, Charger, Gunner, and Defender. T1/T2/T3 are three authored pucks with progressively heavier central mass and at most one larger functional plate. Never use concentric rings. Keep all source sprites in the same normalized bounding-box size and centered pivot; runtime applies 100%, 125%, and 150% size later.
+Make this the simplest family. Each body is one compact round or softly octagonal command puck with one broad right-facing nose cut and no arms, legs, antennae, turret, barrel, radial pods, or repeated lamps. It should be visibly simpler than Pursuer, Charger, Emitter, and Defender. T1/T2/T3 are three authored pucks with progressively heavier central mass and at most one larger functional plate. Never use concentric rings. Keep all source sprites in the same normalized bounding-box size and centered pivot; runtime applies 100%, 125%, and 150% size later.
 
 Trait rows:
 Base: plain command puck with one large danger-coral plate and one broad right-facing nose cut. No trait cue.
@@ -222,7 +222,7 @@ No perspective, white backdrop, checkerboard, decorative rivets, tiny circles, r
 | `source/charger-master-rgb.png` | `ec59b26897ede61f29957c8974d4391834b01fd8c849bcb58f377ac4b299399c` |
 | `source/coordinator-master-rgb.png` | `82e86840ed51afff9e9076a1143bc8b5ff9ee5eb913e3392a83455108dc698fd` |
 | `source/defender-master-rgb.png` | `cf646ea87f13745bed49cc408e550204bc5fda417a68f4112507a2692023270a` |
-| `source/gunner-master-rgb.png` | `9ed134ed130f91c4e5c2df5022131f6959954c27bb26bb2a9b582513d754c349` |
+| `source/emitter-master-rgb.png` | `9ed134ed130f91c4e5c2df5022131f6959954c27bb26bb2a9b582513d754c349` |
 | `source/pursuer-master-rgb.png` | `65d4fbda888d77341ebd346e99332ac155756eac614e745a74e52cc90a836b45` |
 
 ### Alpha master sheets
@@ -232,7 +232,7 @@ No perspective, white backdrop, checkerboard, decorative rivets, tiny circles, r
 | `master-sheets/charger-master.png` | `d85001323b4eb851f1da39a900efb901784b15b08d7cd11a1db03d2e84188c67` |
 | `master-sheets/coordinator-master.png` | `0e44e195c34fcf7e002c334b6f47206be512ad5d7c5c5df105e861545b782193` |
 | `master-sheets/defender-master.png` | `e787343ce29ec2e8eaf447f3d9f1dc812f2bd111380f6cba78d402e556f5a444` |
-| `master-sheets/gunner-master.png` | `e41e53cfcaa252f7dc0e592338b4aca91f96778971a85a1605b96959674cdb4d` |
+| `master-sheets/emitter-master.png` | `e41e53cfcaa252f7dc0e592338b4aca91f96778971a85a1605b96959674cdb4d` |
 | `master-sheets/pursuer-master.png` | `7e50e7f34e16140bd2eb3f8a9c92f49ac76a5ec1ecc7136999147addc9a67df4` |
 
 ### Review comparisons
@@ -244,7 +244,7 @@ No perspective, white backdrop, checkerboard, decorative rivets, tiny circles, r
 | `comparisons/charger-comparison.png` | `2aac92cda0c4d2b2f088a9e00dbfeb372faf5e2038139b9befc3633df068248e` |
 | `comparisons/coordinator-comparison.png` | `46531f8d8dd965d40d5effdd66722474f73160b418cd10356c2cc79509e65b0e` |
 | `comparisons/defender-comparison.png` | `bfcc4af9052b9b446c92ae0fc46ef14c617dddcb828661840802c692a50a8b73` |
-| `comparisons/gunner-comparison.png` | `78a327b3d2e81b292617ddbfca142d4d8bb588982e26c39b2bf5528e0c5a90bd` |
+| `comparisons/emitter-comparison.png` | `78a327b3d2e81b292617ddbfca142d4d8bb588982e26c39b2bf5528e0c5a90bd` |
 | `comparisons/pursuer-comparison.png` | `ab30d2c0c92e74cdd9efa6d09ceac017402e196a9167653a24c5fef0b858c78b` |
 
 All 45 normalized actor hashes are recorded in `asset-hashes.sha256`.

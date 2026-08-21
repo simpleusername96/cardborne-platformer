@@ -345,11 +345,11 @@
   <header>
     <p class="eyebrow">Cardborne · ordinary enemy design revision</p>
     <h1>Use five clear enemy families.</h1>
-    <p class="lead">Remove families that do not earn their own player response. Put self-destruction inside Charger. Put artillery and slowing shots inside Gunner. Show only three tier images per family and scale tiers with integer percentages.</p>
+    <p class="lead">Remove families that do not earn their own player response. Put self-destruction inside Charger. Put artillery and slowing shots inside Emitter. Show only three tier images per family and scale tiers with integer percentages.</p>
 
     <div class="hero-grid">
       <div class="decision">
-        <strong>Decision:</strong> use <strong>Pursuer, Charger, Gunner, Defender, and Coordinator</strong>. Give each family only two launch traits. Show T1, T2, and T3 only. Use <strong>100%, 125%, and 150%</strong> visual scale. Do not merge the remote pursuit branch as-is.
+        <strong>Decision:</strong> use <strong>Pursuer, Charger, Emitter, Defender, and Coordinator</strong>. Give each family only two launch traits. Show T1, T2, and T3 only. Use <strong>100%, 125%, and 150%</strong> visual scale. Do not merge the remote pursuit branch as-is.
       </div>
       <div class="meta" aria-label="Report status">
         <div><span>Family count</span><strong>5, down from 9</strong></div>
@@ -396,7 +396,7 @@
           <tr><td>Controller family</td><td><span class="chip delete">Remove</span></td><td>Its current units do not form a strong, clear family.</td><td>Delete Controller actor IDs after stage and Guidebook replacement.</td></tr>
           <tr><td>Sustainer family</td><td><span class="chip delete">Remove</span></td><td>There are already many families. Repair units do not need a full launch family.</td><td>Delete repair/support actor IDs and unused fixed support data.</td></tr>
           <tr><td>Bomber family</td><td><span class="chip move">Move</span></td><td>Self-destruction works better as a Charger variation.</td><td>Move the fuse and explosion to Charger. Delete the Bomber-style ID.</td></tr>
-          <tr><td>Artillery family</td><td><span class="chip move">Merge</span></td><td>It is still a ranged unit. The shot pattern is the main difference.</td><td>Make Artillery one Gunner trait. Delete the separate Artillery ID.</td></tr>
+          <tr><td>Artillery family</td><td><span class="chip move">Merge</span></td><td>It is still a ranged unit. The shot pattern is the main difference.</td><td>Make Artillery one Emitter trait. Delete the separate Artillery ID.</td></tr>
           <tr><td>Overload trait</td><td><span class="chip delete">Replace</span></td><td>Self-Destruct gives Charger a clearer danger and response.</td><td>Remove <code>ordinary_overload_01</code> after roster migration.</td></tr>
         </tbody>
       </table>
@@ -451,7 +451,7 @@
         <h3>Do not reuse</h3>
         <ul>
           <li>Do not make every member chase the player alone.</li>
-          <li>Do not remove Gunner distance and Defender formation space.</li>
+          <li>Do not remove Emitter distance and Defender formation space.</li>
           <li>Do not remove escort and support position ownership before packs replace it.</li>
           <li>Do not accept the branch document as the new product rule.</li>
         </ul>
@@ -536,12 +536,12 @@
         <div class="comment-box" data-review="charger"><div class="comment-head"><label for="comment-charger">Comment on Charger</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-charger" placeholder="Comment on Double, Self-Destruct, the fuse, or counterplay."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
       </article>
 
-      <article class="family" data-section-title="4.3 Gunner">
+      <article class="family" data-section-title="4.3 Emitter">
         <div class="family-grid">
           <div>
-            <div class="family-id">03 · GUNNER</div>
+            <div class="family-id">03 · EMITTER</div>
             <h3>Break a fire lane or leave a marked impact area</h3>
-            <p class="muted">Gunner includes normal shooting and artillery. Artillery is not a separate family. Every Gunner pack has a Defender, including Artillery and Slow variants.</p>
+            <p class="muted">Emitter includes normal shooting and artillery. Artillery is not a separate family. Every Emitter pack has a Defender, including Artillery and Slow variants.</p>
             <div class="trait-pair">
               <div class="trait"><strong>Artillery</strong><p>Replace direct fire with a marked lobbed or ground-impact shot. The mark must appear before damage.</p></div>
               <div class="trait"><strong>Slow</strong><p>A bullet hit slows the player for a short time. More hits refresh one bounded slow. They do not stack into a movement lock.</p></div>
@@ -549,15 +549,15 @@
             <ul class="rule-list"><li>Current seeds: ranged, lane, range, beam, growth, and ground-impact attack code.</li><li>The Slow projectile needs a distinct cue before it can ship.</li></ul>
           </div>
           <div>
-            <div class="tier-row" aria-label="Gunner tier PNGs">
-              <div class="tier-card t1"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/gunner-t1.png" alt="Gunner T1 concept PNG"></div><strong>T1 · 100%</strong></div>
-              <div class="tier-card t2"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/gunner-t2.png" alt="Gunner T2 concept PNG"></div><strong>T2 · 125%</strong></div>
-              <div class="tier-card t3"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/gunner-t3.png" alt="Gunner T3 concept PNG"></div><strong>T3 · 150%</strong></div>
+            <div class="tier-row" aria-label="Emitter tier PNGs">
+              <div class="tier-card t1"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/emitter-t1.png" alt="Emitter T1 concept PNG"></div><strong>T1 · 100%</strong></div>
+              <div class="tier-card t2"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/emitter-t2.png" alt="Emitter T2 concept PNG"></div><strong>T2 · 125%</strong></div>
+              <div class="tier-card t3"><div class="tier-frame"><img src="assets/2026-08-20-game-structure-ordinary-enemies/five-family-tiers/emitter-t3.png" alt="Emitter T3 concept PNG"></div><strong>T3 · 150%</strong></div>
             </div>
             <p class="concept-label">Three report-only tier crops. No trait image.</p>
           </div>
         </div>
-        <div class="comment-box" data-review="gunner"><div class="comment-head"><label for="comment-gunner">Comment on Gunner</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-gunner" placeholder="Comment on Artillery, Slow, bullet cues, or Defender support."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
+        <div class="comment-box" data-review="emitter"><div class="comment-head"><label for="comment-emitter">Comment on Emitter</label><span class="save-state" data-status>No saved comment</span></div><textarea id="comment-emitter" placeholder="Comment on Artillery, Slow, bullet cues, or Defender support."></textarea><div class="comment-actions"><button type="button" data-save>Save</button><button type="button" data-copy>Copy</button><button type="button" data-clear>Clear</button></div></div>
       </article>
 
       <article class="family" data-section-title="4.4 Defender">
@@ -615,17 +615,17 @@
     <h2>5. Build and admit enemies as complete packs</h2>
     <div class="grid-3">
       <div class="card"><h3>One pack, one contract</h3><p class="muted">A pack owns its family, tier, active trait, leader, members, formation, target, and shared cooldown. Each actor still owns health, collision, damage, and rendering.</p></div>
-      <div class="card"><h3>Atomic spawn</h3><p class="muted">Spawn, delay, replace, or cancel the full pack. Do not create a Gunner first and wait for its Defender later.</p></div>
+      <div class="card"><h3>Atomic spawn</h3><p class="muted">Spawn, delay, replace, or cancel the full pack. Do not create a Emitter first and wait for its Defender later.</p></div>
       <div class="card"><h3>Same threat budget</h3><p class="muted">A required Defender replaces a filler slot. It does not increase the actor count or the authored threat budget.</p></div>
     </div>
-    <div class="note good"><strong>Hard rule:</strong> every pack with a Gunner has at least one Defender. This includes a direct-fire Gunner, an Artillery-trait Gunner, and a Slow-trait Gunner. There is no Artillery exception.</div>
+    <div class="note good"><strong>Hard rule:</strong> every pack with a Emitter has at least one Defender. This includes a direct-fire Emitter, an Artillery-trait Emitter, and a Slow-trait Emitter. There is no Artillery exception.</div>
     <div class="table-wrap" style="margin-top:16px">
       <table>
         <thead><tr><th>Example pack</th><th>Front or flank</th><th>Rear</th><th>Why it works</th></tr></thead>
         <tbody>
-          <tr><td>Direct fire</td><td>Defender + Pursuer filler</td><td>Direct-fire Gunners</td><td>Player can break the shield angle, then attack the firing line.</td></tr>
-          <tr><td>Artillery</td><td>Defender</td><td>Artillery-trait Gunners</td><td>The Defender buys time, but marked impact zones still give movement counterplay.</td></tr>
-          <tr><td>Slow fire</td><td>Defender + close-range filler</td><td>Slow-trait Gunners</td><td>Slow cannot stack. The Defender is the first target-priority problem.</td></tr>
+          <tr><td>Direct fire</td><td>Defender + Pursuer filler</td><td>Direct-fire Emitters</td><td>Player can break the shield angle, then attack the firing line.</td></tr>
+          <tr><td>Artillery</td><td>Defender</td><td>Artillery-trait Emitters</td><td>The Defender buys time, but marked impact zones still give movement counterplay.</td></tr>
+          <tr><td>Slow fire</td><td>Defender + close-range filler</td><td>Slow-trait Emitters</td><td>Slow cannot stack. The Defender is the first target-priority problem.</td></tr>
           <tr><td>Coordinator</td><td>Family-safe fillers</td><td>Coordinator in a readable slot</td><td>Player can find and kill the source before Blink or Pack Feed grows the threat.</td></tr>
         </tbody>
       </table>
@@ -645,17 +645,17 @@
       <table>
         <thead><tr><th>Current item</th><th>Action</th><th>What may survive</th><th>Safe delete condition</th></tr></thead>
         <tbody>
-          <tr><td><code>gap_01</code>, <code>compression_01</code></td><td><span class="chip delete">Delete Controller IDs</span></td><td>No family state. Only a generic warning or impact helper if Gunner needs it.</td><td>Stages, Guidebook, visuals, localization, tests, and fixtures use five-family replacements.</td></tr>
-          <tr><td><code>sweep_01</code></td><td><span class="chip move">Move then delete</span></td><td>Generic marked ground-impact code may support Gunner Artillery.</td><td>The actor ID and Controller-style presentation have no consumers.</td></tr>
+          <tr><td><code>gap_01</code>, <code>compression_01</code></td><td><span class="chip delete">Delete Controller IDs</span></td><td>No family state. Only a generic warning or impact helper if Emitter needs it.</td><td>Stages, Guidebook, visuals, localization, tests, and fixtures use five-family replacements.</td></tr>
+          <tr><td><code>sweep_01</code></td><td><span class="chip move">Move then delete</span></td><td>Generic marked ground-impact code may support Emitter Artillery.</td><td>The actor ID and Controller-style presentation have no consumers.</td></tr>
           <tr><td><code>support_01</code>, <code>fixed_support_01</code></td><td><span class="chip delete">Delete Sustainer IDs</span></td><td>No ordinary repair family.</td><td>Boss add rosters and support branches use approved replacements.</td></tr>
           <tr><td><code>support_02</code></td><td><span class="chip move">Move then delete</span></td><td>Only useful shield logic moves to Defender Bulwark.</td><td>Bulwark tests replace prototype tests.</td></tr>
           <tr><td><code>support_03</code></td><td><span class="chip delete">Delete carrier actor</span></td><td>Pack coordination stays in the shared pack runtime.</td><td>Coordinator no longer needs child-spawn behavior.</td></tr>
           <tr><td><code>melee_02</code></td><td><span class="chip move">Move then delete</span></td><td>Bounded death-stack receipt moves to Pack Feed.</td><td>Pack-level cap, summon exclusion, and duplicate-receipt tests pass.</td></tr>
           <tr><td><code>area_01</code>, <code>fixed_area_01</code></td><td><span class="chip move">Move then delete</span></td><td>Readable fuse and explosion move to Charger Self-Destruct.</td><td>Charger trait and all stage migrations pass.</td></tr>
-          <tr><td><code>growth_01</code></td><td><span class="chip move">Merge into Gunner</span></td><td>Marked impact behavior becomes Artillery trait data.</td><td>No separate Artillery family or actor ID remains.</td></tr>
+          <tr><td><code>growth_01</code></td><td><span class="chip move">Merge into Emitter</span></td><td>Marked impact behavior becomes Artillery trait data.</td><td>No separate Artillery family or actor ID remains.</td></tr>
           <tr><td><code>reflect_01</code></td><td><span class="chip move">Convert then delete alias</span></td><td>Periodic reflection window becomes Defender trait data.</td><td>Normal shield and timed reflection tests pass.</td></tr>
           <tr><td><code>overload_01</code></td><td><span class="chip delete">Delete</span></td><td>Nothing. Self-Destruct replaces it.</td><td>Stage 12 and vulnerability logic use Charger trait data.</td></tr>
-          <tr><td><code>resonance_01</code></td><td><span class="chip delete">Delete</span></td><td>Nothing in the two-trait Gunner launch pool.</td><td>Its stage slots have Artillery or Slow replacements.</td></tr>
+          <tr><td><code>resonance_01</code></td><td><span class="chip delete">Delete</span></td><td>Nothing in the two-trait Emitter launch pool.</td><td>Its stage slots have Artillery or Slow replacements.</td></tr>
           <tr><td><code>fixed_ranged_01</code>, <code>fixed_ranged_02</code></td><td><span class="chip delete">Delete inactive ordinary IDs</span></td><td>Nothing unless a later tower-defense expansion creates a new, separate installation catalog.</td><td>All current consumers are audited and removed.</td></tr>
         </tbody>
       </table>
@@ -698,10 +698,10 @@
       <table>
         <thead><tr><th>Step</th><th>Change</th><th>Proof</th><th>Stop if</th></tr></thead>
         <tbody>
-          <tr><td>1 · Data</td><td>Add family, tier, trait, and pack data. Store integer <code>size_percent</code> values 100 / 125 / 150. Separate visual and collision size ownership.</td><td>Validators reject unknown families, invalid percentages, more than two family traits, two active traits, or a Gunner without Defender.</td><td>Old actor IDs or absolute tier pixels still control the new rules.</td></tr>
-          <tr><td>2 · First pack</td><td>Build direct-fire Gunner + Defender as one complete pack.</td><td>No orphan Gunner, stable formation, clear firing and shield cues.</td><td>Actor count or threat budget grows.</td></tr>
-          <tr><td>3 · Gunner traits</td><td>Add Artillery, then Slow.</td><td>Marked impact is fair; Slow does not stack; both packs include Defender.</td><td>The player cannot tell the projectile or impact type.</td></tr>
-          <tr><td>4 · Defender traits</td><td>Add timed Bulwark growth and timed Reflector state.</td><td>Normal, large-shield, and reflection states are easy to tell apart.</td><td>Protection begins before its warning or hides the Gunner attack.</td></tr>
+          <tr><td>1 · Data</td><td>Add family, tier, trait, and pack data. Store integer <code>size_percent</code> values 100 / 125 / 150. Separate visual and collision size ownership.</td><td>Validators reject unknown families, invalid percentages, more than two family traits, two active traits, or a Emitter without Defender.</td><td>Old actor IDs or absolute tier pixels still control the new rules.</td></tr>
+          <tr><td>2 · First pack</td><td>Build direct-fire Emitter + Defender as one complete pack.</td><td>No orphan Emitter, stable formation, clear firing and shield cues.</td><td>Actor count or threat budget grows.</td></tr>
+          <tr><td>3 · Emitter traits</td><td>Add Artillery, then Slow.</td><td>Marked impact is fair; Slow does not stack; both packs include Defender.</td><td>The player cannot tell the projectile or impact type.</td></tr>
+          <tr><td>4 · Defender traits</td><td>Add timed Bulwark growth and timed Reflector state.</td><td>Normal, large-shield, and reflection states are easy to tell apart.</td><td>Protection begins before its warning or hides the Emitter attack.</td></tr>
           <tr><td>5 · Charger</td><td>Move fuse/explosion to Self-Destruct and remove Overload.</td><td>Charge, fuse, blast, death, and early-kill counterplay are deterministic.</td><td>The blast can happen without a clear fuse.</td></tr>
           <tr><td>6 · Coordinator</td><td>Add Blink and Pack Feed only.</td><td>Safe destination, formation, cap, summon exclusion, and source-death tests pass.</td><td>Invisible, Shrink, or Like Rock enters the launch scope.</td></tr>
           <tr><td>7 · Cleanup</td><td>Migrate stages and delete old IDs plus every consumer.</td><td>Twelve-cycle, boss add, Guidebook, localization, semantic asset, fixture, and spawn tests pass.</td><td>A reachable encounter loses an enemy without replacement.</td></tr>
@@ -709,7 +709,7 @@
         </tbody>
       </table>
     </div>
-    <div class="note good"><strong>First implementation slice:</strong> one Gunner pack with one Defender. Add Artillery and Slow only after the base formation and shield rules work. This is the smallest slice that proves the most important new contract.</div>
+    <div class="note good"><strong>First implementation slice:</strong> one Emitter pack with one Defender. Add Artillery and Slow only after the base formation and shield rules work. This is the smallest slice that proves the most important new contract.</div>
     <div class="comment-box" data-review="rollout">
       <div class="comment-head"><label for="comment-rollout">Comment on the build order</label><span class="save-state" data-status>No saved comment</span></div>
       <textarea id="comment-rollout" placeholder="Comment on the first slice, order, tests, or stop conditions."></textarea>

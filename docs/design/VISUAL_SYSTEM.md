@@ -448,7 +448,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   installation은 `62`, boss는 `146`을 유지한다. 이 값은 presentation scale이며 compact
   movement/contact radius와 분리된다. 모든 ordinary tier의 projectile target radius는
   `48` 값을 별도 gameplay owner에서 명시한다.
-- runtime ordinary body asset은 Pursuer, Charger, Gunner, Defender, Coordinator의
+- runtime ordinary body asset은 Pursuer, Charger, Emitter, Defender, Coordinator의
   T1/T2/T3 base body와 각 family의 trait body 두 개를 포함한 PNG 45개를 사용한다.
   `family_trait`가 비어 있으면 base body를, 아니면 같은 family/tier의 trait body를
   선택한다. 이 선택은 collision, movement, attack, active range의 truth를 바꾸지 않는다.
@@ -516,7 +516,7 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - hostile circle, wedge, shockwave와 non-emitted-beam damaging corridor는 affinity와 무관하게 exact
   committed footprint를 danger-red full area로 채우고 thin near-black perimeter와
   four inward boundary notches를 사용한다. startup body alpha는 readiness에 따라
-  `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. Coordinator와 Gunner는
+  `0.10 -> 0.20`, damaging window는 `0.20`을 유지한다. Coordinator와 Emitter는
   projectile을 발사하며 Self-Destruct는 fuse 중에만 실제 위험 범위를 표시한다.
   affinity별 inner ring, diamond, center line, tick bar, commit
   marker는 만들지 않는다.
@@ -896,7 +896,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
   presentation inputs; startup publishes no path geometry. Translating laser walls remain
   placed moving hazards and do not claim a boss muzzle.
 - Five ordinary families use forty-five production body PNGs: each T1/T2/T3 body for
-  Pursuer, Charger, Gunner, Defender, and Coordinator has a base, trait A, and trait B
+  Pursuer, Charger, Emitter, Defender, and Coordinator has a base, trait A, and trait B
   variant. Their integer presentation scale is `100/125/150`, measured from the shared T1
   radius `56`; projectile target radius remains `48`. Ten family traits retain the shared
   code-native cues defined above and select their matching texture batch, keeping the combat

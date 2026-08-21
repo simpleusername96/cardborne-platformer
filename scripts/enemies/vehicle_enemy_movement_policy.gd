@@ -15,7 +15,7 @@ const PURSUIT_ARCHETYPES: Array[StringName] = [
 	&"ordinary_charger_t1", &"ordinary_charger_t2", &"ordinary_charger_t3",
 ]
 const STANDOFF_ARCHETYPES: Array[StringName] = [
-	&"ordinary_gunner_t1", &"ordinary_gunner_t2", &"ordinary_gunner_t3",
+	&"ordinary_emitter_t1", &"ordinary_emitter_t2", &"ordinary_emitter_t3",
 ]
 const ESCORT_ARCHETYPES: Array[StringName] = [
 	&"ordinary_defender_t1", &"ordinary_defender_t2", &"ordinary_defender_t3",

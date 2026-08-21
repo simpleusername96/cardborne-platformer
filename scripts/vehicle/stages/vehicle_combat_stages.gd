@@ -54,23 +54,23 @@ const BOSS_NAME_KEYS := [
 	"BOSS_STAGE_09", "BOSS_STAGE_10", "BOSS_STAGE_11", "BOSS_STAGE_12",
 ]
 const MOBILE_ROLES := [
-	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_gunner_t1"],
-	[&"ordinary_charger_t1", &"ordinary_gunner_t1", &"ordinary_defender_t1"],
-	[&"ordinary_gunner_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
+	[&"ordinary_pursuer_t1", &"ordinary_charger_t1", &"ordinary_emitter_t1"],
+	[&"ordinary_charger_t1", &"ordinary_emitter_t1", &"ordinary_defender_t1"],
+	[&"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1"],
 	[&"ordinary_defender_t1", &"ordinary_coordinator_t1", &"ordinary_pursuer_t1"],
-	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_gunner_t2"],
-	[&"ordinary_charger_t2", &"ordinary_gunner_t2", &"ordinary_defender_t2"],
-	[&"ordinary_gunner_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
+	[&"ordinary_pursuer_t2", &"ordinary_charger_t2", &"ordinary_emitter_t2"],
+	[&"ordinary_charger_t2", &"ordinary_emitter_t2", &"ordinary_defender_t2"],
+	[&"ordinary_emitter_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2"],
 	[&"ordinary_defender_t2", &"ordinary_coordinator_t2", &"ordinary_pursuer_t2"],
-	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_gunner_t3"],
-	[&"ordinary_charger_t3", &"ordinary_gunner_t3", &"ordinary_defender_t3"],
-	[&"ordinary_gunner_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
+	[&"ordinary_pursuer_t3", &"ordinary_charger_t3", &"ordinary_emitter_t3"],
+	[&"ordinary_charger_t3", &"ordinary_emitter_t3", &"ordinary_defender_t3"],
+	[&"ordinary_emitter_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3"],
 	[&"ordinary_defender_t3", &"ordinary_coordinator_t3", &"ordinary_pursuer_t3"],
 ]
 const BOSS_TUTOR_ROLES := [
-	&"ordinary_gunner_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1", &"ordinary_pursuer_t1",
-	&"ordinary_gunner_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2", &"ordinary_pursuer_t2",
-	&"ordinary_gunner_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3", &"ordinary_pursuer_t3",
+	&"ordinary_emitter_t1", &"ordinary_defender_t1", &"ordinary_coordinator_t1", &"ordinary_pursuer_t1",
+	&"ordinary_emitter_t2", &"ordinary_defender_t2", &"ordinary_coordinator_t2", &"ordinary_pursuer_t2",
+	&"ordinary_emitter_t3", &"ordinary_defender_t3", &"ordinary_coordinator_t3", &"ordinary_pursuer_t3",
 ]
 
 static func normalized_id(stage_id: StringName) -> StringName:
@@ -222,7 +222,7 @@ static func _pack_blueprint(stage_index: int, pack_ordinal: int, pack_size: int)
 	var family := StringName(EnemyArchetypes.definition(primary_archetype)["family"])
 	var roles: Array[StringName] = []
 	var defender_count := 0
-	if family == &"gunner":
+	if family == &"emitter":
 		defender_count = 2 if pack_size >= 6 else 1
 	for _index in pack_size - defender_count:
 		roles.append(FamilyTraits.archetype(family, tier))

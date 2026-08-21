@@ -41,7 +41,7 @@ const PERFORMANCE_EFFECT_IDS: Array[StringName] = [
 const MOBILE_ARCHETYPES: Array[StringName] = [
 	&"ordinary_pursuer_t1", &"ordinary_pursuer_t2", &"ordinary_pursuer_t3",
 	&"ordinary_charger_t1", &"ordinary_charger_t2", &"ordinary_charger_t3",
-	&"ordinary_gunner_t1", &"ordinary_gunner_t2", &"ordinary_gunner_t3",
+	&"ordinary_emitter_t1", &"ordinary_emitter_t2", &"ordinary_emitter_t3",
 	&"ordinary_defender_t1", &"ordinary_defender_t2", &"ordinary_defender_t3",
 	&"ordinary_coordinator_t1", &"ordinary_coordinator_t2", &"ordinary_coordinator_t3",
 ]

@@ -329,7 +329,7 @@ func _show_stage_report(failed: bool) -> void:
 		_report_fixture.record_incoming(&"contact", 18.0)
 		_report_fixture.record_defeat(&"ordinary_pursuer_t1")
 		_report_fixture.record_defeat(&"ordinary_pursuer_t1")
-		_report_fixture.record_defeat(&"ordinary_gunner_t1", &"slow")
+		_report_fixture.record_defeat(&"ordinary_emitter_t1", &"slow")
 	var report_data := {
 		"number":1,
 		"title_key":_stage_title_key(0),
@@ -355,7 +355,7 @@ func _final_result_fixture() -> Dictionary:
 		telemetry.record_status_application(&"chill")
 		telemetry.record_defeat(&"ordinary_pursuer_t1")
 		telemetry.record_defeat(&"ordinary_pursuer_t1")
-		telemetry.record_defeat(&"ordinary_gunner_t1", &"slow" if stage_index % 2 == 0 else &"")
+		telemetry.record_defeat(&"ordinary_emitter_t1", &"slow" if stage_index % 2 == 0 else &"")
 		stage_records.append(StageReportBuilder.build(telemetry.freeze_stage(), {
 			"number":stage_index + 1,
 			"title_key":_stage_title_key(stage_index),
@@ -562,7 +562,7 @@ func _capture_movement_policy_evidence() -> void:
 	})
 	var ordinary_lane_01: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_movement_ordinary_lane_01",
-		"role":&"ordinary_gunner_t1",
+		"role":&"ordinary_emitter_t1",
 		"pos":Vector2(fixture["ordinary_lane_01_start"]),
 		"active":true,
 	})
@@ -1629,7 +1629,7 @@ func _capture_ordinary_projectile_evidence() -> void:
 	_run.player_barrier_timer = 0.0
 	var ordinary_lane_01: VehicleEnemyState = _run._make_enemy({
 		"id":"capture_ordinary_ordinary_lane_01",
-		"role":&"ordinary_gunner_t1",
+		"role":&"ordinary_emitter_t1",
 		"pos":_run.player_position + Vector2(-260.0, 0.0),
 		"active":true,
 	})

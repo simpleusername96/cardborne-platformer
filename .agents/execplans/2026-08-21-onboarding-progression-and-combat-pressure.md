@@ -31,11 +31,13 @@ The canonical neutral name for the ranged ordinary family is emitter. The Korean
 - [x] Locked the design values and responsibility boundaries below.
 - [x] Removed predicted route geometry from hostile projectile startup descriptors, including the stage-8 broad barrage, while preserving source readiness and active damage truth.
 - [x] Replaced the capped tier multipliers with a smooth XP curve that projects level 50 after stage 10 and level 55 after stage 12 on the current quota-and-map path.
-- [ ] Implement the terminology migration and semantic validators.
+- [x] Implement the terminology migration and semantic validators.
 - [ ] Implement onboarding, post-onboarding composition, family behavior, progression, pressure, and bombardment changes.
 - [ ] Capture valid gameplay telemetry and performance evidence, then update accepted product documentation.
 
-The projectile-route correction and XP curve are implemented. The broader terminology, encounter, pressure, bombardment, and performance phases remain the decision-complete execution contract below.
+The projectile-route correction, XP curve, and terminology migration are implemented. The broader encounter, pressure, bombardment, and performance phases remain the decision-complete execution contract below.
+
+Phase 0 checkpoint (2026-08-21): all tracked runtime IDs, localization stems, semantic asset IDs, PNG paths, reports, workbench references, and validators now use emitter / 방출형. Nine runtime PNG files and eighteen retained report/workbench PNG files kept identical SHA-256 content across their path rename. Godot 4.7.1 reimported the runtime textures without error. The guidebook store now migrates schema-v1 discovery IDs and rewrites them as schema v2. The tracked text/path scan returned zero legacy-token matches; guidebook, semantic-asset, combat-renderer, and visual-authority validators passed.
 
 ## Evidence Inspected
 
@@ -293,13 +295,13 @@ The renderer draws matching concentric boundaries and a stronger active center. 
 
 ### Phase 0 — Canonical terminology migration
 
-- [ ] Rename the runtime family ID, archetype IDs, localization stems, constants, semantic asset IDs, PNG filenames, imports, tests, reports, workbench references, manifests, and current telemetry fixtures to emitter.
-- [ ] Use Emitter T1/T2/T3 in English and 방출형 T1/T2/T3 in Korean.
-- [ ] Rename the family pairing constant to EMITTERS_PER_DEFENDER.
-- [ ] Keep artillery and slow trait names and behavior.
-- [ ] Regenerate Godot import sidecars after PNG path changes; do not change image pixels.
-- [ ] Confirm that no persistent player save stores the old family identifier. If an unknown persisted boundary is discovered, stop and add an explicit one-release migration before removing the old identifier.
-- [ ] Require zero matches in tracked text and paths with git grep -Iin -E 'g[u]nner' and git ls-files | rg -i 'g[u]nner'.
+- [x] Rename the runtime family ID, archetype IDs, localization stems, constants, semantic asset IDs, PNG filenames, imports, tests, reports, workbench references, manifests, and current telemetry fixtures to emitter.
+- [x] Use Emitter T1/T2/T3 in English and 방출형 T1/T2/T3 in Korean.
+- [x] Rename the family pairing constant to EMITTERS_PER_DEFENDER.
+- [x] Keep artillery and slow trait names and behavior.
+- [x] Regenerate Godot import sidecars after PNG path changes; do not change image pixels.
+- [x] Confirm the guidebook discovery save boundary and migrate schema-v1 IDs to schema v2 before removing the retired identifier.
+- [x] Require zero matches in tracked text and paths with git grep -Iin -E 'g[u]nner' and git ls-files | rg -i 'g[u]nner'.
 
 Acceptance: all tracked repository content, semantic paths, new release artifacts, localization, validators, and runtime capture schemas use emitter or 방출형. Historical ignored outputs are not evidence and are regenerated when task-owned.
 

@@ -64,14 +64,14 @@ func _validate_stage_packs(stage_id: StringName, stage_index: int) -> void:
 			var trait_id := StringName(pack.get("trait", &""))
 			_expect(tier == FamilyTraits.tier_for_stage(stage_index), "%s pack tier follows the four-stage ladder" % stage_id)
 			_expect(FamilyTraits.trait_belongs_to_family(family, trait_id), "%s pack trait is family-exclusive" % stage_id)
-			if family == &"gunner":
-				var gunner_count := 0
+			if family == &"emitter":
+				var emitter_count := 0
 				var defender_count := 0
 				for role in roles:
 					var role_family := StringName(Archetypes.definition(StringName(role)).get("family", &""))
-					gunner_count += 1 if role_family == &"gunner" else 0
+					emitter_count += 1 if role_family == &"emitter" else 0
 					defender_count += 1 if role_family == &"defender" else 0
-				_expect(defender_count >= FamilyTraits.required_defenders(gunner_count), "%s Gunner pack has its Defender slots" % stage_id)
+				_expect(defender_count >= FamilyTraits.required_defenders(emitter_count), "%s Emitter pack has its Defender slots" % stage_id)
 	_expect(authored_count == int(CombatStages.AUTHORED_COUNTS[stage_index]), "%s family packs preserve authored population" % stage_id)
 
 

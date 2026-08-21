@@ -1351,7 +1351,7 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	var family := StringName(spec.get("pack_family", definition.get("family", &"")))
 	var family_trait := StringName(spec.get("pack_trait", &""))
 	var role := StringName(definition["behavior"])
-	if family == &"gunner" and family_trait == &"artillery":
+	if family == &"emitter" and family_trait == &"artillery":
 		role = &"ordinary_growth_01"
 	var attack_cooldown := _rng.randf_range(0.4, 1.2) / EncounterDirector.ENEMY_RECOVERY_RATE
 	var health := float(definition["health"])
@@ -4121,17 +4121,17 @@ func _desired_enemy_velocity(
 		enemy.speed
 	)
 	if movement_family == EnemyMovementPolicy.ESCORT and not recovering:
-		var protected_gunner := _find_enemy_by_id(enemy.escort_target_id)
+		var protected_emitter := _find_enemy_by_id(enemy.escort_target_id)
 		if (
-			protected_gunner != null
-			and protected_gunner.alive
-			and protected_gunner.active
-			and protected_gunner.family == &"gunner"
+			protected_emitter != null
+			and protected_emitter.alive
+			and protected_emitter.active
+			and protected_emitter.family == &"emitter"
 		):
-			var screen_direction := (pressure_focus - protected_gunner.pos).normalized()
+			var screen_direction := (pressure_focus - protected_emitter.pos).normalized()
 			if not screen_direction.is_zero_approx():
-				movement_focus = protected_gunner.pos + screen_direction * (
-					protected_gunner.radius + enemy.radius + 18.0
+				movement_focus = protected_emitter.pos + screen_direction * (
+					protected_emitter.radius + enemy.radius + 18.0
 				)
 	var engagement_focus := false
 	if enemy.engagement_active and enemy.phase == &"move" and not recovering:

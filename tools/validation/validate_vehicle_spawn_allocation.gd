@@ -167,7 +167,7 @@ func _validate_role_distances(allocations: Array[Dictionary], player_position: V
 			var family := StringName(EnemyArchetypes.definition(role).get("family", &""))
 			if family in [&"pursuer", &"charger", &"defender"]:
 				_expect(int(lanes[index]) in [1, 2], "%s pursuit selects 1650/2100 role lanes" % context)
-			elif family == &"gunner":
+			elif family == &"emitter":
 				_expect(int(lanes[index]) in [0, 1], "%s standoff selects 1200/1650 role lanes" % context)
 			elif family == &"coordinator":
 				_expect(int(lanes[index]) == 0, "%s standoff/support selects 1200 role lane" % context)

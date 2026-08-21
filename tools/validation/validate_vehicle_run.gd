@@ -620,29 +620,29 @@ func _check_simulation_lod_contract(run) -> void:
 func _check_critical_enemy_attack_progression(run) -> void:
 	var projectile_store: RefCounted = run.get("projectile_store")
 	projectile_store.call("clear")
-	var gunner: EnemyState = run.call("_make_enemy", {
+	var emitter: EnemyState = run.call("_make_enemy", {
 		"id":"critical_attack_progression",
-		"role":&"ordinary_gunner_t1",
+		"role":&"ordinary_emitter_t1",
 		"pos":run.player_position + Vector2(-320.0, 0.0),
 		"active":true,
 	})
-	gunner.phase = &"startup"
-	gunner.phase_time = 0.0
-	gunner.committed_dir = Vector2.RIGHT
-	gunner.committed_target = run.player_position
-	var phase_time_before := gunner.phase_time
-	run.call("_update_scheduled_ordinary_enemy", gunner, 1.0 / 60.0)
+	emitter.phase = &"startup"
+	emitter.phase_time = 0.0
+	emitter.committed_dir = Vector2.RIGHT
+	emitter.committed_target = run.player_position
+	var phase_time_before := emitter.phase_time
+	run.call("_update_scheduled_ordinary_enemy", emitter, 1.0 / 60.0)
 	_expect(
-		gunner.phase_time < phase_time_before
-			or gunner.phase in [&"recovery", &"active"],
+		emitter.phase_time < phase_time_before
+			or emitter.phase in [&"recovery", &"active"],
 		"critical ordinary startup advances on the 60 Hz path"
 	)
 	_expect(
-		gunner.phase == &"recovery" and projectile_store.call("hostile_count") == 1,
-		"critical Gunner reaches its real fire path instead of freezing"
+		emitter.phase == &"recovery" and projectile_store.call("hostile_count") == 1,
+		"critical Emitter reaches its real fire path instead of freezing"
 	)
 	projectile_store.call("clear")
-	run.enemy_store.release_untracked(gunner)
+	run.enemy_store.release_untracked(emitter)
 
 
 func _check_ordinary_predicted_commitment(run) -> void:

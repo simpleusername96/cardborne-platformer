@@ -867,11 +867,11 @@ func _admit_due_window(
 		var specs: Array[Dictionary] = []
 		for allocation in allocations:
 			var roles: Array = allocation["roles"]
-			var protected_gunner_index := -1
+			var protected_emitter_index := -1
 			for role_index in roles.size():
 				var role_definition := EnemyArchetypes.definition(StringName(roles[role_index]))
-				if StringName(role_definition.get("family", &"")) == &"gunner":
-					protected_gunner_index = role_index
+				if StringName(role_definition.get("family", &"")) == &"emitter":
+					protected_emitter_index = role_index
 					break
 			if unit_index >= roles.size():
 				continue
@@ -896,8 +896,8 @@ func _admit_due_window(
 				"formation_slot":unit_index,
 				"formation_size":roles.size(),
 				"escort_target_id":(
-					"%s_u%02d" % [squad_id, protected_gunner_index + 1]
-					if protected_gunner_index >= 0
+					"%s_u%02d" % [squad_id, protected_emitter_index + 1]
+					if protected_emitter_index >= 0
 					and StringName(EnemyArchetypes.definition(StringName(roles[unit_index])).get("family", &"")) == &"defender"
 					else ""
 				),

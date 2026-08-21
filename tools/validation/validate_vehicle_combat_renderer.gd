@@ -79,9 +79,9 @@ func _run() -> void:
 	for pair in [
 		[&"ordinary_pursuer_t1", &"ordinary_pursuer_t2"],
 		[&"ordinary_charger_t1", &"ordinary_charger_t2"],
-		[&"ordinary_gunner_t1", &"ordinary_defender_t1"],
+		[&"ordinary_emitter_t1", &"ordinary_defender_t1"],
 		[&"ordinary_coordinator_t1", &"ordinary_pursuer_t1"],
-		[&"boss_pattern_fixed_beam_01", &"ordinary_gunner_t1"],
+		[&"boss_pattern_fixed_beam_01", &"ordinary_emitter_t1"],
 	]:
 		_expect(
 			AssetProvider.texture(StringName("actor/%s" % String(pair[0])))
@@ -255,7 +255,7 @@ func _run() -> void:
 	)
 	snapshot = renderer.debug_snapshot()
 	var status_enemy_batch := renderer.get_node("Enemy_ordinary_pursuer_t1") as MultiMeshInstance2D
-	var peer_enemy_batch := renderer.get_node("Enemy_ordinary_gunner_t1") as MultiMeshInstance2D
+	var peer_enemy_batch := renderer.get_node("Enemy_ordinary_emitter_t1") as MultiMeshInstance2D
 	_expect(
 		status_enemy_batch.multimesh.is_using_custom_data()
 			and status_enemy_batch.material is ShaderMaterial
@@ -610,7 +610,7 @@ func _run() -> void:
 	var projectile_attacker := EnemyState.new()
 	projectile_attacker.id = "projectile_attacker"
 	projectile_attacker.role = &"ordinary_lane_01"
-	projectile_attacker.archetype = &"ordinary_gunner_t1"
+	projectile_attacker.archetype = &"ordinary_emitter_t1"
 	projectile_attacker.pos = Vector2(300.0, 360.0)
 	projectile_attacker.visual_radius = 26.0
 	projectile_attacker.alive = true

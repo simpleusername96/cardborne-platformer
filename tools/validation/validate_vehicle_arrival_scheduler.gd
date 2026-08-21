@@ -91,11 +91,11 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 		var defender_definition := EnemyArchetypes.definition(StringName(spec["role"]))
 		_expect(
 			StringName(defender_definition.get("family", &"")) == &"defender"
-				and StringName(target_definition.get("family", &"")) == &"gunner"
+				and StringName(target_definition.get("family", &"")) == &"emitter"
 				and String(spec["squad_id"]) == String(target.get("squad_id", "")),
-			"a defender in a gunner squad is linked to a live same-squad gunner target"
+			"a defender in a emitter squad is linked to a live same-squad emitter target"
 		)
-	_expect(escort_count > 0, "the mixed-family packet assigns defenders to protect gunners")
+	_expect(escort_count > 0, "the mixed-family packet assigns defenders to protect emitters")
 	for index in range(1, cue_times.size()):
 		_expect(cue_times[index] - cue_times[index - 1] >= 1.20 - 0.001, "actual cue windows stay at least 1.20 seconds apart")
 	var snapshot := runtime.debug_snapshot()
