@@ -27,6 +27,15 @@ const PHASE_ACTIONS: Array[StringName] = [
 	ACTION_BEGIN_ACTIVE,
 	ACTION_UPDATE_ACTIVE,
 ]
+const DIRECT_PATTERN_KINDS: Array[StringName] = [
+	&"lanes", &"fan", &"cross", &"broad_barrage", &"cross_corridors",
+	&"crossing_weave", &"compression", &"radial_volley", &"charge", &"beam",
+	&"switch_sweep", &"area", &"pylons", &"summon", &"long_banks",
+]
+const AUTONOMOUS_PATTERN_KINDS: Array[StringName] = [
+	&"area", &"lanes", &"beam", &"summon", &"long_banks",
+	&"crossing_weave", &"radial_volley", &"compression",
+]
 
 var stage_id: StringName = &"stage_1"
 var stage_index := 0
@@ -151,6 +160,14 @@ static func valid_phase_receipt(receipt: Dictionary) -> bool:
 	)
 
 
+static func supports_direct_pattern(pattern: String) -> bool:
+	return Patterns.kind(pattern) in DIRECT_PATTERN_KINDS
+
+
+static func supports_autonomous_pattern(pattern: String) -> bool:
+	return Patterns.kind(pattern) in AUTONOMOUS_PATTERN_KINDS
+
+
 func begin_active(boss: VehicleEnemyState, services: Variant) -> void:
 	boss.phase = &"boss_active"
 	boss.pattern_tick = 0.0
@@ -163,6 +180,16 @@ func begin_active(boss: VehicleEnemyState, services: Variant) -> void:
 		finite_summons_remaining -= spawn_count
 		for _child_index in spawn_count:
 			services.call("_spawn_carrier_child", boss)
+	elif kind == &"long_banks":
+		boss.pattern_volleys = 1
+		services.call("_spawn_boss_long_banks", {
+			"origin":Vector2(boss.pos),
+			"target":Vector2(boss.committed_target),
+			"damage":Patterns.damage(pattern, stage_index)
+				* boss.boss_attack_damage_multiplier,
+			"pattern":pattern,
+			"affinity":Patterns.affinity(pattern),
+		})
 
 
 func update_active(
@@ -280,14 +307,23 @@ func update_active(
 			services.call("_damage_player", damage, pattern, true, true, true)
 		if before.distance_to(boss.pos) + 1.0 < requested.length():
 			boss.phase_time = 0.0
-	elif kind == &"beam":
-		var growth_ratio := AttackContract.emitted_beam_growth_ratio(
-			boss.phase_time,
-			Patterns.active_seconds(pattern, stage_index)
-		)
+	elif kind in [&"beam", &"switch_sweep"]:
+		var active_total := Patterns.active_seconds(pattern, stage_index)
+		var elapsed := active_total - boss.phase_time
 		for telegraph in boss.attack_telegraphs:
 			if StringName(telegraph.get("delivery", &"")) != &"beam":
 				continue
+			var release_delay := float(telegraph.get("beam_release_delay", 0.0))
+			if elapsed < release_delay:
+				continue
+			var growth_ratio := clampf(
+				(elapsed - release_delay)
+					/ maxf(0.001, float(telegraph.get(
+						"beam_growth_seconds", AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+					))),
+				0.0,
+				1.0
+			)
 			var emitter := Vector2(telegraph.get("beam_emitter", boss.pos))
 			var endpoints: Array[Vector2] = [Vector2(telegraph["to"])]
 			if StringName(telegraph.get("beam_emission_mode", &"")) == AttackContract.EMITTED_BEAM_BIDIRECTIONAL:

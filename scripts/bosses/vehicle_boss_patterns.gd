@@ -41,7 +41,7 @@ const PATTERNS := {
 	&"breaker_charge":{"kind":&"charge", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.30, "active":0.70, "recovery":1.20, "damage":36.0},
 	&"ricochet_volley":{"kind":&"fan", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.00, "active":0.75, "recovery":1.05, "damage":22.0},
 	&"gate_shockwave":{"kind":&"area", "commit_mode":&"committed", "affinity":&"kinetic", "startup":1.75, "active":0.55, "recovery":1.05, "damage":28.0, "radius":240.0},
-	&"switch_sweep":{"kind":&"beam", "commit_mode":&"committed", "affinity":&"arc", "startup":1.05, "active":0.80, "recovery":1.15, "damage":30.0, "width":78.0},
+	&"switch_sweep":{"kind":&"switch_sweep", "commit_mode":&"committed", "affinity":&"arc", "startup":1.05, "active":0.80, "recovery":1.15, "damage":30.0, "width":78.0},
 	&"switchyard_mines":{"kind":&"area", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.60, "recovery":0.0, "damage":26.0, "radius":145.0},
 	&"switch_sweeps":{"kind":&"beam", "commit_mode":&"autonomous", "affinity":&"arc", "startup":1.15, "active":0.75, "recovery":0.0, "damage":28.0, "width":72.0},
 
@@ -190,6 +190,7 @@ const BEHAVIOR_FAMILY_BY_KIND := {
 	&"fan": &"fan_volley",
 	&"cross": &"cross_volley",
 	&"beam": &"emitted_beam",
+	&"switch_sweep": &"sequential_beam_sweep",
 	&"broad_barrage": &"broad_barrage",
 	&"cross_corridors": &"cross_corridor_beam",
 	&"long_banks": &"distance_growth_banks",

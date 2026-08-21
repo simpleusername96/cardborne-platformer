@@ -127,6 +127,11 @@ func _initialize() -> void:
 		"differently named emitted beams resolve to one shared behavior"
 	)
 	_expect(
+		Patterns.behavior_family("switch_sweep") == &"sequential_beam_sweep"
+			and not Patterns.is_shared_behavior("switch_sweep"),
+		"Stage 4 sequential sweep is a real signature behavior, not a beam alias"
+	)
+	_expect(
 		not Patterns.is_shared_behavior("crossing_weave_a")
 			and Patterns.stages_using_behavior(&"crossing_weave") == [&"stage_7"]
 			and not Patterns.is_shared_behavior("radial_volley_a")

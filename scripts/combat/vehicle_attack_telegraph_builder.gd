@@ -189,6 +189,10 @@ static func refresh_boss(
 				posmod(enemy.pattern_index - 1, AttackContract.HOSTILE_BEAM_TOPOLOGIES.size())
 			]
 		)
+	elif kind == &"switch_sweep":
+		_append_hostile_switch_sweep(
+			enemy, pattern, stage_index, damage, affinity, resolve_path
+		)
 	elif kind in [&"area", &"pylons"]:
 		enemy.attack_telegraphs.append(_area(
 			enemy.committed_target,
@@ -381,6 +385,37 @@ static func _append_hostile_beam_topology(
 		descriptor["beam_emission_mode"] = emission_mode
 		descriptor["beam_emitter"] = emitter
 		descriptor["beam_topology"] = topology
+		descriptor["active_seconds"] = BossPatterns.active_seconds(pattern, stage_index)
+		enemy.attack_telegraphs.append(descriptor)
+
+
+static func _append_hostile_switch_sweep(
+	enemy: EnemyState,
+	pattern: String,
+	stage_index: int,
+	damage: float,
+	affinity: StringName,
+	resolve_path: Callable
+) -> void:
+	var width := BossPatterns.width(pattern, stage_index)
+	for step_index in 3:
+		var axis := Vector2(enemy.committed_dir).rotated(
+			lerpf(-0.34, 0.34, float(step_index) / 2.0)
+		).normalized()
+		var emitter := Vector2(enemy.pos)
+		var to := _resolve_path(
+			resolve_path, emitter, axis, BossPatterns.BEAM_RANGE,
+			BossPatterns.BEAM_COVER_PADDING
+		)
+		var descriptor := _corridor(
+			emitter, to, AttackContract.beam_danger_half_width(width),
+			damage, affinity, &"beam", width
+		)
+		descriptor["beam_growth_seconds"] = AttackContract.EMITTED_BEAM_GROWTH_SECONDS
+		descriptor["beam_emission_mode"] = AttackContract.EMITTED_BEAM_FORWARD
+		descriptor["beam_emitter"] = emitter
+		descriptor["beam_topology"] = &"sequential_sweep"
+		descriptor["beam_release_delay"] = float(step_index) * 0.18
 		descriptor["active_seconds"] = BossPatterns.active_seconds(pattern, stage_index)
 		enemy.attack_telegraphs.append(descriptor)
 

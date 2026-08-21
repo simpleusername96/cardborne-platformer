@@ -3,8 +3,9 @@ extends SceneTree
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
-const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
+const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 
 var _failures: Array[String] = []
 
@@ -17,6 +18,7 @@ class BossServiceStub:
 	var identity_activation_calls := 0
 	var radial_projectiles_fired := 0
 	var radial_projectile_damage := 0.0
+	var long_bank_projectiles_fired := 0
 
 
 	func _boss_fire_aimed_burst(
@@ -53,17 +55,16 @@ class BossServiceStub:
 		radial_projectile_damage = float(volley.get("damage", 0.0))
 
 
+	func _spawn_boss_long_banks(_event: Dictionary) -> void:
+		long_bank_projectiles_fired += 10
+
+
 func _init() -> void:
 	var runtime := BossRuntime.new()
-	_expect(
-		BossRuntime.PHASE_GAPS == [0.40, 0.30, 0.24]
-			and BossRuntime.AUTONOMOUS_INTERVALS == [4.8, 3.9, 3.1]
-			and is_equal_approx(BossRuntime.DIRECT_RECOVERY_SCALE, 0.72),
-		"boss offense owns the exact read gaps, autonomous intervals, and recovery scale"
-	)
+	_expect(BossProfiles.PROFILES.size() == 12, "boss offense reads twelve absolute profiles")
 	var previous_gap := INF
 	var previous_initial_delay := INF
-	for boss_index in 8:
+	for boss_index in 12:
 		var stage_index := boss_index
 		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		runtime.configure(stage_id)
@@ -71,7 +72,7 @@ func _init() -> void:
 		_expect(
 			is_equal_approx(
 				float(configured["autonomous_timer"]),
-				3.2 * StageDifficulty.boss_cadence_scale(stage_index)
+				float(BossProfiles.profile(stage_index)["initial_autonomous_delay"])
 			),
 			"%s applies stage cadence to the initial autonomous delay" % stage_id
 		)
@@ -87,8 +88,7 @@ func _init() -> void:
 			_expect(
 				is_equal_approx(
 					runtime.read_gap(phase),
-					float(BossRuntime.PHASE_GAPS[phase - 1])
-						* StageDifficulty.boss_cadence_scale(stage_index)
+					BossProfiles.read_gap(stage_index, phase)
 				),
 				"%s phase %d applies the exact direct read gap" % [stage_id, phase]
 			)
@@ -98,8 +98,7 @@ func _init() -> void:
 			_expect(
 				is_equal_approx(
 					float(runtime.snapshot()["autonomous_timer"]),
-					float(BossRuntime.AUTONOMOUS_INTERVALS[phase - 1])
-						* StageDifficulty.boss_cadence_scale(stage_index)
+					BossProfiles.autonomous_interval(stage_index, phase)
 				),
 				"%s phase %d applies the exact autonomous interval" % [stage_id, phase]
 			)
@@ -115,6 +114,10 @@ func _init() -> void:
 			_expect(
 				BossPatterns.commit_mode(pattern) in [&"committed", &"autonomous"],
 				"%s direct selection declares execution ownership" % stage_id
+			)
+			_expect(
+				BossRuntime.supports_direct_pattern(pattern),
+				"%s direct selection has an explicit runtime route: %s" % [stage_id, pattern]
 			)
 		boss.last_pattern = StringName(BossPatterns.sequence(stage_id, 1)[0])
 		boss.pattern_index = 0
@@ -136,6 +139,10 @@ func _init() -> void:
 		_expect(events.size() == 1, "%s emits its next bounded autonomous attack" % stage_id)
 		if not events.is_empty():
 			var event := events[0]
+			_expect(
+				BossRuntime.supports_autonomous_pattern(String(event["pattern"])),
+				"%s autonomous selection has an explicit world route" % stage_id
+			)
 			_expect(
 				StringName(event["kind"]) == BossPatterns.kind(String(event["pattern"])),
 				"%s preserves the authored autonomous shape" % stage_id
@@ -159,9 +166,11 @@ func _init() -> void:
 	)
 	_validate_late_stage_direct_area_coverage(runtime)
 	_validate_direct_beam_growth(runtime)
+	_validate_switch_sweep_geometry()
 	_validate_direct_identity_activation(runtime)
 	_validate_radial_volley_schedule(runtime)
 	_validate_direct_recovery_scale(runtime)
+	_validate_direct_long_banks(runtime)
 	_validate_phase_receipts(runtime)
 	_finish()
 
@@ -228,7 +237,7 @@ func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
 
 
 func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
-	runtime.configure(&"stage_2")
+	runtime.configure(&"stage_1")
 	var services := BossServiceStub.new()
 	var boss := _boss()
 	boss.pattern = &"thermal_ring"
@@ -240,14 +249,24 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 	runtime.update_active(boss, 0.02, services)
 	_expect(
 		boss.phase == &"boss_recovery"
-			and is_equal_approx(
-				boss.phase_time,
-				BossPatterns.recovery_seconds("thermal_ring")
-					* 0.72
-					* StageDifficulty.boss_cadence_scale(1)
-			),
-		"direct recovery applies both its offense scale and the cycle cadence scale"
+			and is_equal_approx(boss.phase_time, BossPatterns.recovery_seconds("thermal_ring", 0)),
+		"direct recovery reads the boss pattern's absolute value"
 	)
+
+
+func _validate_direct_long_banks(runtime: BossRuntime) -> void:
+	runtime.configure(&"stage_6")
+	var services := BossServiceStub.new()
+	var boss := _boss()
+	boss.pattern = &"long_bank_barrage"
+	boss.committed_target = Vector2(900.0, 0.0)
+	runtime.begin_active(boss, services)
+	_expect(
+		services.long_bank_projectiles_fired == 10 and boss.pattern_volleys == 1,
+		"Stage 6 direct long-bank selection emits ten growth projectiles once"
+	)
+	runtime.update_active(boss, 0.01, services)
+	_expect(services.long_bank_projectiles_fired == 10, "direct long banks cannot emit twice")
 
 
 func _validate_direct_identity_activation(runtime: BossRuntime) -> void:
@@ -342,12 +361,38 @@ func _validate_direct_beam_growth(runtime: BossRuntime) -> void:
 		services.damage_calls == 0,
 		"direct boss beam cannot damage beyond its first growing segment"
 	)
-	boss.phase_time = BossPatterns.active_seconds("switch_sweep") - 0.15
+	boss.phase_time = BossPatterns.active_seconds("switch_sweep", 3) - 0.15
 	runtime.update_active(boss, 0.0, services)
 	_expect(
 		services.damage_calls == 1,
 		"direct boss beam damage reaches the player when its 0.15-second segment arrives"
 	)
+
+
+func _validate_switch_sweep_geometry() -> void:
+	var boss := _boss()
+	boss.phase = &"boss_startup"
+	boss.pattern = &"switch_sweep"
+	boss.committed_dir = Vector2.RIGHT
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"switch_sweep",
+		func(origin: Vector2, direction: Vector2, distance: float, _padding: float):
+			return origin + direction * distance,
+		Callable(),
+		3
+	)
+	_expect(boss.attack_telegraphs.size() == 3, "Stage 4 switch sweep authors three beam headings")
+	var delays: Array[float] = []
+	for descriptor in boss.attack_telegraphs:
+		delays.append(float(descriptor.get("beam_release_delay", -1.0)))
+		_expect(
+			StringName(descriptor.get("beam_topology", &"")) == &"sequential_sweep"
+				and StringName(descriptor.get("beam_emission_mode", &""))
+					== AttackContract.EMITTED_BEAM_FORWARD,
+			"each switch-sweep step is a collision-backed forward emitted beam"
+		)
+	_expect(delays == [0.0, 0.18, 0.36], "switch-sweep headings release in one fixed sequence")
 
 
 func _boss() -> EnemyState:

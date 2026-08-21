@@ -142,13 +142,13 @@ Preconditions:
 
 Source owners: `scripts/bosses/vehicle_boss_runtime.gd`, `scripts/vehicle/vehicle_run.gd`, `scripts/combat/vehicle_attack_telegraph_builder.gd`, `tools/validation/validate_vehicle_boss_runtime.gd`
 
-- [ ] **2.1** Add exhaustive selectable-pattern dispatch validation.
+- [x] **2.1** Add exhaustive selectable-pattern dispatch validation.
   - Change: exercise each selectable direct and autonomous pattern through its real dispatcher and assert projectile, zone, beam, summon, movement/contact, or state output.
   - Accept: no selectable pattern completes without a measurable owned effect, and unsupported kinds fail the validator.
-- [ ] **2.2** Repair Stage 6 direct long-bank execution.
+- [x] **2.2** Repair Stage 6 direct long-bank execution.
   - Change: dispatch one direct long-bank volley at active start using the same distance-growth projectile contract as the autonomous version.
   - Accept: direct selection emits exactly ten growth projectiles once; autonomous execution remains unchanged and fixed-cap safe.
-- [ ] **2.3** Implement the Stage 4 sequential switch sweep.
+- [x] **2.3** Implement the Stage 4 sequential switch sweep.
   - Change: replace the generic topology alias with three collision-backed emitted-beam headings released in sequence under one fixed-cap behavior receipt.
   - Accept: the three headings execute once each, use the shared beam timing from Phase 3, retire cleanly, and never publish a startup path.
 
@@ -247,10 +247,11 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2.
-- Next task: 2.1, make direct and autonomous dispatch coverage measurable, then repair the Stage 6 direct long-bank route.
-- Last completed gate: Phase 1 batch gate (`validate_vehicle_boss_patterns`, `validate_vehicle_boss_difficulty_correction`, report script execution, and `git diff --check`).
+- Current phase: Phase 3.
+- Next task: 3.1, simplify the radial warning to one monotonically darkening full-area fill.
+- Last completed gate: Phase 2 batch gate (`validate_vehicle_boss_runtime` and `validate_vehicle_late_boss_mechanics_correction`).
 - Phase 1 evidence: all 12 profiles and every selected pattern resolve absolute values; the two walk-out failures found during migration were corrected to 1.28 s and 1.31 s; the report renders 12 boss cards and 12 production images with no unresolved values or boss multiplier readouts.
+- Phase 2 evidence: every selection kind resolves an explicit direct/autonomous route; Stage 6 direct long banks emit one ten-projectile receipt; Stage 4 builds three forward collision beams at release delays `0.00/0.18/0.36 s` and uses a distinct signature family.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions
