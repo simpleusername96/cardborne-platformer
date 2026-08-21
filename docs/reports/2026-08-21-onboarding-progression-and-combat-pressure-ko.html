@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 전투 온보딩·성장·압박 조정 보고서</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #091016;
+      --panel: #101c24;
+      --panel-2: #142630;
+      --line: #29424d;
+      --text: #e8f0ef;
+      --muted: #9db1b4;
+      --cyan: #66d9d0;
+      --gold: #f0c36b;
+      --red: #ff766f;
+      --green: #8dd69d;
+      --blue: #79aef5;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 12% -5%, rgba(74, 161, 173, .18), transparent 30rem),
+        radial-gradient(circle at 92% 12%, rgba(240, 195, 107, .10), transparent 26rem),
+        var(--bg);
+      color: var(--text);
+      font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+      line-height: 1.65;
+    }
+    a { color: var(--cyan); text-underline-offset: .2em; }
+    .wrap { width: min(1180px, calc(100% - 32px)); max-width: 100%; margin: 0 auto; }
+    header { padding: 72px 0 42px; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.22; letter-spacing: -.025em; }
+    h1 { max-width: 900px; font-size: clamp(2rem, 5vw, 4rem); }
+    h2 { margin-bottom: 18px; font-size: clamp(1.45rem, 3vw, 2.2rem); }
+    h3 { margin-bottom: 10px; font-size: 1.05rem; }
+    p { margin: 0 0 12px; }
+    .lead { max-width: 880px; margin-top: 22px; color: #c6d5d6; font-size: 1.08rem; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(16, 28, 36, .78);
+      padding: 6px 11px;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-top: 1px solid rgba(41, 66, 77, .7);
+      border-bottom: 1px solid rgba(41, 66, 77, .7);
+      background: rgba(9, 16, 22, .91);
+      backdrop-filter: blur(14px);
+    }
+    nav .wrap { display: flex; gap: 18px; overflow-x: auto; padding-top: 12px; padding-bottom: 12px; }
+    nav a { flex: 0 0 auto; color: var(--muted); font-size: .83rem; text-decoration: none; }
+    nav a:hover { color: var(--text); }
+    main { padding: 42px 0 90px; }
+    section { scroll-margin-top: 72px; margin-top: 54px; }
+    .grid { display: grid; width: 100%; min-width: 0; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+    .card {
+      grid-column: span 4;
+      min-width: 0;
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(20, 38, 48, .88), rgba(13, 25, 32, .92));
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card.wide { grid-column: span 6; }
+    .card.full { grid-column: 1 / -1; }
+    .metric { display: block; margin: 4px 0 8px; font-size: 1.9rem; font-weight: 850; letter-spacing: -.04em; }
+    .muted { color: var(--muted); }
+    .good { color: var(--green); }
+    .warn { color: var(--gold); }
+    .bad { color: var(--red); }
+    .info { color: var(--blue); }
+    .callout {
+      border-left: 4px solid var(--gold);
+      border-radius: 8px 14px 14px 8px;
+      background: rgba(240, 195, 107, .08);
+      padding: 18px 20px;
+    }
+    .callout.critical { border-color: var(--red); background: rgba(255, 118, 111, .08); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; min-width: 660px; background: rgba(16, 28, 36, .66); }
+    th, td { padding: 13px 14px; border-bottom: 1px solid rgba(41, 66, 77, .72); text-align: left; vertical-align: top; }
+    th { color: #cde0df; background: rgba(26, 47, 58, .88); font-size: .82rem; }
+    td { color: #c4d1d2; font-size: .9rem; }
+    tr:last-child td { border-bottom: 0; }
+    .timeline { display: grid; width: 100%; min-width: 0; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+    .step { position: relative; min-width: 0; max-width: 100%; min-height: 190px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 17px; }
+    .step::after { content: ""; position: absolute; top: 24px; right: -13px; width: 13px; height: 2px; background: var(--cyan); }
+    .step:last-child::after { display: none; }
+    .step-no { color: var(--cyan); font-weight: 850; font-size: .78rem; letter-spacing: .08em; }
+    .step strong { display: block; margin: 8px 0; }
+    ul { margin: 10px 0 0; padding-left: 1.25rem; }
+    li + li { margin-top: 7px; }
+    .bar { display: flex; height: 28px; overflow: hidden; border: 1px solid var(--line); border-radius: 999px; background: #0b151b; }
+    .bar span { display: grid; place-items: center; min-width: 18px; color: #071014; font-size: .72rem; font-weight: 900; }
+    .pursuer { width: 38%; background: #6dd2c9; }
+    .charger { width: 30%; background: #f0c36b; }
+    .emitter { width: 15%; background: #7daaf2; }
+    .defender { width: 15%; background: #b79ae8; }
+    .coordinator { width: 2%; background: #ff8179; color: transparent !important; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; color: var(--muted); font-size: .78rem; }
+    .legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; }
+    .phase { border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: rgba(16, 28, 36, .7); }
+    .phase + .phase { margin-top: 12px; }
+    .tag { display: inline-block; margin-bottom: 9px; border-radius: 6px; padding: 3px 7px; background: rgba(102, 217, 208, .14); color: var(--cyan); font-size: .72rem; font-weight: 800; }
+    footer { border-top: 1px solid var(--line); padding: 28px 0 52px; color: var(--muted); font-size: .82rem; }
+    @media (max-width: 900px) {
+      .card, .card.wide { grid-column: span 6; }
+      .timeline { grid-template-columns: 1fr 1fr; }
+      .step::after { display: none; }
+    }
+    @media (max-width: 620px) {
+      .wrap { width: min(calc(100% - 22px), 1180px); }
+      header { padding-top: 46px; }
+      .card, .card.wide { grid-column: 1 / -1; }
+      .timeline { grid-template-columns: 1fr; }
+      th, td { padding: 11px; }
+      h1, h2, h3, p, li { overflow-wrap: anywhere; }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <p class="eyebrow">Cardborne · 분석 및 실행 제안</p>
+    <h1>초반에는 가르치고,<br>후반에는 끊김 없이 압박한다</h1>
+    <p class="lead">현재 코드는 적 종류와 trait를 갖추고 있지만, 스폰·메타데이터·공격 상태·포격 표시가 서로 어긋나 있습니다. 이 보고서는 첫 60킬의 학습 순서, 이후의 강제 비율, 완만한 레벨업, 더 자주 그러나 더 공정한 공격, 그리고 유효한 성능 측정 방법을 하나의 실행안으로 묶습니다.</p>
+    <div class="meta">
+      <span class="pill">작성일 2026-08-21</span>
+      <span class="pill">대상: 12스테이지 차량 런</span>
+      <span class="pill">상태: 분석 완료 · 구현 전</span>
+      <span class="pill">중립 명칭: emitter / 방출형</span>
+    </div>
+  </header>
+
+  <nav aria-label="보고서 목차">
+    <div class="wrap">
+      <a href="#verdict">결론</a>
+      <a href="#current">현재 문제</a>
+      <a href="#onboarding">온보딩</a>
+      <a href="#composition">스폰 규칙</a>
+      <a href="#behavior">행동·trait</a>
+      <a href="#xp">경험치</a>
+      <a href="#pressure">공격 압박</a>
+      <a href="#performance">성능</a>
+      <a href="#execution">실행 순서</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <section id="verdict">
+      <p class="eyebrow">Executive verdict</p>
+      <h2>문제는 콘텐츠 부족이 아니라 연결 규칙의 불일치입니다</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="metric bad">3개</span>
+          <h3>스테이지당 허용 family</h3>
+          <p class="muted">현재는 다섯 family 중 세 개만 순환합니다. 킬 기반 소개가 아니어서 방어형과 조정형이 플레이어에게 늦거나 불명확하게 나타납니다.</p>
+        </article>
+        <article class="card">
+          <span class="metric bad">192 XP</span>
+          <h3>후반 필요 XP 상한</h3>
+          <p class="muted">후반에도 요구량이 낮게 고정되어 레벨업 선택창이 계속 전투를 끊습니다.</p>
+        </article>
+        <article class="card">
+          <span class="metric bad">0회</span>
+          <h3>현재 측정의 원거리 공격</h3>
+          <p class="muted">성능 캡처에서 원거리·지역통제 공격이 발생하지 않았습니다. 프레임은 좋아 보여도 완전한 전투 부하는 아닙니다.</p>
+        </article>
+      </div>
+      <div class="callout critical" style="margin-top:16px">
+        <strong>가장 심각한 공정성 결함:</strong> 현재 렌더러는 적 포격의 경고 시간이 남아 있을 때 위험 영역을 숨기고, 피해가 활성화되는 순간부터 보여 줍니다. “보이는 순간 맞는다”는 피드백과 정확히 일치합니다.
+      </div>
+    </section>
+
+    <section id="current">
+      <p class="eyebrow">Current state</p>
+      <h2>현재 스쿼드와 전투 로직에서 확인한 문제</h2>
+      <div class="grid">
+        <article class="card wide">
+          <h3>스폰</h3>
+          <ul>
+            <li>첫 팩 6기, 이후 팩은 보통 4–8기입니다.</li>
+            <li>스테이지가 세 family를 고정하고, 팩은 그중 하나를 순환합니다.</li>
+            <li>방출형 팩에 방어형을 붙이지만 family와 trait가 팩 단위라 방어형이 잘못된 메타데이터를 물려받습니다.</li>
+            <li>trait 선택식은 기본/trait A/trait B를 4:3:3으로 만들지만, 완전한 독립 확률이 아니라 결정적 해시입니다.</li>
+          </ul>
+        </article>
+        <article class="card wide">
+          <h3>행동</h3>
+          <ul>
+            <li>추격형과 돌진형은 집결·대형 위치를 우선할 때 유저에게서 비켜납니다.</li>
+            <li>방어형과 조정형은 이동 분기 뒤 즉시 반환되어 직접 공격 상태로 들어가지 않습니다.</li>
+            <li>방어형의 “원거리 앞을 막는다”는 좌표 계산은 있으나 페어링과 메타데이터가 불안정합니다.</li>
+            <li>trait별 PNG 선택 함수는 있으나, 입력 identity가 틀려 같은 family/trait처럼 보일 수 있습니다.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="onboarding">
+      <p class="eyebrow">First 60 kills</p>
+      <h2>첫 런은 15킬 단위로 하나씩 가르칩니다</h2>
+      <p class="muted" style="margin-bottom:18px">각 구간은 5기 스쿼드 3개입니다. 첫 60킬 뒤 조정형 브리지 스쿼드 1개를 내보낸 다음에만 일반 규칙을 엽니다. 튜토리얼 65기는 기존 스테이지 인원 안에서 대체되며 추가되지 않습니다.</p>
+      <div class="timeline">
+        <article class="step"><span class="step-no">00–14 KILLS</span><strong>추격형만</strong><p class="muted">5 추격형<br>기본 trait<br>거리 압박 학습</p></article>
+        <article class="step"><span class="step-no">15–29 KILLS</span><strong>방출형 추가</strong><p class="muted">3 추격형 + 2 방출형<br>기본 trait<br>우선 표적 학습</p></article>
+        <article class="step"><span class="step-no">30–44 KILLS</span><strong>돌진형 추가</strong><p class="muted">2 추격형 + 1 방출형 + 2 돌진형<br>기본 trait</p></article>
+        <article class="step"><span class="step-no">45–59 KILLS</span><strong>방어형 추가</strong><p class="muted">2 추격형 + 1 돌진형 + 1 방출형 + 1 방어형<br>정확한 1:1 페어</p></article>
+        <article class="step"><span class="step-no">60 BRIDGE</span><strong>조정형 추가</strong><p class="muted">2 추격형 + 2 돌진형 + 1 조정형<br>입장 완료 뒤 일반 규칙</p></article>
+      </div>
+    </section>
+
+    <section id="composition">
+      <p class="eyebrow">After onboarding</p>
+      <h2>10개 팩을 한 묶음으로 만들어 비율과 변주를 동시에 보장합니다</h2>
+      <div class="grid">
+        <article class="card wide">
+          <h3>팩 가중치</h3>
+          <ul>
+            <li><strong>추격형 팩 4</strong></li>
+            <li><strong>돌진형 팩 3</strong></li>
+            <li><strong>방출형–방어형 페어 팩 3</strong></li>
+            <li>적격 추격/돌진 팩 하나의 멤버를 조정형으로 교체</li>
+          </ul>
+          <p class="muted" style="margin-top:12px">순서는 시드 기반으로 섞습니다. 조정형은 단독 또는 방출형–방어형 팩에 나오지 않습니다.</p>
+        </article>
+        <article class="card wide">
+          <h3>6기 팩 기준 예상 유닛 비율</h3>
+          <div class="bar" aria-label="추격형 38%, 돌진형 30%, 방출형 15%, 방어형 15%, 조정형 2%">
+            <span class="pursuer">38</span><span class="charger">30</span><span class="emitter">15</span><span class="defender">15</span><span class="coordinator">2</span>
+          </div>
+          <div class="legend">
+            <span><i style="background:#6dd2c9"></i>추격형 38%</span>
+            <span><i style="background:#f0c36b"></i>돌진형 30%</span>
+            <span><i style="background:#7daaf2"></i>방출형 15%</span>
+            <span><i style="background:#b79ae8"></i>방어형 15%</span>
+            <span><i style="background:#ff8179"></i>조정형 2%</span>
+          </div>
+          <p class="muted" style="margin-top:13px">유저가 제안한 3:3:3:1의 의도는 유지하되, 실제 조합에서는 방출형과 방어형의 정확한 1:1 및 조정형의 동반 조건을 우선합니다.</p>
+        </article>
+        <article class="card full">
+          <h3>trait 확률</h3>
+          <p>family마다 별도의 10회 셔플백을 사용해 <strong>기본 4 : trait A 3 : trait B 3</strong>을 보장합니다. 독립 난수보다 긴 미등장 구간과 몰림을 줄이면서 요청한 확률을 유지합니다. 온보딩 중에는 학습을 위해 기본 trait만 사용합니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="behavior">
+      <p class="eyebrow">Visible roles</p>
+      <h2>모든 family가 플레이어에게 읽히는 역할을 갖습니다</h2>
+      <div class="grid">
+        <article class="card"><h3>추격형·돌진형</h3><p class="muted">집결 위치가 접근을 가로채지 못하게 합니다. 회복 이동도 유저 방향 성분을 항상 양수로 유지합니다. 충돌이나 실제 공격 커밋만 예외입니다.</p></article>
+        <article class="card"><h3>방어형</h3><p class="muted">같은 스쿼드의 방출형 앞을 막습니다. 보호 대상이 살아 있으면 추격하지 않습니다. 대상이 없을 때만 0.60초 예고의 방패 돌진으로 유저를 공격합니다.</p></article>
+        <article class="card"><h3>조정형</h3><p class="muted">지원 trait를 유지하면서 0.80초 예고, 피해 12, 속도 420의 직접 탄환 공격을 추가합니다. 성능 시나리오에서도 반드시 공격 커밋이 나와야 합니다.</p></article>
+        <article class="card wide"><h3>방출형 포격</h3><p class="muted">포격 trait를 이동 탄환이 아닌 표시된 지면 타격으로 바꿉니다. 공격 준비와 피격 사이에 0.75초를 추가하고, 경고 중 정확한 피해 범위를 계속 표시합니다.</p></article>
+        <article class="card wide"><h3>trait PNG</h3><p class="muted">5 family × 3 tier × 기본/trait A/trait B, 총 45개 identity를 모두 검사합니다. 같은 family라도 trait가 다르면 서로 다른 PNG 경로와 content hash를 가져야 합니다. 런타임 색상 변경으로 대체하지 않습니다.</p></article>
+      </div>
+    </section>
+
+    <section id="xp">
+      <p class="eyebrow">Progression curve</p>
+      <h2>5레벨까지 유지하고, 후반으로 갈수록 선택 간격을 넓힙니다</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>도달 레벨 구간</th><th>현재 배수</th><th>제안 배수</th><th>의도</th></tr></thead>
+          <tbody>
+            <tr><td>1–5</td><td>1.0×</td><td class="good"><strong>1.0×</strong></td><td>필수 빌드 확보 유지</td></tr>
+            <tr><td>6–10</td><td>1.5×</td><td class="info"><strong>2.0×</strong></td><td>초반을 조금만 연장</td></tr>
+            <tr><td>11–20</td><td>2.0×</td><td class="warn"><strong>3.0×</strong></td><td>중반 모달 빈도 감소</td></tr>
+            <tr><td>21–35</td><td>2.0×, 상한 적용</td><td class="warn"><strong>4.5×</strong></td><td>후반 선택 사이 전투 시간 확보</td></tr>
+            <tr><td>36+</td><td>192 XP 상한</td><td class="bad"><strong>6.0×, 1,536 XP 상한</strong></td><td>후반 연속 레벨업 차단</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid" style="margin-top:16px">
+        <article class="card"><span class="metric">9회</span><h3>첫 60킬 예상 업그레이드</h3><p class="muted">현재 기본 적 보상으로 계산한 정적 추정치입니다. 실제 로그로 검증합니다.</p></article>
+        <article class="card"><span class="metric">28–32회</span><h3>12스테이지 목표 중앙값</h3><p class="muted">완주 로그의 중앙값 목표입니다. 범위를 벗어나면 임의 튜닝하지 않고 계획을 다시 엽니다.</p></article>
+        <article class="card"><span class="metric">1,536 XP</span><h3>새 후반 상한</h3><p class="muted">낮은 고정 상한을 8배로 올려 후반 선택창 연속 발생을 막습니다.</p></article>
+      </div>
+    </section>
+
+    <section id="pressure">
+      <p class="eyebrow">Pressure with fair warnings</p>
+      <h2>공격은 더 잦게, 예고는 줄이지 않습니다</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>현재</th><th>제안</th><th>원칙</th></tr></thead>
+          <tbody>
+            <tr><td>일반 적 이동 배수</td><td>1.40</td><td>1.48</td><td>전체 +5.7%</td></tr>
+            <tr><td>보스 이동속도</td><td>380–525</td><td>405–555</td><td>약 +6%, 5 단위 반올림</td></tr>
+            <tr><td>일반 공격 회복</td><td>1.00</td><td>0.90</td><td>예고가 아니라 공격 뒤 공백 단축</td></tr>
+            <tr><td>방출형 추가 회복 배수</td><td>없음</td><td>0.85</td><td>결합 공백 약 23.5% 단축</td></tr>
+            <tr><td>적 탄환 충돌 반경</td><td>5 / 6 / 7</td><td>6 / 7.5 / 9</td><td>표시 폭도 함께 확대</td></tr>
+            <tr><td>포격 추가 경고</td><td>없음</td><td>+0.75초</td><td>경고 중 피해 없음</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid" style="margin-top:16px">
+        <article class="card wide"><h3>작은 포격 · 2단계</h3><p><strong>중심 0–50%</strong>: 피해 100%<br><strong>외곽 50–100%</strong>: 피해 45%</p></article>
+        <article class="card wide"><h3>큰 포격 · 3단계</h3><p><strong>중심 0–33%</strong>: 피해 100%<br><strong>중간 33–67%</strong>: 피해 70%<br><strong>외곽 67–100%</strong>: 피해 40%</p></article>
+      </div>
+      <p class="muted" style="margin-top:14px">동심원 경계는 실제 피해 반경과 일치합니다. 신규 PNG나 SVG를 만들지 않고, 현재 비주얼 규칙이 허용한 코드 기반 유지형 지오메트리로 표현합니다.</p>
+    </section>
+
+    <section id="performance">
+      <p class="eyebrow">Measured, but not yet valid</p>
+      <h2>프레임은 개선됐지만 현재 수치만으로 완료 판정을 할 수 없습니다</h2>
+      <div class="grid">
+        <article class="card"><span class="metric good">3.333 ms</span><h3>Frame p95</h3><p class="muted">활성 적 중앙값 72기, native 30초 진단</p></article>
+        <article class="card"><span class="metric good">94.87 FPS</span><h3>1% low</h3><p class="muted">33.3ms 초과 연속 프레임 0회</p></article>
+        <article class="card"><span class="metric warn">6.505 ms</span><h3>Physics p95</h3><p class="muted">현재 정책의 6ms 기준을 소폭 초과</p></article>
+      </div>
+      <div class="callout" style="margin-top:16px">
+        <strong>해석:</strong> 렌더링과 프레임 페이싱은 이전보다 부드럽다는 체감과 부합합니다. 하지만 측정 시 방출형 공격, 지역통제, 적 탄환 부하가 사실상 없었고 소스도 공식 성능 주장 조건을 만족하지 않았습니다. 구현 뒤 실제 다섯 family가 공격하는 시나리오로 다시 측정해야 합니다.
+      </div>
+      <p class="muted" style="margin-top:14px">최종 측정은 커밋된 clean tree에서 10초 워밍업 + 60초 native 캡처 1회, Web export 뒤 built Web 스모크로 제한합니다. 실제 공격 커밋이 없으면 시나리오를 실패 처리합니다.</p>
+    </section>
+
+    <section id="execution">
+      <p class="eyebrow">Implementation order</p>
+      <h2>실행 순서와 완료 조건</h2>
+      <div class="phase"><span class="tag">PHASE 0</span><h3>용어 전면 변경</h3><p class="muted">코드 ID, 상수, PNG와 import, 로컬라이제이션, 문서, 테스트, 캡처 스키마를 emitter/방출형으로 바꿉니다. 추적 텍스트와 경로에 기존 토큰이 0개여야 합니다.</p></div>
+      <div class="phase"><span class="tag">PHASE 1–2</span><h3>텔레메트리와 스폰 소유자 분리</h3><p class="muted">순수 composition 모듈을 만들고, encounter runtime은 킬 게이트와 입장만 소유합니다. 온보딩, 10팩 백, 페어링, coordinator 조건을 시드 테스트로 증명합니다.</p></div>
+      <div class="phase"><span class="tag">PHASE 3–5</span><h3>행동·XP·전투 압박 구현</h3><p class="muted">근접 접근, 방어 위치, 직접 공격, trait PNG, XP 구간, 투사체, 포격 예고와 피해 구간을 책임별로 수정합니다.</p></div>
+      <div class="phase"><span class="tag">PHASE 6</span><h3>통합 검증과 성능 증명</h3><p class="muted">실제 공격 부하가 있는 deterministic capture, Web export, built Web 확인, clean native 60초 측정으로 닫습니다. combat batch는 80 이하여야 합니다.</p></div>
+      <p style="margin-top:18px"><a href="../../.agents/execplans/2026-08-21-onboarding-progression-and-combat-pressure.md">상세 ExecPlan 열기</a></p>
+    </section>
+
+    <section id="sources">
+      <p class="eyebrow">Sources</p>
+      <h2>참고한 외부 근거</h2>
+      <ul>
+        <li><a href="https://steamcdn-a.akamaihd.net/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf">Valve — AI Systems of Left 4 Dead</a>: 일정한 압박만 반복하지 않고 빈도와 밀도를 조절하는 페이싱.</li>
+        <li><a href="https://nexus.leagueoflegends.com/en-us/2017/10/dev-leagues-vfx-style-guide/">Riot Games — League of Legends VFX Style Guide</a>: 공간·위력·기능·타이밍을 함께 전달하는 전투 가독성.</li>
+        <li><a href="https://brotato.wiki.spellsandguns.com/Experience">Brotato Wiki — Experience</a>: 낮은 후반 고정 상한을 피하는 생존형 게임의 비교 사례.</li>
+        <li><a href="https://docs.godotengine.org/en/4.5/tutorials/scripting/debug/the_profiler.html">Godot Engine — The Profiler</a>: 프레임·물리·렌더링·스크립트 비용을 분리해 측정하는 기준.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">이 문서는 현재 구현과 보존 로그를 기반으로 만든 구현 전 분석 보고서입니다. 수치 조정은 유효한 전체 런 텔레메트리와 정확한 커밋의 성능 증거로 최종 확인합니다.</div>
+  </footer>
+</body>
+</html>
