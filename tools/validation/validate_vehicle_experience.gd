@@ -47,8 +47,8 @@ func _validate_stage_items() -> void:
 func _validate_experience_runtime() -> void:
 	var runtime := ExperienceRuntime.new()
 	var expected_requirements := [
-		14, 16, 18, 21, 25, 45, 53, 60, 69, 80,
-		106, 122, 140, 160, 180, 192, 192, 192, 192, 192,
+		14, 16, 18, 21, 25, 30, 36, 43, 50, 58,
+		66, 75, 85, 95, 106, 118, 130, 142, 156, 170,
 	]
 	for level_index in expected_requirements.size():
 		runtime.run_level = level_index + 1
@@ -58,6 +58,22 @@ func _validate_experience_runtime() -> void:
 				level_index + 1, expected_requirements[level_index]
 			]
 		)
+	var previous_requirement: int = int(expected_requirements[4])
+	var previous_growth := 0
+	for level in range(6, 61):
+		runtime.run_level = level
+		var requirement := runtime.required_experience()
+		var growth: int = requirement - previous_requirement
+		_expect(growth > 0, "level %d requirement increases" % level)
+		if level > 6:
+			_expect(
+				absi(growth - previous_growth) <= 2,
+				"level %d requirement growth stays smooth" % level
+			)
+		previous_requirement = requirement
+		previous_growth = growth
+	runtime.run_level = 70
+	_expect(runtime.required_experience() == 1536, "very-late requirements respect the 1536-XP cap")
 	runtime.reset()
 	var empty_receipt := runtime.advance(0.0, Vector2.ZERO, 0.0, 0.0)
 	var source_buffer: Array = empty_receipt["reward_sources"]
@@ -162,12 +178,13 @@ func _validate_experience_runtime() -> void:
 
 func _validate_route_level_cadence() -> void:
 	var runtime := ExperienceRuntime.new()
+	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
 	var total_experience := 0
 	var total_levels := 0
+	var expected_stage_levels := [16, 21, 26, 30, 33, 37, 40, 43, 46, 50, 53, 55]
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
-		var profile := Catalog.profile(stage_id)
-		var stage_experience := 24 if bool(profile.get("has_boss", true)) else 0
+		var stage_experience := 0
 		var counted_enemies := 0
 		for spec in Catalog.enemy_blueprint(stage_id):
 			if counted_enemies >= Catalog.quota(stage_id):
@@ -179,17 +196,26 @@ func _validate_route_level_cadence() -> void:
 			)
 			stage_experience += FieldDropRules.experience_for_enemy(enemy)
 			counted_enemies += 1
+		for pickup in layout.pickup_blueprint(stage_id):
+			if StringName(pickup["kind"]) == &"experience_shard":
+				stage_experience += int(pickup.get("experience", 0))
 		var level_before := runtime.run_level
 		runtime.spawn_shard(Vector2.ZERO, stage_experience)
 		runtime.advance(0.0, Vector2.ZERO, 100.0, 0.0)
 		var levels_gained := runtime.run_level - level_before
 		total_experience += stage_experience
 		total_levels += levels_gained
+		_expect(
+			runtime.run_level == expected_stage_levels[stage_index],
+			"stage %d reaches projected level %d (actual %d)" % [
+				stage_index + 1, expected_stage_levels[stage_index], runtime.run_level
+			]
+		)
 		while runtime.consume_pending_level():
 			pass
 	_expect(Catalog.STAGE_IDS.size() == 12, "the campaign exposes twelve boss cycles")
-	_expect(total_experience == 20218, "the current twelve-cycle minimum quota path yields 20218 total XP (actual %d)" % total_experience)
-	_expect(total_levels == 114 and runtime.run_level == 115, "the tiered XP curve reaches level 115 with 114 rewards (actual %d / level %d)" % [total_levels, runtime.run_level])
+	_expect(total_experience == 20530, "the current twelve-cycle quota and authored-map path yields 20530 total XP (actual %d)" % total_experience)
+	_expect(total_levels == 54 and runtime.run_level == 55, "the smooth XP curve reaches level 55 with 54 rewards (actual %d / level %d)" % [total_levels, runtime.run_level])
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:

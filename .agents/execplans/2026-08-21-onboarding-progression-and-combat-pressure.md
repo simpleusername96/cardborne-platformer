@@ -30,11 +30,12 @@ The canonical neutral name for the ranged ordinary family is emitter. The Korean
 - [x] Compared local findings with relevant pacing, XP, VFX readability, and profiling references.
 - [x] Locked the design values and responsibility boundaries below.
 - [x] Removed predicted route geometry from hostile projectile startup descriptors, including the stage-8 broad barrage, while preserving source readiness and active damage truth.
+- [x] Replaced the capped tier multipliers with a smooth XP curve that projects level 50 after stage 10 and level 55 after stage 12 on the current quota-and-map path.
 - [ ] Implement the terminology migration and semantic validators.
 - [ ] Implement onboarding, post-onboarding composition, family behavior, progression, pressure, and bombardment changes.
 - [ ] Capture valid gameplay telemetry and performance evidence, then update accepted product documentation.
 
-The projectile-route correction is implemented. The broader terminology, encounter, progression, pressure, bombardment, and performance phases remain the decision-complete execution contract below.
+The projectile-route correction and XP curve are implemented. The broader terminology, encounter, pressure, bombardment, and performance phases remain the decision-complete execution contract below.
 
 ## Evidence Inspected
 
@@ -224,48 +225,37 @@ Validate all 45 family, tier, and trait combinations by loading the resolved tex
 
 ### 5. Progression curve
 
-Keep the existing base requirement formula. Replace the current multipliers and cap with these exact bands:
+Keep the exact level-1-through-5 requirements at 14, 16, 18, 21, and 25 XP. From level 6 onward, let `k = current level - 5` and calculate `min(1,536, round(25 + 5k + 0.31k²))`. This removes multiplier cliffs and the reachable 192-XP plateau while preserving the first five choices.
 
-| Target level band | Multiplier | Intent |
-| --- | ---: | --- |
-| 1–5 | 1.0 | Preserve the first essential choices |
-| 6–10 | 2.0 | Slightly lengthen early build formation |
-| 11–20 | 3.0 | Reduce mid-run modal frequency |
-| 21–35 | 4.5 | Create meaningful space between late choices |
-| 36+ | 6.0 | Prevent repeated end-run interruptions |
-
-Set MAX_LEVEL_REQUIREMENT to 1,536 XP.
-
-The deterministic reward projection below assumes every stage quota is cleared, all ten 5-XP map shards are collected per stage, the planned post-onboarding composition and 4:3:3 trait bags are representative, and boss adds grant no XP. The stage-1 estimate includes the 60-kill tutorial and five-unit bridge. Boss adds can raise the result while missed shards lower it, so runtime outcomes should normally fall within one level of the estimate until telemetry replaces this model.
+The deterministic projection below uses the current stage catalog's quota-limited ordinary enemies, all ten 5-XP authored map shards per stage, no boss XP because boss cleanup disables it, and no boss-add XP. Boss adds can raise the result while missed map shards lower it.
 
 | Stage cleared | Estimated stage XP | Cumulative XP | Expected level |
 | ---: | ---: | ---: | ---: |
-| 1 | 735 | 735 | 12 |
-| 2 | 675 | 1,410 | 15 |
-| 3 | 732 | 2,142 | 17 |
-| 4 | 789 | 2,931 | 19 |
-| 5 | 956 | 3,887 | 21 |
-| 6 | 1,020 | 4,907 | 22 |
-| 7 | 1,085 | 5,992 | 24 |
-| 8 | 1,149 | 7,141 | 25 |
-| 9 | 1,628 | 8,769 | 26 |
-| 10 | 1,715 | 10,484 | 28 |
-| 11 | 1,803 | 12,287 | 29 |
-| 12 | 1,891 | 14,178 | 31 |
+| 1 | 770 | 770 | 16 |
+| 2 | 842 | 1,612 | 21 |
+| 3 | 1,159 | 2,771 | 26 |
+| 4 | 1,266 | 4,037 | 30 |
+| 5 | 1,128 | 5,165 | 33 |
+| 6 | 1,508 | 6,673 | 37 |
+| 7 | 1,944 | 8,617 | 40 |
+| 8 | 2,002 | 10,619 | 43 |
+| 9 | 2,081 | 12,700 | 46 |
+| 10 | 2,615 | 15,315 | 50 |
+| 11 | 2,750 | 18,065 | 53 |
+| 12 | 2,465 | 20,530 | 55 |
 
-| Reached level | Proposed next requirement | Proposed cumulative XP | Proposed upgrade count |
+| Reached level | Next requirement | Cumulative XP spent to reach level | Upgrade count |
 | ---: | ---: | ---: | ---: |
-| 5 | 25 | 94 | 4 |
-| 10 | 106 | 502 | 9 |
-| 15 | 270 | 1,564 | 14 |
-| 20 | 450 | 3,436 | 19 |
-| 25 | 1,017 | 7,815 | 24 |
-| 30 | 1,436 | 14,130 | 29 |
-| 35 | 1,536 | 21,800 | 34 |
+| 5 | 25 | 69 | 4 |
+| 10 | 58 | 253 | 9 |
+| 15 | 106 | 632 | 14 |
+| 20 | 170 | 1,284 | 19 |
+| 30 | 344 | 3,714 | 29 |
+| 40 | 580 | 8,163 | 39 |
+| 50 | 878 | 15,251 | 49 |
+| 55 | 1,050 | 19,978 | 54 |
 
-Static reward estimates map 372 XP to eight upgrades, 558 XP to ten, 4,000 XP to twenty, 8,000 XP to twenty-five, and 16,000 XP to thirty-one. With current base-unit rewards, the first 60 tutorial defeats are expected to give about nine choices. This estimate is not accepted evidence; gameplay telemetry must confirm it.
-
-Acceptance targets are four to five upgrades after the first 15 defeats, no more than nine after the first 60, no more than eleven in stage 1, and a median of 28 through 32 upgrades over a completed twelve-stage run. Record upgrade-modal open count, total open time, confirmation time, XP collected, level reached, and upgrades by stage. If a valid capture misses a target, stop and revise the plan rather than silently tuning multipliers during execution.
+The current deterministic path targets level 50 after stage 10 and level 55 after stage 12. Record upgrade-modal open count, total open time, confirmation time, XP collected, level reached, and upgrades by stage. If valid gameplay telemetry differs by more than two levels at stage 10, reopen the curve with the measured XP total instead of silently tuning it.
 
 ### 6. Attack pressure and movement
 
@@ -347,12 +337,12 @@ Acceptance: pursuit units continuously close, protected emitters remain behind t
 
 ### Phase 4 — Progression pacing
 
-- [ ] Apply the exact multiplier bands and 1,536 cap in VehicleExperienceRuntime.
-- [ ] Update progression validators with the locked threshold and cumulative-XP table.
-- [ ] Keep XP drops unchanged.
-- [ ] Run the deterministic reward projection, then one valid full-run telemetry capture.
+- [x] Apply the smooth post-level-5 quadratic curve and 1,536 cap in VehicleExperienceRuntime.
+- [x] Update progression validators with exact thresholds and all twelve current-path stage levels.
+- [x] Keep XP drops unchanged.
+- [ ] Run one valid full-run telemetry capture.
 
-Acceptance: threshold tests match every locked checkpoint, and valid full-run telemetry meets the first-15, first-60, stage-1, and twelve-stage upgrade targets.
+Acceptance: threshold tests match every locked checkpoint, the deterministic current path reaches level 50 after stage 10 and level 55 after stage 12, and valid full-run telemetry stays within two levels of the stage-10 target.
 
 ### Phase 5 — Combat pressure, projectile scale, and bombardment readability
 

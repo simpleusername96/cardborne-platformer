@@ -6,16 +6,11 @@ extends RefCounted
 const MAX_SHARDS := 192
 const BASE_PICKUP_RADIUS := 34.0
 const ATTRACT_SPEED := 520.0
-const BASE_LEVEL_REQUIREMENT := 6
-const LINEAR_LEVEL_GROWTH := 1.5
-const QUADRATIC_LEVEL_GROWTH := 0.32
-const MAX_LEVEL_REQUIREMENT := 192
-const EARLY_REQUIREMENT_SURCHARGE := 8
-const EARLY_SURCHARGE_LEVEL_COUNT := 10
-const BASE_REQUIREMENT_LEVEL_COUNT := 5
-const MID_REQUIREMENT_LEVEL_COUNT := 5
-const MID_REQUIREMENT_MULTIPLIER := 1.5
-const LATE_REQUIREMENT_MULTIPLIER := 2.0
+const EARLY_LEVEL_REQUIREMENTS: Array[int] = [14, 16, 18, 21, 25]
+const SMOOTH_GROWTH_BASE := 25.0
+const SMOOTH_LINEAR_GROWTH := 5.0
+const SMOOTH_QUADRATIC_GROWTH := 0.31
+const MAX_LEVEL_REQUIREMENT := 1536
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 
 var run_level := 1
@@ -54,21 +49,14 @@ func clear_shards() -> void:
 
 
 func required_experience() -> int:
-	var progression_index := run_level - 1
-	var base_requirement := BASE_LEVEL_REQUIREMENT + roundi(
-		LINEAR_LEVEL_GROWTH * float(progression_index)
-		+ QUADRATIC_LEVEL_GROWTH * float(progression_index * progression_index)
-	)
-	var requirement := base_requirement + (
-		EARLY_REQUIREMENT_SURCHARGE
-		if progression_index < EARLY_SURCHARGE_LEVEL_COUNT
-		else 0
-	)
-	if progression_index < BASE_REQUIREMENT_LEVEL_COUNT:
-		return requirement
-	if progression_index < BASE_REQUIREMENT_LEVEL_COUNT + MID_REQUIREMENT_LEVEL_COUNT:
-		return mini(MAX_LEVEL_REQUIREMENT, roundi(requirement * MID_REQUIREMENT_MULTIPLIER))
-	return mini(MAX_LEVEL_REQUIREMENT, roundi(requirement * LATE_REQUIREMENT_MULTIPLIER))
+	if run_level <= EARLY_LEVEL_REQUIREMENTS.size():
+		return EARLY_LEVEL_REQUIREMENTS[run_level - 1]
+	var levels_after_early := float(run_level - EARLY_LEVEL_REQUIREMENTS.size())
+	return mini(MAX_LEVEL_REQUIREMENT, roundi(
+		SMOOTH_GROWTH_BASE
+		+ SMOOTH_LINEAR_GROWTH * levels_after_early
+		+ SMOOTH_QUADRATIC_GROWTH * levels_after_early * levels_after_early
+	))
 
 
 func spawn_shard(
