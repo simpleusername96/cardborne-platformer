@@ -1408,7 +1408,11 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.health_class = health_class
 	enemy.health_visible_timer = 0.0
 	enemy.threat_cost = float(definition["threat_cost"])
-	enemy.threat_kind = StringName(definition["threat_kind"])
+	enemy.threat_kind = (
+		&"denial"
+		if family == &"emitter" and family_trait == &"artillery"
+		else StringName(definition["threat_kind"])
+	)
 	enemy.counts_active_cap = bool(definition["active_cap"])
 	enemy.alive = true
 	enemy.active = bool(spec.get("active", false))

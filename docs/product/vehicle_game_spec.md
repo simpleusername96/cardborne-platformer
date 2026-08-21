@@ -398,6 +398,13 @@ second global elite-stat layer.
 - Enemy defeats leave collectible XP shards; boss-cleanup retirement never grants XP.
   A new run adds exactly ten visible XP shards to authored placements; cycle advancement
   does not repopulate them.
+- Level requirements are `14/16/18/21/25` for levels 1-5. From level 6 onward,
+  with `k = current level - 5`, the requirement is
+  `min(1,536, ceil(25 + 4.01k + 0.176k²))`. The requirement rises smoothly and
+  reaches the cap only in the very late fallback progression. The fixed connected-run
+  trace uses composed family traits, collects the initial ten authored shards once,
+  excludes boss and boss-add XP, and reaches levels
+  `16/22/26/30/33/36/39/42/46/49/52/55` after cycles 1-12.
 - A new run places four experience-recall pickups. After 90 active seconds, if fewer than
   two remain active, one consumed recall returns every 30 seconds, never above four.
 - The actual viewport publishes at most one placed direct item and one dormant neutral

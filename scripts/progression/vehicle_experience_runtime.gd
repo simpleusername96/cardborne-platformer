@@ -8,8 +8,8 @@ const BASE_PICKUP_RADIUS := 34.0
 const ATTRACT_SPEED := 520.0
 const EARLY_LEVEL_REQUIREMENTS: Array[int] = [14, 16, 18, 21, 25]
 const SMOOTH_GROWTH_BASE := 25.0
-const SMOOTH_LINEAR_GROWTH := 5.0
-const SMOOTH_QUADRATIC_GROWTH := 0.31
+const SMOOTH_LINEAR_GROWTH := 4.01
+const SMOOTH_QUADRATIC_GROWTH := 0.176
 const MAX_LEVEL_REQUIREMENT := 1536
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 
@@ -52,7 +52,7 @@ func required_experience() -> int:
 	if run_level <= EARLY_LEVEL_REQUIREMENTS.size():
 		return EARLY_LEVEL_REQUIREMENTS[run_level - 1]
 	var levels_after_early := float(run_level - EARLY_LEVEL_REQUIREMENTS.size())
-	return mini(MAX_LEVEL_REQUIREMENT, roundi(
+	return mini(MAX_LEVEL_REQUIREMENT, ceili(
 		SMOOTH_GROWTH_BASE
 		+ SMOOTH_LINEAR_GROWTH * levels_after_early
 		+ SMOOTH_QUADRATIC_GROWTH * levels_after_early * levels_after_early

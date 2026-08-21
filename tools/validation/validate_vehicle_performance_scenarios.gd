@@ -81,29 +81,41 @@ func _run() -> void:
 			# steps preserve the production decision cadence. Packet fences can defer
 			# a later authored beat while the preceding population enters in windows,
 			# so the replay runs until the peak beat is actually active and then keeps
-			# one full ten-second qualification window. The bound is derived from the
-			# authored trigger plus a bounded packet-drain allowance rather than a
-			# wall-clock benchmark duration.
+			# a thirty-second combat window. The rolling evidence remains ten seconds;
+			# the extra time lets every sparse coordinator and artillery role commit at
+			# least once through its production movement and cooldown path. The bound is
+			# derived from the authored trigger plus a bounded packet-drain allowance
+			# rather than a wall-clock benchmark duration.
 			var final_trigger := _final_authored_trigger_time(run.current_stage_id)
 			var replay_limit := ceili((final_trigger + 240.0) / 0.10)
 			var peak_window_steps := -1
 			for _step in replay_limit:
 				scenario.before_physics(run, 0.10)
-				run.call("_update_encounter", 0.10)
+				run.call("_physics_process", 0.10)
 				scenario.after_physics(run)
 				if peak_window_steps < 0 and run.encounter_runtime.current_beat >= 4:
 					peak_window_steps = 0
 				elif peak_window_steps >= 0:
 					peak_window_steps += 1
-					if peak_window_steps >= 120:
+					if peak_window_steps >= 300:
 						break
 		scenario.after_physics(run)
 		var snapshot := scenario.validation_snapshot(run)
 		if scenario_id == &"production_replay" and not bool(snapshot["valid"]):
+			var failed_scheduler := Dictionary(snapshot.get("scheduler", {}))
 			print(
 				"PRODUCTION_REPLAY_DIAGNOSTIC ",
 				JSON.stringify({
-					"scheduler":snapshot.get("scheduler", {}),
+					"scheduler":{
+						"stage_id":failed_scheduler.get("stage_id", &""),
+						"beat":failed_scheduler.get("beat", -1),
+						"run_ordinary_defeats":failed_scheduler.get(
+							"run_ordinary_defeats", -1
+						),
+						"onboarding_bridge_admitted":failed_scheduler.get(
+							"onboarding_bridge_admitted", false
+						),
+					},
 					"qualification":snapshot.get("production_qualification", {}),
 					"enemies":snapshot.get("enemies", {}),
 					"projectiles":snapshot.get("projectiles", {}),

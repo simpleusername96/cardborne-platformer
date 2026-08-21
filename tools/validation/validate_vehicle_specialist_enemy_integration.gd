@@ -107,9 +107,17 @@ func _validate_family_direct_attacks(run) -> void:
 
 	var zone_count: int = run.denied_zones.size()
 	var projectile_count_before_artillery: int = run.hostile_projectiles.size()
-	var artillery := _enemy("artillery", &"ordinary_growth_01", Vector2.ZERO)
-	artillery.family = &"emitter"
-	artillery.family_trait = &"artillery"
+	var artillery = run.call("_make_enemy", {
+		"id":"artillery", "role":&"ordinary_emitter_t1",
+		"family":&"emitter", "family_trait":&"artillery",
+		"pos":Vector2.ZERO, "active":true,
+	})
+	_expect(
+		artillery != null
+			and artillery.role == &"ordinary_growth_01"
+			and artillery.threat_kind == &"denial",
+		"artillery is canonically classified into the marked-impact denial lane"
+	)
 	artillery.committed_target = Vector2(420.0, 0.0)
 	run.call("_start_enemy_attack", artillery)
 	_expect(

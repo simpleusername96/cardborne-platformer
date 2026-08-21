@@ -30,7 +30,7 @@ The canonical neutral name for the ranged ordinary family is emitter. The Korean
 - [x] Compared local findings with relevant pacing, XP, VFX readability, and profiling references.
 - [x] Locked the design values and responsibility boundaries below.
 - [x] Removed predicted route geometry from hostile projectile startup descriptors, including the stage-8 broad barrage, while preserving source readiness and active damage truth.
-- [x] Replaced the capped tier multipliers with a smooth XP curve that projects level 50 after stage 10 and level 55 after stage 12 on the current quota-and-map path.
+- [x] Replaced the capped tier multipliers with a smooth XP curve that reaches level 49 after stage 10 and level 55 after stage 12 on the connected composed-identity path.
 - [x] Implement the terminology migration and semantic validators.
 - [x] Implement onboarding, post-onboarding composition, family behavior, progression, pressure, and bombardment changes.
 - [ ] Capture valid gameplay telemetry and performance evidence, then update accepted product documentation.
@@ -44,6 +44,8 @@ Phase 1–2 checkpoint (2026-08-21): VehicleEnemySpawnComposition now owns the f
 Phase 3 checkpoint (2026-08-21): Pursuers and chargers retain individual approach ownership during collective gather and lock, and their recovery vectors keep the locked 65/35 and 55/45 forward-to-tangent weights with positive playerward motion. Defenders bind to an exact same-squad emitter, hold its player-facing screen point, and gain the 0.60/0.24-second, 14-damage, 500-speed bash only after that emitter is gone. Coordinators now commit a 0.80-second warned, 12-damage, 420-speed direct projectile with 1.50-second recovery. Artillery creates a delayed marked ground impact rather than a moving shell. Normal and boss-add spawns retain per-enemy family, tier, trait, and escort identity. All 45 family-tier-trait mappings resolve unique approved 256x256 PNG paths, and base/trait sibling hashes differ. Focused movement, attack, contact, specialist integration, semantic asset, renderer, and visual-authority validators pass.
 
 Phase 5 checkpoint (2026-08-21): Ordinary movement is 1.48x; ordinary post-active downtime uses 0.90x and emitter downtime an additional 0.85x. Boss speeds, phase gaps, autonomous gaps, and direct recovery use the locked values. Hostile projectile collision radii are 6/7.5/9 with a 4.20 visual envelope. VehicleAttackContract now owns the shared 0.75-second bombardment addition, warned startup transformation, and exact two-band or three-band radial damage. Warning areas render from the first warning frame and cannot commit damage until a later active update; retained concentric disks and boundaries match gameplay radii. Projectile startup remains source-only, including stage 8. Combat performance fixtures now use the canonical 80-batch visual ceiling. Attack, specialist, boss, route-readability, difficulty, renderer, damage-feedback, performance-scenario, and visual-authority validators pass. A diff-scoped responsibility audit consolidated startup-warning policy into the attack contract and found no remaining competing owner in the task-owned surface.
+
+Phase 6 implementation checkpoint (2026-08-21): Production replay now completes the typed 60-defeat onboarding and bridge on the same run-global encounter owner before final-stage reconfiguration. Qualification requires all five normal families, direct commits from every attacking ordinary family, ranged and denial commits, and live hostile projectiles. Artillery is classified into the denial lane at canonical enemy construction. The performance-scenario and specialist integration validators pass. A deterministic progression evidence owner now replays production family traits, the connected-run seed, the initial authored XP once, and the production XP runtime; it records modal count but explicitly leaves human modal timing unmeasured. This trace exposed and removed the earlier trait-free/per-cycle-map-XP projection error. The corrected curve reaches level 49 after cycle 10 and 55 after cycle 12 with 13,498 XP. Exact-commit JSON capture, integrated validation, Web proof, and final performance evidence remain.
 
 ## Evidence Inspected
 
@@ -233,37 +235,37 @@ Validate all 45 family, tier, and trait combinations by loading the resolved tex
 
 ### 5. Progression curve
 
-Keep the exact level-1-through-5 requirements at 14, 16, 18, 21, and 25 XP. From level 6 onward, let `k = current level - 5` and calculate `min(1,536, round(25 + 5k + 0.31k²))`. This removes multiplier cliffs and the reachable 192-XP plateau while preserving the first five choices.
+Keep the exact level-1-through-5 requirements at 14, 16, 18, 21, and 25 XP. From level 6 onward, let `k = current level - 5` and calculate `min(1,536, ceil(25 + 4.01k + 0.176k²))`. This removes multiplier cliffs and the reachable 192-XP plateau while preserving the first five choices. The coefficients were corrected after the composed-family trace proved that the earlier projection had treated every ordinary identity as trait-free and had incorrectly repopulated ten authored XP shards on every cycle.
 
-The deterministic projection below uses the current stage catalog's quota-limited ordinary enemies, all ten 5-XP authored map shards per stage, no boss XP because boss cleanup disables it, and no boss-add XP. Boss adds can raise the result while missed map shards lower it.
+The deterministic connected-run trace below uses the production composition traits, quota-limited authored defeat order, the initial ten 5-XP authored map shards once, the initial tactical-layout encounter seed retained by cycle continuation, no boss XP because boss cleanup disables it, and no boss-add XP. Boss adds can raise the result while missed initial map shards lower it.
 
-| Stage cleared | Estimated stage XP | Cumulative XP | Expected level |
+| Stage cleared | Trace stage XP | Cumulative XP | Expected level |
 | ---: | ---: | ---: | ---: |
-| 1 | 770 | 770 | 16 |
-| 2 | 842 | 1,612 | 21 |
-| 3 | 1,159 | 2,771 | 26 |
-| 4 | 1,266 | 4,037 | 30 |
-| 5 | 1,128 | 5,165 | 33 |
-| 6 | 1,508 | 6,673 | 37 |
-| 7 | 1,944 | 8,617 | 40 |
-| 8 | 2,002 | 10,619 | 43 |
-| 9 | 2,081 | 12,700 | 46 |
-| 10 | 2,615 | 15,315 | 50 |
-| 11 | 2,750 | 18,065 | 53 |
-| 12 | 2,465 | 20,530 | 55 |
+| 1 | 726 | 726 | 16 |
+| 2 | 633 | 1,359 | 22 |
+| 3 | 682 | 2,041 | 26 |
+| 4 | 741 | 2,782 | 30 |
+| 5 | 902 | 3,684 | 33 |
+| 6 | 956 | 4,640 | 36 |
+| 7 | 1,037 | 5,677 | 39 |
+| 8 | 1,112 | 6,789 | 42 |
+| 9 | 1,569 | 8,358 | 46 |
+| 10 | 1,642 | 10,000 | 49 |
+| 11 | 1,687 | 11,687 | 52 |
+| 12 | 1,811 | 13,498 | 55 |
 
 | Reached level | Next requirement | Cumulative XP spent to reach level | Upgrade count |
 | ---: | ---: | ---: | ---: |
 | 5 | 25 | 69 | 4 |
-| 10 | 58 | 253 | 9 |
-| 15 | 106 | 632 | 14 |
-| 20 | 170 | 1,284 | 19 |
-| 30 | 344 | 3,714 | 29 |
-| 40 | 580 | 8,163 | 39 |
-| 50 | 878 | 15,251 | 49 |
-| 55 | 1,050 | 19,978 | 54 |
+| 10 | 50 | 241 | 9 |
+| 15 | 83 | 554 | 14 |
+| 20 | 125 | 1,050 | 19 |
+| 30 | 236 | 2,771 | 29 |
+| 40 | 381 | 5,755 | 39 |
+| 50 | 562 | 10,354 | 49 |
+| 55 | 666 | 13,369 | 54 |
 
-The current deterministic path targets level 50 after stage 10 and level 55 after stage 12. Record upgrade-modal open count, total open time, confirmation time, XP collected, level reached, and upgrades by stage. If valid gameplay telemetry differs by more than two levels at stage 10, reopen the curve with the measured XP total instead of silently tuning it.
+The current deterministic connected-run path reaches level 49 after stage 10, within one level of the requested approximate level-50 target, and level 55 after stage 12. Record upgrade-modal open count, total open time, confirmation time, XP collected, level reached, and upgrades by stage. Deterministic evidence records modal count but labels human modal and confirmation time as unmeasured. If valid gameplay telemetry differs by more than two levels at stage 10, reopen the curve with the measured XP total instead of silently tuning it.
 
 ### 6. Attack pressure and movement
 
@@ -350,7 +352,7 @@ Acceptance: pursuit units continuously close, protected emitters remain behind t
 - [x] Keep XP drops unchanged.
 - [ ] Run one valid full-run telemetry capture.
 
-Acceptance: threshold tests match every locked checkpoint, the deterministic current path reaches level 50 after stage 10 and level 55 after stage 12, and valid full-run telemetry stays within two levels of the stage-10 target.
+Acceptance: threshold tests match every locked checkpoint, the deterministic connected-run path reaches level 49 after stage 10 and level 55 after stage 12, and valid full-run telemetry stays within two levels of the stage-10 target.
 
 ### Phase 5 — Combat pressure, projectile scale, and bombardment readability
 
@@ -367,7 +369,7 @@ Acceptance: no bombardment can damage during warning; sampled center, middle, an
 
 ### Phase 6 — Integrated validation, performance proof, and documentation
 
-- [ ] Update production replay so onboarding is complete before the measured interval and the ten-pack composition produces nonzero pursuer, charger, emitter, defender, coordinator, ranged, denial, and hostile-projectile activity.
+- [x] Update production replay so onboarding is complete before the measured interval and the ten-pack composition produces nonzero pursuer, charger, emitter, defender, coordinator, ranged, denial, and hostile-projectile activity.
 - [ ] Run focused spawn, movement, combat, XP, localization, asset, renderer, and visual-authority validators after their relevant implementation batches.
 - [ ] Export Web once the implementation is coherent.
 - [ ] On a committed, clean, quiescent source tree, run one native production replay with 10 seconds warmup and 60 seconds sampling.

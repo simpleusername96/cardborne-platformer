@@ -85,7 +85,7 @@ func configure(id: StringName, enemy_count_override: int = -1) -> bool:
 
 
 func activate(run: Node) -> void:
-	_prepare_final_stage(run)
+	_prepare_final_stage(run, scenario_id == &"production_replay")
 	_diagnostic_authored_reserve = int(
 		run.encounter_runtime.debug_snapshot().get("authored_reserve_units", 0)
 	)
@@ -629,13 +629,43 @@ func _maintain_damage_zone_pressure(run: Node) -> void:
 	_fill_damage_zones(run, target)
 
 
-func _prepare_final_stage(run: Node) -> void:
+func _prepare_final_stage(run: Node, complete_onboarding: bool = false) -> void:
 	run.selected_primary = &"pulse_cannon"
 	run.selected_run_difficulty = RunDifficulty.HARD
+	if complete_onboarding:
+		run.current_stage_index = 0
+		run.current_stage_id = StageCatalog.STAGE_IDS[0]
+		run.call("_reset_run", false, false)
+		_prime_onboarding_progress(run)
 	run.current_stage_index = StageCatalog.STAGE_IDS.size() - 1
 	run.current_stage_id = StageCatalog.STAGE_IDS[-1]
-	run.call("_reset_run", false, true)
+	run.call("_reset_run", false, true, complete_onboarding)
 	run.mode = run.RunMode.PLAYING
+
+
+func _prime_onboarding_progress(run: Node) -> void:
+	# Exercise the production kill gates and bridge before reconfiguring the same
+	# run-global encounter owner for the measured final-stage scheduler.
+	for family in [&"pursuer", &"emitter", &"charger", &"defender"]:
+		for _defeat in 15:
+			run.encounter_runtime.record_ordinary_defeat(family)
+	var visible_world: Rect2 = run.call("_visible_world_rect", 0.0)
+	var no_attack_families: Array[StringName] = []
+	for _step in 5000:
+		run.encounter_runtime.tick(
+			0.05,
+			0,
+			no_attack_families,
+			run.player_position,
+			visible_world
+		)
+		if bool(
+			run.encounter_runtime.debug_snapshot().get(
+				"onboarding_bridge_admitted", false
+			)
+		):
+			return
+	push_error("Production replay could not complete the onboarding bridge")
 
 
 func _activate_production_replay(run: Node) -> void:
@@ -828,6 +858,37 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 	)
 	var maximum_ranged := _production_sample_maximum(&"ranged_commits")
 	var maximum_denial := _production_sample_maximum(&"denial_commits")
+	var maximum_hostile_projectiles := _production_sample_maximum(
+		&"hostile_projectiles"
+	)
+	var onboarding_qualified := (
+		int(scheduler.get("run_ordinary_defeats", 0)) >= 60
+		and bool(scheduler.get("onboarding_bridge_admitted", false))
+	)
+	var normal_family_counts := _normal_pack_family_counts(
+		Array(scheduler.get("run_emitted_packs", []))
+	)
+	var composition_qualified := true
+	for family in [&"pursuer", &"charger", &"emitter", &"defender", &"coordinator"]:
+		composition_qualified = (
+			composition_qualified
+			and int(normal_family_counts.get(family, 0)) > 0
+		)
+	var attack_commits := Dictionary(
+		scheduler.get("run_attack_commits_by_family", {})
+	)
+	var family_attacks_qualified := true
+	for family in [&"pursuer", &"charger", &"emitter", &"coordinator"]:
+		family_attacks_qualified = (
+			family_attacks_qualified
+			and int(attack_commits.get(family, 0)) > 0
+		)
+	var combat_activity_qualified := (
+		family_attacks_qualified
+		and maximum_ranged > 0
+		and maximum_denial > 0
+		and maximum_hostile_projectiles > 0
+	)
 	# The replay runs the final authored stage after beat four. Read the active
 	# runtime ceilings so late-stage pressure is checked against its own contract,
 	# rather than the legacy global defaults used by fixture scenarios.
@@ -837,6 +898,9 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 		and int(scheduler.get("beat", 0)) >= 4
 		and median_active >= minimum_active
 		and bool(allocation_qualification["valid"])
+		and onboarding_qualified
+		and composition_qualified
+		and combat_activity_qualified
 		and production_commit_window_within_stage_caps(
 			maximum_ranged,
 			maximum_denial,
@@ -896,12 +960,32 @@ func _production_validation_snapshot(run: Node) -> Dictionary:
 			"minimum_active":minimum_active,
 			"maximum_ranged_commits":maximum_ranged,
 			"maximum_denial_commits":maximum_denial,
+			"maximum_hostile_projectiles":maximum_hostile_projectiles,
 			"ranged_commit_cap":int(commit_caps["ranged"]),
 			"denial_commit_cap":int(commit_caps["denial"]),
+			"onboarding_complete":onboarding_qualified,
+			"normal_family_counts":normal_family_counts,
+			"composition_valid":composition_qualified,
+			"attack_commits_by_family":attack_commits,
+			"combat_activity_valid":combat_activity_qualified,
 			"allocations":allocation_qualification,
 			"samples":_production_pressure_samples.duplicate(true),
 		},
 	}
+
+
+static func _normal_pack_family_counts(packs: Array) -> Dictionary:
+	var result := {}
+	for pack_variant in packs:
+		var pack := Dictionary(pack_variant)
+		if StringName(pack.get("composition_kind", &"")) != &"normal":
+			continue
+		for identity_variant in Array(pack.get("identities", [])):
+			var family := StringName(String(identity_variant).get_slice(":", 0))
+			if family.is_empty():
+				continue
+			result[family] = int(result.get(family, 0)) + 1
+	return result
 
 
 func _production_commit_caps(run: Node) -> Dictionary:
@@ -924,7 +1008,7 @@ func _production_workload_fingerprint(run: Node, population: Dictionary) -> int:
 	# Keep the replay identity independent from runtime counters. Any authored
 	# pressure, cap, route, loadout, or input-contract change produces a new key.
 	return hash(var_to_str([
-		"production_replay_v1",
+		"production_replay_v2",
 		String(run.current_stage_id),
 		String(run.selected_run_difficulty),
 		String(run.selected_primary),

@@ -5,9 +5,11 @@ const FieldDropRules = preload("res://scripts/rewards/vehicle_field_drop_rules.g
 const Catalog = preload("res://scripts/vehicle/vehicle_stage_catalog.gd")
 const UpgradeCatalog = preload("res://scripts/cards/vehicle_upgrade_catalog.gd")
 const RunBuild = preload("res://scripts/cards/vehicle_run_build.gd")
-const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const LayoutGenerator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
+const ProgressionCapture = preload(
+	"res://scripts/diagnostics/vehicle_progression_telemetry_capture.gd"
+)
 
 var failures := PackedStringArray()
 
@@ -47,8 +49,8 @@ func _validate_stage_items() -> void:
 func _validate_experience_runtime() -> void:
 	var runtime := ExperienceRuntime.new()
 	var expected_requirements := [
-		14, 16, 18, 21, 25, 30, 36, 43, 50, 58,
-		66, 75, 85, 95, 106, 118, 130, 142, 156, 170,
+		14, 16, 18, 21, 25, 30, 34, 39, 44, 50,
+		56, 62, 69, 76, 83, 91, 99, 107, 116, 125,
 	]
 	for level_index in expected_requirements.size():
 		runtime.run_level = level_index + 1
@@ -73,6 +75,8 @@ func _validate_experience_runtime() -> void:
 		previous_requirement = requirement
 		previous_growth = growth
 	runtime.run_level = 70
+	_expect(runtime.required_experience() == 1030, "level 70 remains below the very-late cap")
+	runtime.run_level = 90
 	_expect(runtime.required_experience() == 1536, "very-late requirements respect the 1536-XP cap")
 	runtime.reset()
 	var empty_receipt := runtime.advance(0.0, Vector2.ZERO, 0.0, 0.0)
@@ -177,45 +181,47 @@ func _validate_experience_runtime() -> void:
 
 
 func _validate_route_level_cadence() -> void:
-	var runtime := ExperienceRuntime.new()
-	var layout := LayoutGenerator.generate(0xC4A2B0, Catalog.STAGE_IDS)
-	var total_experience := 0
-	var total_levels := 0
-	var expected_stage_levels := [16, 21, 26, 30, 33, 37, 40, 43, 46, 50, 53, 55]
-	for stage_index in Catalog.STAGE_IDS.size():
-		var stage_id := Catalog.STAGE_IDS[stage_index]
-		var stage_experience := 0
-		var counted_enemies := 0
-		for spec in Catalog.enemy_blueprint(stage_id):
-			if counted_enemies >= Catalog.quota(stage_id):
-				break
-			var definition := EnemyArchetypes.definition(StringName(spec["role"]))
-			var enemy := _enemy(
-				StringName(definition["health_class"]),
-				StringName(definition["behavior"])
-			)
-			stage_experience += FieldDropRules.experience_for_enemy(enemy)
-			counted_enemies += 1
-		for pickup in layout.pickup_blueprint(stage_id):
-			if StringName(pickup["kind"]) == &"experience_shard":
-				stage_experience += int(pickup.get("experience", 0))
-		var level_before := runtime.run_level
-		runtime.spawn_shard(Vector2.ZERO, stage_experience)
-		runtime.advance(0.0, Vector2.ZERO, 100.0, 0.0)
-		var levels_gained := runtime.run_level - level_before
-		total_experience += stage_experience
-		total_levels += levels_gained
+	var identity := {
+		"schema_version":1, "identity_status":"resolved",
+		"commit":"a".repeat(40), "ref":"fixture", "source_cleanliness":"clean",
+		"content_fingerprint":"b".repeat(64),
+	}
+	var bundle := ProgressionCapture.new().build("experience-validation", identity)
+	var stages: Array = bundle.get("stages", [])
+	var expected_stage_levels := [16, 22, 26, 30, 33, 36, 39, 42, 46, 49, 52, 55]
+	var expected_stage_experience := [
+		726, 633, 682, 741, 902, 956, 1037, 1112, 1569, 1642, 1687, 1811,
+	]
+	_expect(
+		bool(Dictionary(bundle.get("acceptance", {})).get("capture_valid", false)),
+		"the deterministic composed-identity progression trace is valid"
+	)
+	_expect(stages.size() == 12, "the campaign exposes twelve boss cycles")
+	for stage_index in mini(stages.size(), expected_stage_levels.size()):
+		var stage := Dictionary(stages[stage_index])
 		_expect(
-			runtime.run_level == expected_stage_levels[stage_index],
+			int(stage.get("level_reached", 0)) == expected_stage_levels[stage_index],
 			"stage %d reaches projected level %d (actual %d)" % [
-				stage_index + 1, expected_stage_levels[stage_index], runtime.run_level
+				stage_index + 1, expected_stage_levels[stage_index],
+				int(stage.get("level_reached", 0))
 			]
 		)
-		while runtime.consume_pending_level():
-			pass
-	_expect(Catalog.STAGE_IDS.size() == 12, "the campaign exposes twelve boss cycles")
-	_expect(total_experience == 20530, "the current twelve-cycle quota and authored-map path yields 20530 total XP (actual %d)" % total_experience)
-	_expect(total_levels == 54 and runtime.run_level == 55, "the smooth XP curve reaches level 55 with 54 rewards (actual %d / level %d)" % [total_levels, runtime.run_level])
+		_expect(
+			int(stage.get("stage_xp", 0)) == expected_stage_experience[stage_index],
+			"stage %d composed-identity trace yields %d XP" % [
+				stage_index + 1, expected_stage_experience[stage_index]
+			]
+		)
+	var run := Dictionary(bundle.get("run", {}))
+	_expect(
+		int(run.get("xp_collected", 0)) == 13498,
+		"the connected composed-identity route yields 13498 total XP"
+	)
+	_expect(
+		int(run.get("modal_opens", 0)) == 54
+			and int(run.get("level_reached", 0)) == 55,
+		"the corrected smooth XP curve reaches level 55 with 54 rewards"
+	)
 
 
 func _enemy(health_class: StringName, role: StringName, carrier_id: String = "") -> EnemyState:
