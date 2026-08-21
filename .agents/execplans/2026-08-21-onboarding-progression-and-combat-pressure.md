@@ -29,11 +29,12 @@ The canonical neutral name for the ranged ordinary family is emitter. The Korean
 - [x] Inspected the current stage authoring, squad construction, family and trait catalogs, movement policies, attack state machine, XP runtime, drop rewards, renderer, visual authority, retained captures, and performance logs.
 - [x] Compared local findings with relevant pacing, XP, VFX readability, and profiling references.
 - [x] Locked the design values and responsibility boundaries below.
+- [x] Removed predicted route geometry from hostile projectile startup descriptors, including the stage-8 broad barrage, while preserving source readiness and active damage truth.
 - [ ] Implement the terminology migration and semantic validators.
 - [ ] Implement onboarding, post-onboarding composition, family behavior, progression, pressure, and bombardment changes.
 - [ ] Capture valid gameplay telemetry and performance evidence, then update accepted product documentation.
 
-Implementation has not started. This document is the decision-complete execution contract.
+The projectile-route correction is implemented. The broader terminology, encounter, progression, pressure, bombardment, and performance phases remain the decision-complete execution contract below.
 
 ## Evidence Inspected
 
@@ -235,6 +236,23 @@ Keep the existing base requirement formula. Replace the current multipliers and 
 
 Set MAX_LEVEL_REQUIREMENT to 1,536 XP.
 
+The deterministic reward projection below assumes every stage quota is cleared, all ten 5-XP map shards are collected per stage, the planned post-onboarding composition and 4:3:3 trait bags are representative, and boss adds grant no XP. The stage-1 estimate includes the 60-kill tutorial and five-unit bridge. Boss adds can raise the result while missed shards lower it, so runtime outcomes should normally fall within one level of the estimate until telemetry replaces this model.
+
+| Stage cleared | Estimated stage XP | Cumulative XP | Expected level |
+| ---: | ---: | ---: | ---: |
+| 1 | 735 | 735 | 12 |
+| 2 | 675 | 1,410 | 15 |
+| 3 | 732 | 2,142 | 17 |
+| 4 | 789 | 2,931 | 19 |
+| 5 | 956 | 3,887 | 21 |
+| 6 | 1,020 | 4,907 | 22 |
+| 7 | 1,085 | 5,992 | 24 |
+| 8 | 1,149 | 7,141 | 25 |
+| 9 | 1,628 | 8,769 | 26 |
+| 10 | 1,715 | 10,484 | 28 |
+| 11 | 1,803 | 12,287 | 29 |
+| 12 | 1,891 | 14,178 | 31 |
+
 | Reached level | Proposed next requirement | Proposed cumulative XP | Proposed upgrade count |
 | ---: | ---: | ---: | ---: |
 | 5 | 25 | 94 | 4 |
@@ -340,13 +358,14 @@ Acceptance: threshold tests match every locked checkpoint, and valid full-run te
 
 - [ ] Apply ordinary and boss movement values and recovery/cadence values.
 - [ ] Apply projectile collision and visual scale together.
+- [x] Make every hostile projectile startup descriptor source-only: retain origin, committed direction, damage, affinity, lead time, and readiness, but never publish a predicted endpoint, corridor width, or future path. This includes the stage-8 broad barrage and alternating-sector projectile release.
 - [ ] Render hostile-area warning geometry before damage.
 - [ ] Apply the 0.75-second bombardment warning addition through one shared owner.
 - [ ] Implement two-band and three-band radial damage falloff and matching retained visual geometry.
 - [ ] Keep startup warnings and collision truth separate from effect pixels.
 - [ ] Validate warning-to-hit time, radial damage samples, visual footprint, and combat batch count.
 
-Acceptance: no bombardment can damage during warning; sampled center, middle, and edge points receive the exact locked scales; projectile visuals cover collision truth; ordinary and boss attack commits increase without reducing startup readability.
+Acceptance: no bombardment can damage during warning; sampled center, middle, and edge points receive the exact locked scales; projectile visuals cover collision truth; no hostile projectile startup descriptor or renderer exposes predicted route geometry; off-screen source readiness remains available; actual active beams and damage areas remain visible; ordinary and boss attack commits increase without reducing source readability.
 
 ### Phase 6 — Integrated validation, performance proof, and documentation
 

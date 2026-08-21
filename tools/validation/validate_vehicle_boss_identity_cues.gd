@@ -34,17 +34,23 @@ func _initialize() -> void:
 		var second_axis := (Vector2(boss.attack_telegraphs[1]["to"]) - Vector2(boss.attack_telegraphs[1]["from"])).normalized()
 		_expect(absf(first_axis.dot(second_axis)) <= 0.001, "Cross Beam corridors are perpendicular and form one X")
 	boss = _boss()
-	Telegraphs.refresh_boss(boss, "common_broad_barrage", Callable(self, "_resolve_path"), Callable(), 0)
-	var barrage_contract := boss.attack_telegraphs.size() == 12
+	Telegraphs.refresh_boss(boss, "common_broad_barrage", Callable(self, "_resolve_path"), Callable(), 7)
+	var barrage_contract := boss.attack_telegraphs.size() == 18
 	for cue in boss.attack_telegraphs:
 		barrage_contract = barrage_contract and (
 			StringName(cue["delivery"]) == &"projectile"
+			and StringName(cue["shape"]) == &"source"
 			and not cue.has("show_path")
+			and not cue.has("from")
+			and not cue.has("to")
+			and not cue.has("half_width")
+			and cue.has("origin")
+			and cue.has("direction")
 			and cue.has("row_delay")
 		)
 	_expect(
 		barrage_contract,
-		"opening broad barrage publishes all three four-shot startup rows"
+		"stage 8 broad barrage publishes three six-shot rows without future path geometry"
 	)
 	if not boss.attack_telegraphs.is_empty():
 		_expect(

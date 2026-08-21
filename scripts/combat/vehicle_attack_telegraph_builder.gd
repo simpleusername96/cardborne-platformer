@@ -104,8 +104,7 @@ static func refresh_boss(
 		for lane_offset in enemy.lane_centers:
 			var origin := Vector2(enemy.pos) + direction * 86.0 + tangent * float(lane_offset)
 			_append_projectile(
-				enemy, origin, direction, damage, BossPatterns.projectile_speed(pattern),
-				affinity, resolve_path
+				enemy, origin, direction, damage, affinity
 			)
 	elif kind in [&"fan", &"cross"]:
 		var offsets: Array = (
@@ -120,9 +119,7 @@ static func refresh_boss(
 				Vector2(enemy.pos) + direction * 72.0,
 				direction,
 				damage,
-				BossPatterns.projectile_speed(pattern),
-				affinity,
-				resolve_path
+				affinity
 			)
 	elif kind == &"cross_corridors":
 		for offset in [-PI * 0.25, PI * 0.25]:
@@ -165,8 +162,7 @@ static func refresh_boss(
 					direction = axis.rotated(deg_to_rad(21.0) * ratio)
 				var origin := Vector2(enemy.pos) + tangent * float(row["spacing"]) * centered + direction * 72.0
 				_append_projectile(
-					enemy, origin, direction, float(row["damage"]),
-					BossPatterns.projectile_speed(pattern), affinity, resolve_path
+					enemy, origin, direction, float(row["damage"]), affinity
 				)
 				enemy.attack_telegraphs[-1]["row_delay"] = float(row["at"])
 	elif kind == &"charge":
@@ -180,7 +176,7 @@ static func refresh_boss(
 			affinity,
 			charge_path
 		)
-		_append_boss_aimed_burst(enemy, pattern, damage * 0.55, resolve_path)
+		_append_boss_aimed_burst(enemy, pattern, damage * 0.55)
 	elif kind == &"beam":
 		_append_hostile_beam_topology(
 			enemy,
@@ -201,7 +197,7 @@ static func refresh_boss(
 			affinity
 		))
 		_append_boss_aimed_burst(
-			enemy, pattern, maxf(12.0, damage * 0.55), resolve_path
+			enemy, pattern, maxf(12.0, damage * 0.55)
 		)
 	elif kind == &"summon":
 		if damage > 0.0:
@@ -212,7 +208,7 @@ static func refresh_boss(
 				affinity
 			))
 			_append_boss_aimed_burst(
-				enemy, pattern, maxf(12.0, damage * 0.55), resolve_path
+				enemy, pattern, maxf(12.0, damage * 0.55)
 			)
 		enemy.attack_telegraphs.append({
 			"shape":&"support",
@@ -260,9 +256,7 @@ static func _append_ordinary_attack(
 			origin,
 			direction,
 			damage,
-			float(attack["speed"]),
-			affinity,
-			resolve_path
+			affinity
 		)
 	elif kind == &"charge":
 		_append_charge(
@@ -321,8 +315,7 @@ static func _append_charge(
 static func _append_boss_aimed_burst(
 	enemy: EnemyState,
 	pattern: String,
-	damage: float,
-	resolve_path: Callable
+	damage: float
 ) -> void:
 	for offset in [-0.13, 0.0, 0.13]:
 		var direction := Vector2(enemy.committed_dir).rotated(float(offset))
@@ -331,9 +324,7 @@ static func _append_boss_aimed_burst(
 			Vector2(enemy.pos) + direction * 76.0,
 			direction,
 			damage,
-			BossPatterns.projectile_speed(pattern),
-			BossPatterns.affinity(pattern),
-			resolve_path
+			BossPatterns.affinity(pattern)
 		)
 
 
@@ -399,26 +390,19 @@ static func _append_projectile(
 	origin: Vector2,
 	direction: Vector2,
 	damage: float,
-	base_speed: float,
-	affinity: StringName,
-	resolve_path: Callable
+	affinity: StringName
 ) -> void:
-	var radius := AttackContract.hostile_projectile_radius(damage)
-	var distance := (
-		EncounterDirector.effective_hostile_projectile_speed(base_speed)
-		* AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS
-	)
-	var to := _resolve_path(resolve_path, origin, direction, distance, radius)
-	enemy.attack_telegraphs.append(_corridor(
-		origin,
-		to,
-		AttackContract.projectile_danger_half_width(radius),
-		damage,
-		affinity,
-		&"projectile",
-		0.0,
-		AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS
-	))
+	# Projectile startup only exposes source readiness. Future path geometry is
+	# intentionally absent so no presentation consumer can redraw prediction.
+	enemy.attack_telegraphs.append({
+		"shape":&"source",
+		"delivery":&"projectile",
+		"origin":origin,
+		"direction":direction.normalized(),
+		"damage":damage,
+		"affinity":AttackContract.normalize_affinity(affinity),
+		"lead_seconds":AttackContract.PROJECTILE_TELEGRAPH_LEAD_SECONDS,
+	})
 
 
 static func _resolve_path(

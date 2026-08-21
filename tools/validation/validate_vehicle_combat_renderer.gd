@@ -617,15 +617,13 @@ func _run() -> void:
 	projectile_attacker.active = true
 	projectile_attacker.phase = &"startup"
 	projectile_attacker.attack_telegraphs = [{
-		"shape":&"corridor",
+		"shape":&"source",
 		"delivery":&"projectile",
-		"from":Vector2(330.0, 360.0),
-		"to":Vector2(510.0, 360.0),
-		"half_width":28.0,
+		"origin":Vector2(330.0, 360.0),
+		"direction":Vector2.RIGHT,
 		"damage":12.0,
 		"affinity":AttackContract.KINETIC,
 		"readiness":0.7,
-		"show_path":true,
 	}]
 	renderer.sync(
 		[projectile_attacker], no_projectiles, no_projectiles, [], [],
@@ -637,8 +635,7 @@ func _run() -> void:
 		"visible projectile attacks rely on muzzle direction and the projectile body"
 	)
 	projectile_attacker.pos = Vector2(-120.0, 360.0)
-	projectile_attacker.attack_telegraphs[0]["from"] = Vector2(-90.0, 360.0)
-	projectile_attacker.attack_telegraphs[0]["to"] = Vector2(90.0, 360.0)
+	projectile_attacker.attack_telegraphs[0]["origin"] = Vector2(-90.0, 360.0)
 	renderer.sync(
 		[projectile_attacker], no_projectiles, no_projectiles, [], [],
 		Rect2(0,0,1280,720), Vector2.ZERO, 0.0, true

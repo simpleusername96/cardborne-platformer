@@ -56,14 +56,18 @@ func _validate_ordinary(resolve_path: Callable, resolve_charge: Callable, player
 		_expect(not enemy.attack_telegraphs.is_empty(), "%s produces a committed startup route" % role)
 		for descriptor_variant in enemy.attack_telegraphs:
 			var descriptor := Dictionary(descriptor_variant)
-			_expect(StringName(descriptor.get("shape", &"")) in [&"corridor", &"area"], "%s route uses a supported footprint" % role)
+			_expect(StringName(descriptor.get("shape", &"")) in [&"source", &"corridor", &"area"], "%s route uses a supported footprint" % role)
 			_expect(float(descriptor.get("readiness", -1.0)) >= 0.0, "%s route carries readiness" % role)
-			if descriptor.get("shape", &"") == &"corridor":
+			if descriptor.get("delivery", &"") == &"projectile":
 				var expected_origin := enemy.pos
 				var attack := AttackContract.ordinary_attack(role)
-				if StringName(attack.get("kind", &"")) == &"projectile":
-					expected_origin += enemy.committed_dir * float(attack.get("origin_offset", 0.0))
-				_expect(Vector2(descriptor["from"]) == expected_origin, "%s route origin remains committed" % role)
+				expected_origin += enemy.committed_dir * float(attack.get("origin_offset", 0.0))
+				_expect(StringName(descriptor["shape"]) == &"source", "%s projectile warning is source-only" % role)
+				_expect(Vector2(descriptor["origin"]) == expected_origin, "%s projectile source remains committed" % role)
+				_expect(Vector2(descriptor["direction"]).is_equal_approx(enemy.committed_dir), "%s projectile source keeps its committed direction" % role)
+				_expect(not descriptor.has("from") and not descriptor.has("to") and not descriptor.has("half_width"), "%s projectile warning contains no future path geometry" % role)
+			elif descriptor.get("shape", &"") == &"corridor":
+				_expect(Vector2(descriptor["from"]) == enemy.pos, "%s route origin remains committed" % role)
 				_expect(float(descriptor["half_width"]) > 0.0, "%s route exposes a nonzero danger half-width" % role)
 				if role == &"ordinary_fixed_beam_01":
 					_expect(
@@ -107,7 +111,12 @@ func _validate_boss(resolve_path: Callable, resolve_charge: Callable, player: Ve
 			if delivery == &"area":
 				_expect(Vector2(descriptor["center"]) == enemy.committed_target, "boss area center stays committed")
 				_expect(is_equal_approx(float(descriptor["radius"]), BossPatterns.radius(pattern)), "boss area radius matches pattern")
-			elif delivery in [&"projectile", &"beam", &"charge"]:
+			elif delivery == &"projectile":
+				_expect(StringName(descriptor["shape"]) == &"source", "boss projectile warning is source-only")
+				_expect(Vector2(descriptor["origin"]).distance_to(enemy.pos) <= 90.0, "boss projectile origin stays within the committed muzzle envelope")
+				_expect(Vector2(descriptor["direction"]).is_normalized(), "boss projectile source keeps a normalized committed direction")
+				_expect(not descriptor.has("from") and not descriptor.has("to") and not descriptor.has("half_width"), "boss projectile warning contains no future path geometry")
+			elif delivery in [&"beam", &"charge"]:
 				var committed_origin := Vector2(
 					descriptor.get("beam_emitter", descriptor["from"])
 				)
@@ -177,11 +186,10 @@ func _validate_beam_topology_cycle(
 func _validate_offscreen_intersection() -> void:
 	var visible := Rect2(0.0, 0.0, 1280.0, 720.0)
 	var projectile := {
-		"shape":&"corridor",
+		"shape":&"source",
 		"delivery":&"projectile",
-		"from":Vector2(-180.0, 360.0),
-		"to":Vector2(160.0, 360.0),
-		"half_width":28.0,
+		"origin":Vector2(-180.0, 360.0),
+		"direction":Vector2.RIGHT,
 		"damage":12.0,
 		"readiness":0.5,
 	}
@@ -197,15 +205,18 @@ func _validate_offscreen_intersection() -> void:
 		) == CombatCuePolicy.MODE_NONE,
 		"visible projectile source relies on its muzzle and projectile body"
 	)
-	var charge := projectile.duplicate()
-	charge["delivery"] = &"charge"
+	var charge := {
+		"shape":&"corridor", "delivery":&"charge",
+		"from":Vector2(300.0, 360.0), "to":Vector2(620.0, 360.0),
+		"half_width":28.0, "damage":12.0, "readiness":0.5,
+	}
 	_expect(
 		CombatCuePolicy.telegraph_mode(
 			Vector2(300.0, 360.0), 26.0, &"startup", charge, visible
 		) == CombatCuePolicy.MODE_NONE,
 		"ordinary charge startup does not expose a movement route"
 	)
-	var beam := projectile.duplicate()
+	var beam := charge.duplicate()
 	beam["delivery"] = &"beam"
 	beam["active_width"] = 54.0
 	beam["affinity"] = AttackContract.ARC
