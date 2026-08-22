@@ -7,11 +7,16 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const RecallRuntime = preload(
 	"res://scripts/rewards/vehicle_recall_replenishment_runtime.gd"
 )
+const FeatureRun = preload(
+	"res://scripts/vehicle/vehicle_run_enemy_upgrade_devices.gd"
+)
+const FeatureScene = preload("res://scenes/run/VehicleRun.tscn")
 
 var failures: PackedStringArray = []
 
 
 func _initialize() -> void:
+	_validate_feature_scene_integration()
 	_validate_capture_and_activation()
 	_validate_player_owned_destruction()
 	_validate_stage_health_scaling()
@@ -23,6 +28,13 @@ func _initialize() -> void:
 	for failure in failures:
 		push_error(failure)
 	quit(1)
+
+
+func _validate_feature_scene_integration() -> void:
+	var run := FeatureScene.instantiate()
+	_expect(run is FeatureRun, "VehicleRun scene must instantiate the enemy-upgrade feature layer.")
+	if run != null:
+		run.free()
 
 
 func _validate_capture_and_activation() -> void:

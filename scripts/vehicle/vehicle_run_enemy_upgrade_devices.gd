@@ -4,7 +4,6 @@ extends "res://scripts/vehicle/vehicle_run.gd"
 ## Feature layer for the map-movement experiment. The base run and retired neutral
 ## facility implementation remain intact and can be restored by switching the scene script.
 
-const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyUpgradeRuntime = preload(
 	"res://scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd"
 )
@@ -122,7 +121,7 @@ func _desired_enemy_velocity(enemy: EnemyState, recovering: bool) -> Vector2:
 		and _enemy_upgrade_runtime.is_enemy_assigned(enemy.id)
 		and not recovering
 	):
-		var offset := _enemy_upgrade_runtime.active_position() - enemy.pos
+		var offset: Vector2 = _enemy_upgrade_runtime.active_position() - enemy.pos
 		if offset.length() <= EnemyUpgradeRuntime.CAPTURE_RADIUS * OBJECTIVE_STOP_RATIO:
 			return Vector2.ZERO
 		return (
@@ -145,7 +144,7 @@ func _apply_engagement_gap_steering(
 
 func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
 	if _enemy_upgrade_runtime != null and _enemy_upgrade_runtime.is_enemy_assigned(enemy.id):
-		var facing := _enemy_upgrade_runtime.active_position() - enemy.pos
+		var facing: Vector2 = _enemy_upgrade_runtime.active_position() - enemy.pos
 		if not facing.is_zero_approx():
 			enemy.presentation_facing = facing.normalized()
 		return
