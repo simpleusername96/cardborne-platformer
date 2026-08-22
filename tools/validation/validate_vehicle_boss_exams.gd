@@ -98,22 +98,29 @@ func _validate_stage_ten_reflection() -> void:
 	runtime.configure(&"stage_10")
 	runtime.begin_phase(1)
 	var profile := Catalog.defense_profile(&"stage_10")
-	var gap_direction := Vector2.RIGHT.rotated(float(profile["gap_arc"]) * 0.5)
-	var segment_direction := Vector2.RIGHT.rotated(
+	var inactive_segment_direction := Vector2.RIGHT.rotated(
 		float(profile["gap_arc"]) + float(profile["segment_arc"]) * 0.5
 	)
 	_expect(
-		not runtime.reflects_projectile(-segment_direction),
+		not runtime.reflects_projectile(-inactive_segment_direction),
 		"Stage 10 reflects nothing during its initial down window"
 	)
 	runtime.advance(14.0)
 	_expect(runtime.state() == &"shield_cue", "the final exposed second is an inactive segmented activation cue")
 	_expect(
-		not runtime.reflects_projectile(-segment_direction),
+		not runtime.reflects_projectile(-inactive_segment_direction),
 		"the activation cue remains fully damageable"
 	)
 	runtime.advance(1.0)
 	_expect(runtime.state() == &"shield_up", "Stage 10 reflection activates after fifteen exposed seconds")
+	var active_rotation := runtime.shield_rotation
+	var gap_direction := Vector2.RIGHT.rotated(
+		active_rotation + float(profile["gap_arc"]) * 0.5
+	)
+	var segment_direction := Vector2.RIGHT.rotated(
+		active_rotation + float(profile["gap_arc"])
+			+ float(profile["segment_arc"]) * 0.5
+	)
 	_expect(
 		runtime.reflects_projectile(-segment_direction)
 			and not runtime.reflects_projectile(-gap_direction),
