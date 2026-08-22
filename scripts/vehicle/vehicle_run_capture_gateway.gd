@@ -909,26 +909,6 @@ func _publish_threat_fixture(
 func _capture_field_item_evidence() -> void:
 	prepare_stage(0)
 	_run._clear_enemies()
-	var facility_positions := [
-		_run.player_position + Vector2(-310.0, -120.0),
-		_run.player_position + Vector2(0.0, 210.0),
-		_run.player_position + Vector2(330.0, -80.0),
-	]
-	_run.mystery_device_runtime.configure([
-		{"id":&"capture_facility_repair", "pos":facility_positions[0]},
-		{"id":&"capture_facility_cryo", "pos":facility_positions[1]},
-		{"id":&"capture_facility_lava", "pos":facility_positions[2]},
-	], 1701, _run.current_stage_id)
-	var facility_outcomes := [&"repair", &"cryo", &"lava"]
-	for index in _run.mystery_device_runtime.devices.size():
-		_run.mystery_device_runtime.devices[index]["outcome"] = facility_outcomes[index]
-		if index > 0:
-			_run.mystery_device_runtime.devices[index]["state"] = &"active"
-			_run.mystery_device_runtime.devices[index]["health"] = 0.0
-			_run.mystery_device_runtime.devices[index]["active_remaining"] = (
-				_run.mystery_device_runtime.ACTIVE_DURATION_SECONDS
-				* (0.67 if index == 1 else 0.33)
-			)
 	_run.pickups.clear()
 	_run.pickups.append({"id":"capture_recall", "kind":&"experience_recall", "pos":_run.player_position + Vector2(-150.0, 45.0), "active":true, "pulse":0.0, "heal_amount":0.0})
 	_run.experience_runtime.clear_shards()
@@ -1453,50 +1433,71 @@ func _capture_exact_area_effect_evidence() -> void:
 	await _run.get_tree().process_frame
 	_save_capture("09z-explosive-seeker-impact.png")
 
-	var mystery_profiles := [
-		[&"lava", 0.40, "09v-facility-lava.png"],
-		[&"cryo", 0.50, "09w-facility-cryo.png"],
-		[&"weakpoint", 0.35, "09y-facility-weakpoint.png"],
-	]
 	if settings != null:
 		settings.reduced_motion = false
-	var ready_center := _prepare_exact_area_scene(1.0)
-	_run.player_position = ready_center + Vector2(0.0, -130.0)
+	prepare_stage(1, true)
+	_run._clear_enemies()
+	_run._clear_projectiles()
+	_run._clear_effects()
+	var ready_center := Rules.world_rect(_run.current_stage_id).get_center()
+	_run.player_position = ready_center
+	_run._camera.position = ready_center
+	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 	_run.mystery_device_runtime.configure(
-		[{"id":&"capture_mystery_ready", "pos":ready_center}],
-		1701,
+		[
+			{"id":&"capture_upgrade_northwest", "pos":ready_center + Vector2(-360.0, -190.0)},
+			{"id":&"capture_upgrade_northeast", "pos":ready_center + Vector2(360.0, -190.0)},
+			{"id":&"capture_upgrade_southwest", "pos":ready_center + Vector2(-360.0, 190.0)},
+			{"id":&"capture_upgrade_southeast", "pos":ready_center + Vector2(360.0, 190.0)},
+			{"id":&"capture_upgrade_west", "pos":ready_center + Vector2(-620.0, 0.0)},
+			{"id":&"capture_upgrade_east", "pos":ready_center + Vector2(620.0, 0.0)},
+		],
+		2702,
 		_run.current_stage_id
+	)
+	_run.mystery_device_runtime.refresh_publication(
+		_run._visible_world_rect(0.0), _run.player_position
 	)
 	_run.capture_set_mode(&"paused")
 	_refresh_combat_capture()
 	await _run.get_tree().process_frame
-	_save_capture("09x-mystery-device-ready.png")
-	for profile_variant in mystery_profiles:
-		var profile := Array(profile_variant)
-		var outcome := StringName(profile[0])
-		var center := _prepare_exact_area_scene(float(profile[1]))
-		# Keep the player visible but off the device center so the reviewed outcome
-		# symbol remains inspectable in deterministic capture evidence.
-		_run.player_position = center + Vector2(0.0, -130.0)
-		_run.mystery_device_runtime.configure(
-			[{"id":&"capture_mystery", "pos":center}],
-			1701,
-			_run.current_stage_id
-		)
-		_run.mystery_device_runtime.devices[0]["outcome"] = outcome
-		_run.mystery_device_runtime.devices[0]["state"] = &"active"
-		_run.mystery_device_runtime.devices[0]["health"] = 0.0
-		_run.mystery_device_runtime.devices[0]["active_remaining"] = (
-			_run.mystery_device_runtime.ACTIVE_DURATION_SECONDS * 0.65
-		)
-		var radius := float(
-			_run.mystery_device_runtime.OUTCOME_PROFILE[outcome]["radius"]
-		)
-		_add_exact_area_reference_markers(center, radius, radius)
-		_run.capture_set_mode(&"paused")
-		_refresh_combat_capture()
-		await _run.get_tree().process_frame
-		_save_capture(String(profile[2]))
+	_save_capture("09v-enemy-upgrade-devices-ready.png")
+	var channel_device: Dictionary = {}
+	for device_variant in _run.mystery_device_runtime.devices:
+		var device := Dictionary(device_variant)
+		if bool(device.get("published", false)):
+			channel_device = device
+			break
+	if channel_device.is_empty():
+		push_error("Enemy upgrade capture requires one published device")
+		if settings != null:
+			settings.reduced_motion = original_reduced_motion
+		_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
+		return
+	_run.player_position = Vector2(channel_device["position"]) + Vector2(0.0, -240.0)
+	_run._camera.position = Vector2(channel_device["position"])
+	_refresh_combat_capture()
+	await _run.get_tree().process_frame
+	_save_capture("09w-enemy-upgrade-device-ready-close.png")
+	channel_device["capture_count"] = (
+		_run.mystery_device_runtime.REQUIRED_ENEMY_COUNT
+	)
+	channel_device["capture_elapsed"] = (
+		_run.mystery_device_runtime.CAPTURE_SECONDS * 0.75
+	)
+	var assigned_enemy_ids := {}
+	for index in _run.mystery_device_runtime.REQUIRED_ENEMY_COUNT:
+		assigned_enemy_ids["capture_channel_%d" % index] = true
+	channel_device["assigned_enemy_ids"] = assigned_enemy_ids
+	_refresh_combat_capture()
+	await _run.get_tree().process_frame
+	_save_capture("09x-enemy-upgrade-device-channel.png")
+	channel_device["hit_flash_remaining"] = (
+		_run.mystery_device_runtime.UPGRADE_HIT_FLASH_SECONDS
+	)
+	_refresh_combat_capture()
+	await _run.get_tree().process_frame
+	_save_capture("09y-enemy-upgrade-device-hit.png")
 	if settings != null:
 		settings.reduced_motion = original_reduced_motion
 	_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
