@@ -1,8 +1,8 @@
 name: Apply Boss Implementation
 
 on:
-  push:
-    branches: [codex/boss-shared-pattern-defense-rules]
+  pull_request:
+    branches: [master]
     paths:
       - ".agents/tmp/apply/**"
       - ".github/workflows/branch-source-snapshot.yml"
@@ -11,12 +11,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: apply-boss-implementation-${{ github.ref }}
+  group: apply-boss-implementation-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   apply:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'codex/boss-shared-pattern-defense-rules' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
