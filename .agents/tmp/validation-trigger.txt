@@ -1,0 +1,2 @@
+Validation checkpoint for the implemented shared boss-pattern and segmented-defense branch.
+Remove this file after the final workflow and evidence review.
