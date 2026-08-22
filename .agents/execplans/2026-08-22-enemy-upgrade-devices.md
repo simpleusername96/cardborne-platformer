@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 created: 2026-08-22
 updated: 2026-08-22
 ---
@@ -109,7 +109,7 @@ Locked decisions:
     visual-replacement workbench.
   - Accept when every candidate is readable at intended size and remains outside the
     production manifest.
-- [ ] **C4 — Integration and release gates**
+- [x] **C4 — Integration and release gates**
   - Run the focused validators, one production Web export, and the applicable bounded
     workload check after the implementation is coherent.
   - Accept only exact partial-pass labels; do not claim release performance without
@@ -118,10 +118,23 @@ Locked decisions:
 ## Progress and Next Steps
 
 - Canonical progress: the continuation task checkboxes above.
-- Current phase: C4.
-- Next task: complete the integration, quality, Web-export, and bounded workload gates.
-- Last completed gates: visual-authority, guidebook, and bilingual localization
-  validators pass after the canonical spec and Field Object integration updates.
+- Current phase: complete.
+- Next task: await exact user candidate selection before any production visual switch.
+- Completed gates: device, encounter pacing, spawn composition, guidebook,
+  bilingual localization, active-run clock, full Run, and visual-authority validators;
+  Godot import; four-file production Web export; `git diff --check`; and the bounded
+  headless pressure sample.
+- Bounded pressure result: `active_capped=72`, `cap=72`, `shards=192`,
+  `queued=1`, `steps=300`. This excludes rendering and complete frame orchestration
+  and is not a release-performance pass.
+- Quality post-pass corrected stale guidebook ownership, boss-summon upgrade leakage,
+  unrelated seeker-impact reuse, device bobbing, incomplete diagnostic snapshots,
+  and stale general-run/pressure-harness assumptions. No further task-owned
+  responsibility or failure-path issue remains.
+- The broad visual-replacement-workbench validator still reports 30 pre-existing
+  unassigned trait-family production PNGs. `replacement-workbench.json` is unchanged
+  from `master`, and none of the three review-only device candidates appears in that
+  failure. This is unrelated baseline inventory debt and was not expanded into this task.
 - Update rule: record each checkpoint result here before moving to the next task.
 
 ## Review-only Candidate Evidence
