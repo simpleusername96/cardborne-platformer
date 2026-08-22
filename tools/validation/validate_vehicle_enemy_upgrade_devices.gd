@@ -121,12 +121,12 @@ func _validate_stage_health_scaling() -> void:
 
 func _validate_recall_frequency() -> void:
 	_expect(
-		is_equal_approx(RecallRuntime.START_SECONDS, 45.0),
-		"Recall replenishment must begin at 45 active-run seconds."
+		is_equal_approx(RecallRuntime.START_SECONDS, 90.0),
+		"Recall replenishment must begin at 90 active-run seconds."
 	)
 	_expect(
-		is_equal_approx(RecallRuntime.INTERVAL_SECONDS, 15.0),
-		"Recall replenishment interval must be 15 seconds."
+		is_equal_approx(RecallRuntime.INTERVAL_SECONDS, 30.0),
+		"Recall replenishment interval must be 30 seconds."
 	)
 
 

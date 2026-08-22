@@ -1,6 +1,6 @@
 ---
 type: plan
-status: completed
+status: active
 created: 2026-08-22
 updated: 2026-08-22
 ---
@@ -68,3 +68,60 @@ Manual checks:
 6. Player attacks destroy the device; hostile attacks do not.
 7. A new device appears at another unresolved socket after the delay.
 8. Recall pickups replenish at twice the previous cadence when below the low-water mark.
+
+## Canonical Default Continuation
+
+The user accepted enemy upgrade devices as the canonical field-device system. The
+neutral-facility runtime and approved assets remain in the repository as retired,
+non-published fallback material; they are not deleted or reused as the production
+identity of the hostile device.
+
+Locked decisions:
+
+- Keep `VehicleRunEnemyUpgradeDevices` as the default run scene layer.
+- Restore recall replenishment to the independent canonical `90s` initial / `30s`
+  retry policy; the branch's `45s/15s` experiment is not part of this feature.
+- Give every cycle the late-cycle live-density contract: materialized cap `72` and
+  reserve-backed refill floor `56`.
+- Preserve early tiers, threat budgets, ranged/denial commit caps, defeat quotas,
+  and authored reserve totals so higher density does not import late-cycle damage
+  pressure into early play.
+- Preserve Stage 1 teaching compositions but remove full-clear defeat gates; admit
+  those packets sequentially under the same `72/56` capacity contract.
+- Create three transparent PNG candidates for a new hostile device identity. Keep
+  them review-only until the user selects an exact candidate; do not promote a
+  candidate to the production manifest in this phase.
+
+## Continuation Tasks
+
+- [x] **C1 — Canonical gameplay and density**
+  - Change the encounter pressure owner and Stage 1 admission gates.
+  - Restore recall replenishment to `90s/30s`.
+  - Accept when focused encounter, composition, recall, and device validators pass.
+- [ ] **C2 — Canonical product and visual contracts**
+  - Replace active neutral-facility requirements with enemy upgrade-device rules.
+  - Preserve retired implementation and asset history explicitly.
+  - Accept when doc and visual-authority validation pass.
+- [ ] **C3 — Review-only PNG candidates**
+  - Generate three distinct transparent candidates with the canonical sheet supplied
+    through ImageGen's image-reference input.
+  - Record prompts, hashes, authority evidence, and pending approval status in the
+    visual-replacement workbench.
+  - Accept when every candidate is readable at intended size and remains outside the
+    production manifest.
+- [ ] **C4 — Integration and release gates**
+  - Run the focused validators, one production Web export, and the applicable bounded
+    workload check after the implementation is coherent.
+  - Accept only exact partial-pass labels; do not claim release performance without
+    an eligible clean native/Web performance scenario.
+
+## Progress and Next Steps
+
+- Canonical progress: the continuation task checkboxes above.
+- Current phase: C2.
+- Next task: replace active neutral-facility product and visual rules with the
+  canonical enemy upgrade-device contract while retaining retired sources.
+- Last completed gate: encounter pacing, spawn composition, enemy upgrade-device,
+  and active-run-clock validators pass for the `72/56` density and `90s/30s`
+  recall contracts.
+- Update rule: record each checkpoint result here before moving to the next task.

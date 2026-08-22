@@ -11,8 +11,8 @@ const EXPECTED_MOBILE_COUNTS := [260, 300, 340, 390, 440, 500, 560, 630, 700, 77
 const EXPECTED_QUOTAS := [90, 99, 108, 117, 126, 135, 144, 153, 162, 171, 180, 189]
 const EXPECTED_HARD_MATERIALIZED_CAPS := [6, 44, 56, 64, 72]
 const EXPECTED_HARD_AUTHORED_PRESSURE_CAPS := [6, 124, 172, 224, 276]
-const EXPECTED_STAGE_MATERIALIZED_CAPS := [32, 44, 56, 64, 72, 72, 72, 72, 72, 72, 72, 72]
-const EXPECTED_STAGE_REFILL_FLOORS := [12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56]
+const EXPECTED_STAGE_MATERIALIZED_CAPS := [72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72]
+const EXPECTED_STAGE_REFILL_FLOORS := [56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56]
 const EXPECTED_STAGE_THREAT_BUDGETS := [1.0, 2.0, 3.0, 3.75, 4.5, 5.0, 5.5, 6.0, 6.25, 6.5, 6.75, 7.0]
 const EXPECTED_STAGE_RANGED_CAPS := [3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4]
 const EXPECTED_STAGE_DENIAL_CAPS := [2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3]
@@ -118,15 +118,21 @@ func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: 
 			break
 	_expect(opening_spawns == expected_opening_spawns, "%s emits its complete opening packet before the next gate" % stage_id)
 	if stage_index == 0:
-		var emitted_before_gate := Array(runtime.debug_snapshot()["stage_emitted_packs"]).size()
-		for _blocked_step in 30:
+		for _continuation_step in 120:
 			runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, visible_world)
+			if Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() >= 6:
+				break
 		_expect(
-			emitted_before_gate == 3
-				and Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() == 3,
-			"stage_1 holds the next lesson until the 15-defeat gate"
+			Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() >= 6,
+			"stage_1 admits later lessons without a full-clear defeat gate"
 		)
 		runtime.stop_spawning()
+		_expect(
+			not runtime.spawning_enabled()
+				and runtime.debug_snapshot()["queued_spawns"] == 0
+				and runtime.debug_snapshot()["reserved_arrival_slots"] == 0,
+			"stage_1 explicit teardown can stop future arrivals"
+		)
 		return
 	var cue_count := 0
 	var maximum_tick_spawns := 0

@@ -48,12 +48,14 @@ func _validate_onboarding_authoring() -> void:
 				)
 	_expect(actual_kinds == expected_kinds, "onboarding emits four three-squad lessons and one bridge")
 	_expect(onboarding_units == 65, "onboarding replaces exactly 65 authored slots")
-	var expected_triggers := [0, 15, 30, 45, 60]
+	var expected_triggers := [0, 0, 0, 0, 60]
 	for packet_index in 5:
 		var trigger := Dictionary(Dictionary(packets[packet_index])["trigger"])
 		_expect(
-			int(trigger.get("at", 0)) == expected_triggers[packet_index],
-			"onboarding trigger %d uses the exact defeat gate" % packet_index
+			int(trigger.get("at", 0)) == expected_triggers[packet_index]
+				and StringName(trigger.get("kind", &""))
+					== (&"time" if packet_index < 4 else &"ordinary_defeats"),
+			"onboarding trigger %d preserves the dense teaching sequence" % packet_index
 		)
 
 
@@ -154,9 +156,10 @@ func _validate_runtime_gates() -> void:
 	)
 	var all_spawns: Array[Dictionary] = []
 	_pump_until_pack_count(runtime, tactical, 3, all_spawns)
+	_pump_until_pack_count(runtime, tactical, 12, all_spawns)
 	_expect(
-		Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() == 3,
-		"the second lesson stays blocked before 15 defeats"
+		Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() >= 12,
+		"all four teaching lessons admit without full-clear defeat gates"
 	)
 	for gate in [15, 30, 45, 60]:
 		while int(runtime.debug_snapshot()["run_ordinary_defeats"]) < gate:

@@ -3,8 +3,8 @@ extends RefCounted
 
 ## Owns the bounded, boss-independent replenishment policy for recall pickups.
 
-const START_SECONDS := 45.0
-const INTERVAL_SECONDS := 15.0
+const START_SECONDS := 90.0
+const INTERVAL_SECONDS := 30.0
 const LOW_WATERMARK := 2
 const ACTIVE_CAP := 4
 
