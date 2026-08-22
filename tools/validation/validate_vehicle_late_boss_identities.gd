@@ -2,6 +2,7 @@ extends SceneTree
 
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
 
 var failures: Array[String] = []
@@ -52,13 +53,20 @@ func _validate_crossing_weave(run) -> void:
 	for zone in run.denied_zones:
 		valid_wall_zones = valid_wall_zones and (
 			StringName(zone["shape"]) == &"corridor"
-			and Vector2(zone["motion"]).length() > 0.0
+			and is_equal_approx(
+				Vector2(zone["motion"]).length(),
+				LateBossMechanics.crossing_wall_speed()
+			)
+			and is_equal_approx(
+				float(zone["damage"]),
+				LateBossMechanics.crossing_wall_damage(float(event["damage"]))
+			)
 			and is_equal_approx(float(zone["safe_gap"]), 200.0)
 			and not zone.has("beam_emission_mode")
 		)
 	_expect(
 		valid_wall_zones,
-		"Stage 7 Boss walls expose collision-true moving gaps without beam semantics"
+		"Stage 7 Boss walls keep their geometry while speed and damage use the exact 0.70 scales"
 	)
 	_expect(
 		float(run.denied_zones[4]["warning"])

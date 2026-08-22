@@ -6,6 +6,7 @@ extends RefCounted
 
 const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
+const PhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
@@ -13,6 +14,8 @@ const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages
 const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 
 const MAX_PENDING_RADIAL_VOLLEYS := 4
+const COMMON_ATTACKS_BEFORE_SIGNATURE := 2
+const SQUAD_INTERVAL_SECONDS := 10.0
 const ACTION_NONE: StringName = &""
 const ACTION_REPOSITION: StringName = &"reposition"
 const ACTION_SELECT_DIRECT: StringName = &"select_direct"
@@ -42,6 +45,11 @@ var stage_index := 0
 var autonomous_timer := 3.2
 var autonomous_index := 0
 var autonomous_serial := 0
+var common_index := 0
+var signature_index := 0
+var common_attacks_since_signature := 0
+var squad_timer := SQUAD_INTERVAL_SECONDS
+var squad_serial := 0
 var finite_summons_remaining := 6
 var _pending_radial_volleys: Array[Dictionary] = []
 
@@ -52,9 +60,18 @@ func configure(next_stage_id: StringName) -> void:
 		BossProfiles.stage_index_from_id(stage_id)
 		if CombatStages.has_boss(stage_id) else -1
 	)
-	autonomous_timer = float(BossProfiles.profile(stage_index).get("initial_autonomous_delay", 0.0))
+	autonomous_timer = (
+		float(BossProfiles.profile(stage_index).get("initial_autonomous_delay", 0.0))
+		if not Patterns.autonomous_sequence(stage_id).is_empty()
+		else INF
+	)
 	autonomous_index = 0
 	autonomous_serial = 0
+	common_index = 0
+	signature_index = 0
+	common_attacks_since_signature = 0
+	squad_timer = SQUAD_INTERVAL_SECONDS
+	squad_serial = 0
 	finite_summons_remaining = 6
 	_pending_radial_volleys.clear()
 
@@ -99,18 +116,31 @@ func read_gap(phase: int) -> float:
 
 
 func select_direct(boss: VehicleEnemyState) -> String:
-	var sequence := Patterns.sequence(stage_id, boss.boss_phase)
-	if sequence.is_empty():
+	var common := Patterns.common_sequence(stage_id, boss.boss_phase)
+	var signatures := Patterns.signature_sequence(stage_id, boss.boss_phase)
+	if common.is_empty() and signatures.is_empty():
 		return ""
-	var candidate := String(sequence[boss.pattern_index % sequence.size()])
+	var choose_signature := (
+		not signatures.is_empty()
+		and common_attacks_since_signature >= COMMON_ATTACKS_BEFORE_SIGNATURE
+	)
+	var sequence: Array[String] = signatures if choose_signature else common
+	if sequence.is_empty():
+		sequence = signatures
+		choose_signature = true
+	var cursor := signature_index if choose_signature else common_index
+	var candidate := String(sequence[cursor % sequence.size()])
+	cursor += 1
+	if candidate == String(boss.last_pattern) and sequence.size() > 1:
+		candidate = String(sequence[cursor % sequence.size()])
+		cursor += 1
+	if choose_signature:
+		signature_index = cursor
+		common_attacks_since_signature = 0
+	else:
+		common_index = cursor
+		common_attacks_since_signature += 1
 	boss.pattern_index += 1
-	if candidate == String(boss.last_pattern):
-		for offset in sequence.size():
-			var alternate := String(sequence[(boss.pattern_index + offset) % sequence.size()])
-			if alternate != String(boss.last_pattern):
-				candidate = alternate
-				boss.pattern_index += offset + 1
-				break
 	return candidate
 
 
@@ -372,11 +402,12 @@ func advance_autonomous(
 	player_position: Vector2
 ) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
-	autonomous_timer -= delta
-	if autonomous_timer > 0.0:
-		return events
 	var sequence := Patterns.autonomous_sequence(stage_id)
 	if sequence.is_empty():
+		autonomous_timer = INF
+		return events
+	autonomous_timer -= maxf(0.0, delta)
+	if autonomous_timer > 0.0:
 		return events
 	var pattern := String(sequence[autonomous_index % sequence.size()])
 	autonomous_index += 1
@@ -415,6 +446,29 @@ func advance_autonomous(
 	return events
 
 
+func advance_squad(
+	delta: float,
+	boss: VehicleEnemyState,
+	major_signature_active: bool = false
+) -> Dictionary:
+	squad_timer = maxf(0.0, squad_timer - maxf(0.0, delta))
+	if squad_timer > 0.0 or major_signature_active:
+		return {}
+	var roles := PhaseCatalog.squad_roles(stage_id, boss.boss_phase)
+	if roles.is_empty():
+		squad_timer = SQUAD_INTERVAL_SECONDS
+		return {}
+	squad_serial += 1
+	squad_timer = SQUAD_INTERVAL_SECONDS
+	return {
+		"id":"boss_squad_%d" % squad_serial,
+		"pattern":&"common_squad_call",
+		"roles":roles,
+		"tactic_id":PhaseCatalog.squad_tactic_id(stage_id, boss.boss_phase),
+		"phase":boss.boss_phase,
+	}
+
+
 func snapshot() -> Dictionary:
 	return {
 		"stage_id":stage_id,
@@ -422,6 +476,11 @@ func snapshot() -> Dictionary:
 		"profile":BossProfiles.profile(stage_index).duplicate(true),
 		"autonomous_timer":autonomous_timer,
 		"autonomous_index":autonomous_index,
+		"common_index":common_index,
+		"signature_index":signature_index,
+		"common_attacks_since_signature":common_attacks_since_signature,
+		"squad_timer":squad_timer,
+		"squad_serial":squad_serial,
 		"finite_summons_remaining":finite_summons_remaining,
 		"pending_radial_volley_count":_pending_radial_volleys.size(),
 	}

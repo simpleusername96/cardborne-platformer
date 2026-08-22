@@ -1,0 +1,66 @@
+name: Apply Boss Shared Pattern Plan
+
+on:
+  push:
+    branches:
+      - codex/boss-shared-pattern-defense-rules
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-boss-shared-pattern-plan
+  cancel-in-progress: false
+
+jobs:
+  apply-plan:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out branch head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: codex/boss-shared-pattern-defense-rules
+          fetch-depth: 0
+
+      - name: Apply active English ExecPlan
+        run: python3 tools/migrations/apply_boss_shared_pattern_plan.py
+
+      - name: Check generated patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git status --short
+          test -f scripts/bosses/vehicle_boss_progression_catalog.gd
+          test -f tools/validation/validate_vehicle_boss_shared_pattern_defense_rules.gd
+          grep -q 'BOSS_DISTANCE_GROWTH_KIND' scripts/combat/vehicle_projectile_state.gd
+          grep -q 'STAGE_7_WALL_SPEED_SCALE := 0.70' scripts/bosses/vehicle_late_boss_mechanics.gd
+          grep -q 'boss_shield_runtime.reflects_projectile' scripts/vehicle/vehicle_run.gd
+
+      - name: Commit implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'The active ExecPlan is already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            scripts/bosses/vehicle_boss_progression_catalog.gd \
+            scripts/bosses/vehicle_boss_patterns.gd \
+            scripts/bosses/vehicle_boss_runtime.gd \
+            scripts/bosses/vehicle_boss_shield_runtime.gd \
+            scripts/bosses/vehicle_late_boss_mechanics.gd \
+            scripts/combat/vehicle_projectile_state.gd \
+            scripts/vehicle/vehicle_run.gd \
+            scripts/presentation/vehicle_combat_renderer.gd \
+            tools/validation/validate_vehicle_boss_shared_pattern_defense_rules.gd \
+            tools/validation/validate_vehicle_boss_shared_pattern_defense_rules.gd.uid \
+            docs/product/vehicle_game_spec.md \
+            docs/design/VISUAL_SYSTEM.md
+          git commit -m 'feat(boss): apply shared pattern and defense rules'
+          git push origin HEAD:codex/boss-shared-pattern-defense-rules

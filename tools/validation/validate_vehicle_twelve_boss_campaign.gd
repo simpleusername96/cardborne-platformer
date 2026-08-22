@@ -17,14 +17,17 @@ func _initialize() -> void:
 		var stage_id := Stages.STAGE_IDS[index]
 		_expect(Stages.has_boss(stage_id), "%s is quota-gated by a boss" % stage_id)
 		_expect(not Phases.definition(stage_id).is_empty(), "%s has a boss identity" % stage_id)
-		_expect(Patterns.sequence(stage_id).size() == 5, "%s selects five direct patterns" % stage_id)
+		var common := Patterns.common_sequence(stage_id)
+		var signatures := Patterns.signature_sequence(stage_id)
 		_expect(
-			(Patterns.sequence(stage_id).count("common_charge") == 1 and Patterns.sequence(stage_id).count("common_broad_barrage") == 1)
-				if index < 8 else (
-					Patterns.sequence(stage_id).count("common_charge") == 0
-					and Patterns.sequence(stage_id).count("common_broad_barrage") == 0
-				),
-			"%s has the authored common-pattern policy" % stage_id
+			Patterns.sequence(stage_id) == common + signatures,
+			"%s keeps direct common and signature selections separate" % stage_id
+		)
+		_expect(
+			common.size() == (4 if index == 0 else 6)
+				and common.count("common_charge") == 1
+				and common.count("common_broad_barrage") == 1,
+			"%s retains its cumulative common-pattern policy" % stage_id
 		)
 		var rows := Patterns.broad_barrage_rows(index, Vector2.RIGHT, Patterns.barrage_mode(stage_id))
 		var expected_count := 4 if index <= 2 else (5 if index <= 5 else 6)
@@ -35,8 +38,26 @@ func _initialize() -> void:
 					and BossProfiles.move_speed(index) > BossProfiles.move_speed(index - 1),
 				"%s has stronger independently authored core stats" % stage_id
 			)
-	_expect(Phases.uses_shield(&"stage_3"), "stage 3 boss retains its offensive segmented defense")
-	_expect(not Phases.uses_shield(&"stage_1") and not Phases.uses_shield(&"stage_5") and not Phases.uses_shield(&"stage_12"), "other bosses do not inherit a global shield")
+	_expect(
+		Phases.uses_shield(&"stage_3")
+			and Phases.defense_effect(&"stage_3") == &"guard",
+		"Stage 3 retains its offensive segmented guard"
+	)
+	_expect(
+		Phases.uses_shield(&"stage_10")
+			and Phases.defense_effect(&"stage_10") == &"reflect",
+		"Stage 10 reflection is a segmented defense"
+	)
+	_expect(
+		not Phases.uses_shield(&"stage_1")
+			and not Phases.uses_shield(&"stage_5")
+			and not Phases.uses_shield(&"stage_12"),
+		"defense remains explicitly stage-owned instead of global"
+	)
+	_expect(
+		Patterns.is_common("common_squad_call"),
+		"every boss shares the periodic squad-call family"
+	)
 	var flow := Flow.new()
 	flow.configure(0, 1, true)
 	flow.record_countable_defeat()

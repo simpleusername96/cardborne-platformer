@@ -1353,26 +1353,43 @@ func _sync_boss_core_overlay(
 	enemy: EnemyState,
 	position: Vector2,
 	radius: float,
-	forward: Vector2,
+	_forward: Vector2,
 	presentation: Dictionary
 ) -> void:
-	if enemy.boss_shield_state != &"shield_up":
-		return
 	var shield := Dictionary(presentation.get("boss_shield", {}))
+	var state := StringName(shield.get("state", enemy.boss_shield_state))
+	if state not in [&"shield_up", &"shield_cue"]:
+		return
+	var shield_kind := StringName(shield.get("shield_kind", &"none"))
+	if shield_kind not in [&"segmented_guard", &"segmented_reflection"]:
+		return
 	var shield_radius := radius + 10.0
-	match StringName(shield.get("shield_kind", &"")):
-		&"frontal_intercept":
-			var segment_count := int(shield.get("segment_count", 3))
-			var segment_arc := float(shield.get("segment_arc", deg_to_rad(80.0)))
-			var rotation := float(shield.get("rotation", forward.angle()))
-			for segment_index in segment_count:
-				var start_angle := rotation + float(segment_index) * TAU / float(segment_count)
-				_write_arc_segments(
-					position, shield_radius, start_angle, start_angle + segment_arc,
-					Color(Art.SYSTEM, 0.38), 10, BOSS_SHIELD_SEGMENT_THICKNESS
-				)
-		_:
-			_write_ring(position, radius + 8.0, Color(Art.SYSTEM, 0.52))
+	var segment_count := int(shield.get("segment_count", 0))
+	var segment_arc := float(shield.get("segment_arc", 0.0))
+	var gap_arc := float(shield.get("gap_arc", 0.0))
+	var rotation := float(shield.get("rotation", 0.0))
+	var effect := StringName(shield.get("effect", &"guard"))
+	var cue := state == &"shield_cue"
+	var color := (
+		Color(Art.CORAL, 0.34 if cue else 0.72)
+		if effect == &"reflect"
+		else Color(Art.SYSTEM, 0.24 if cue else 0.38)
+	)
+	var thickness := 5.0 if cue else BOSS_SHIELD_SEGMENT_THICKNESS
+	var period := segment_arc + gap_arc
+	for segment_index in segment_count:
+		# Collision sectors start with the real gap. Presentation starts each arc
+		# after that same gap so visible and attackable angles are identical.
+		var start_angle := rotation + gap_arc + float(segment_index) * period
+		_write_arc_segments(
+			position,
+			shield_radius,
+			start_angle,
+			start_angle + segment_arc,
+			color,
+			10,
+			thickness
+		)
 
 
 func _write_arc_segments(
@@ -1399,23 +1416,15 @@ func _sync_late_mechanic_overlay(
 	radius: float,
 	forward: Vector2
 ) -> void:
-	var reflect_module := (
-		enemy.mechanic_state in [&"reflect_active", &"reflect_cue"]
-		or enemy.archetype == &"ordinary_reflect_01"
-	)
-	if reflect_module:
-		var reflect_active := (
-			enemy.mechanic_state == &"reflect_active"
-			or enemy.archetype == &"ordinary_reflect_01"
-		)
+	if enemy.archetype == &"ordinary_reflect_01":
 		_write_arc_segments(
 			position,
 			radius + 9.0,
 			forward.angle() - deg_to_rad(50.0),
 			forward.angle() + deg_to_rad(50.0),
-			Color(Art.CORAL, 0.72 if reflect_active else 0.34),
+			Color(Art.CORAL, 0.72),
 			12,
-			10.0 if reflect_active else 5.0
+			10.0
 		)
 	var resonance_module := (
 		enemy.mechanic_state in [&"resonance_base", &"resonance_cue", &"resonance_shifted"]
@@ -1480,20 +1489,15 @@ func _sync_projectiles(
 				),
 				Color.WHITE
 			)
-			if projectile.distance_growth_kind == ProjectileState.DISTANCE_GROWTH_GROWTH_KIND:
-				var trail_length := lerpf(
-					hostile_visual_radius * 1.6,
-					hostile_visual_radius * 4.4,
-					projectile.distance_growth_ratio
-				)
-				_write_beam(
-					position - direction * trail_length,
-					position - direction * hostile_visual_radius,
-					maxf(2.0, hostile_visual_radius * 0.34),
-					Color(
-						Art.DANGER,
-						lerpf(0.28, 0.72, projectile.distance_growth_ratio)
-					)
+			if (
+				projectile.distance_growth_kind
+					== ProjectileState.DISTANCE_GROWTH_GROWTH_KIND
+				and projectile.distance_growth_proximity_armed
+			):
+				_write_danger_ring(
+					position,
+					ProjectileState.DISTANCE_GROWTH_PROXIMITY_TRIGGER_RADIUS,
+					Color(Art.DANGER, 0.22)
 				)
 			continue
 		var visual_id := (
