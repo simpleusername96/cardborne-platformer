@@ -15,23 +15,28 @@ related:
 
 # Cardborne 일반 UI/UX 개선 분석 — 기반 가정 교정판
 
+## 목적
+
+이 문서는 Cardborne의 Deployment, Guidebook, Report를 포함한 일반 UI가 어떤 자산, 색, 폭, 정보 묶음으로 구성되어야 하는지 판단하기 위한 연구 evidence다. 정본 명세를 대신하지 않으며, 생성 시안은 code-native 구현 전 구조 검토 자료로만 사용한다.
+
 ## 한 줄 결론
 
-이전 제안은 철회한다. Cardborne의 일반 UI는 **그림을 채우고 남색·노란색을 넓게 바르는 방향**이 아니라, **콘텐츠에 맞는 작은 면적, 필요한 곳에만 쓰는 식별 자산, 중성 크롬, 의미가 분명한 소수의 색**으로 다시 설계해야 한다.
+이전 제안은 철회한다. Cardborne의 일반 UI는 **그림과 남색·노란색으로 넓은 면을 채우는 방향**이 아니라, **콘텐츠에 맞는 작은 면적, 식별에 필요한 자산, bluegray/cyan 크롬, 서로 가까이 묶인 label·input·value**로 다시 설계해야 한다.
 
 가장 먼저 바꿀 것은 장식이 아니라 폭이다. 1280×720에서 현재 Report 1200 px, Deployment 1176 px, Guidebook 1160 px는 사용 가능 폭의 각각 97.4%, 95.5%, 94.2%를 차지한다. 이 값들은 상한이 아니라 사실상 기본값으로 작동한다. 내용이 적어도 화면 전체를 덮으므로 정보가 커 보이는 것이 아니라 패널이 비어 보인다.
 
 교정 방향은 다음 세 문장으로 요약한다.
 
-1. **자산은 선택과 식별에 직접 필요한 경우에만 쓴다.** 고정 기체를 보여 주며 빈 공간을 채우는 이미지는 제거한다.
-2. **어두운 남색·노란색을 공용 UI 브랜드로 쓰지 않는다.** 중성 흑연색을 기본 크롬으로 삼고, cyan은 focus/system, amber는 실제 보상·선택에만 제한한다.
+1. **자산은 선택과 식별에 직접 필요한 경우에만 쓴다.** 유저 기체는 identity anchor로 유지하되 104–112 px 수준으로 제한하고 빈 공간을 만드는 hero image로 쓰지 않는다.
+2. **사용자가 선택한 bluegray/cyan 방향을 공용 chrome으로 발전시킨다.** cyan은 focus/system에, amber는 실제 player/reward/confirmed selection에만 제한한다.
 3. **패널은 viewport가 아니라 과업의 정보량에 맞춘다.** 각 화면에 content-fit 권장 폭과 예외 조건을 둔다.
+4. **관련 정보는 한 perceptual group으로 묶는다.** label과 input/value를 양끝으로 벌리는 `space-between`형 행은 일반 UI에서 사용하지 않는다.
 
 ## 이전 방향을 철회하는 이유
 
 첫 보고서는 현재 명세와 화면을 개선 대상으로 보면서도, 다음 전제를 충분히 검증하지 않았다.
 
-- Deployment에 기체 그림이 있으니 개선안에도 기체 그림이 필요하다고 가정했다.
+- Deployment 기체 그림의 정보 가치를 따지지 않고 넓은 왼쪽 column을 채우는 수단으로 사용했다.
 - 현재 Theme가 navy/amber를 넓게 쓰므로 그것이 Cardborne의 올바른 공용 UI 정체성이라고 가정했다.
 - 명세에 적힌 modal 최대 크기를 정상적인 기본 크기로 해석했다.
 - 넓은 패널 안에서 column 균형을 맞추려 했고, 패널 자체가 필요 이상으로 넓은지는 뒤늦게 보았다.
@@ -40,7 +45,7 @@ related:
 
 ![폐기한 이전 Deployment 방향](./assets/2026-08-22-general-uiux-analysis/rejected-previous-direction/deployment-wide-asset-concept.png)
 
-폐기 이유: 고정 기체 preview가 결정을 돕지 않고 패널 폭을 정당화하며, navy/amber가 정보 의미보다 브랜드 장식으로 먼저 보인다.
+폐기 이유: 기체 preview 자체가 아니라, preview를 이유로 넓은 column과 빈 면을 유지한 것이 문제였다. navy/amber도 정보 의미보다 브랜드 장식으로 먼저 보인다.
 
 ## 증거와 한계
 
@@ -61,19 +66,19 @@ related:
 ### 비주얼 권위 receipt
 
 - `VISUAL_SYSTEM.md` 952줄 전체 재검사.
-- spec SHA-256: `cd44b5f672043d68af4ee5c7bdc140ff81cadcd4a05cf3a9ed4850bad458e798`.
+- spec SHA-256: `c8dde49b2506d01b4ff298622b0bf31a233f141c4ea609d8a42a7a17a01fb560`.
 - 정본 PNG 1448×1086 원본 검사.
 - PNG SHA-256: `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 - 모든 ImageGen 호출에 정본 PNG를 실제 `referenced_image_paths` 입력으로 제공했다.
 - 정본 이미지는 형태·밀도·읽기 쉬움의 문법 참고일 뿐, 그 안의 기체·layout·yellow palette를 복사하거나 승인 자산으로 취급하지 않았다.
 
-### 현재 명세와의 충돌
+### 현재 명세 해석과 구현 전 교정점
 
-현재 시각 명세는 navy surface `#182431`, amber/reward `#F2B735`를 semantic token으로 두고, Deployment craft preview와 일부 화면 artwork를 요구한다. 이번 교정안은 사용자 피드백에 따라 이 전제를 다시 검토한 결과다. 따라서 실제 구현 전에 다음 명세 항목을 먼저 수정해야 한다.
+현재 시각 명세는 navy surface `#182431`, amber/reward `#F2B735`를 semantic token으로 두고, Deployment craft preview, primary weapon 설명, complete controls, two-column body를 요구한다. 유저 피드백에 따라 craft preview는 유지한다. 다만 `two-column`은 viewport를 40/60으로 늘리는 표가 아니라, 작은 identity zone과 compact control zone이라는 두 책임으로 해석해야 한다.
 
 - 공용 surface의 기본색과 amber 사용 범위.
-- Deployment에서 고정 기체 preview를 요구하는 계약.
 - modal minimum size를 사실상 기본 폭으로 만드는 규칙.
+- `VehicleUiComponentFactory.text_row()`가 label과 value를 모두 expand시켜 먼 양끝에 배치하는 규칙.
 - Guidebook/Upgrade의 artwork가 식별에 필요한 경우와 장식인 경우의 경계.
 
 이 보고서는 해당 변경을 제안하지만, runtime code나 정본 명세를 아직 수정하지 않는다.
@@ -92,14 +97,14 @@ related:
 
 | 화면 | 기본 자산 정책 | 유지 가능한 예외 | 결론 |
 | --- | --- | --- | --- |
-| Deployment | 자산 없음 | 실제로 여러 기체·무기 중 선택할 때만 작은 identity preview | 현재 고정 기체 그림 제거 |
+| Deployment | 작은 identity preview | 현재 유저 기체와 기본 무기 식별 | 104–112 px craft 유지, hero image와 장식 배경 금지 |
 | Pause | 자산 없음 | 없음 | compact task modal 유지 |
 | Settings | 자산 없음 | 설정 결과를 즉시 비교해야 하는 preview | 일반 장식 금지 |
 | Guidebook | 제한적 사용 | 발견한 기체·적·보스의 형태 식별 | preview가 stat를 fold 아래로 밀면 축소 |
 | Upgrade | 선택 식별용 사용 | 세 offer를 빠르게 구별하는 작은 artwork | 큰 카드 그림과 장식 frame 금지 |
 | Report/Result | 자산 없음 | 결과 수치와 직접 연결된 작은 semantic glyph | 기념 일러스트·배경 art 금지 |
 
-Deployment는 이 원칙을 검증하기 좋은 화면이다. 기체가 고정되어 있고 선택할 수 없다면 기체 그림은 정보가 아니라 확인용 장식이다. 그림을 제거한 뒤 남는 공간은 “비어 있는 문제”가 아니라 “패널을 줄여야 한다는 증거”다.
+Deployment는 이 원칙을 검증하기 좋은 화면이다. 유저 기체는 현재 조작할 대상을 확인하는 identity anchor로 유효하다. 문제는 기체를 보여 주는 것이 아니라, 작은 preview를 이유로 200 px보다 훨씬 넓은 column과 빈 면을 유지하는 것이다. preview는 유지하고 주변 panel을 줄인다.
 
 ## 2. 색 체계 판단
 
@@ -120,8 +125,8 @@ Deployment는 이 원칙을 검증하기 좋은 화면이다. 기체가 고정�
 | 역할 | 권장 | 사용 범위 |
 | --- | --- | --- |
 | Surround | 거의 검정에 가까운 neutral | gameplay와 modal 분리 |
-| Surface | neutral graphite | 일반 패널의 기본 면 |
-| Raised row | graphite보다 한 단계 밝은 neutral | 행과 입력 영역 |
+| Surface | cool bluegray | 일반 패널의 기본 면 |
+| Raised row | surface보다 한 단계 밝은 bluegray | 실제 입력·선택 영역 |
 | Primary text | warm off-white/cream | title, value, primary label |
 | Secondary text | neutral gray | 설명과 보조 정보 |
 | Focus/System | cyan | keyboard/controller focus, system feedback |
@@ -160,13 +165,13 @@ Deployment는 이 원칙을 검증하기 좋은 화면이다. 기체가 고정�
 
 ### 최종 색 결정
 
-최종 권고는 A와 C의 결합이다.
+사용자 선택에 따라 B의 bluegray/cyan을 최종 탐색 방향으로 올린다. 기존 B 시안의 palette는 유지하되 layout은 전면 교체한다.
 
-- C의 compact 단일 흐름과 면적을 사용한다.
-- A의 neutral graphite surface와 warm off-white text를 사용한다.
-- B의 cyan을 focus/system에만 사용한다.
-- amber는 Upgrade 선택, reward, 실제 confirmed selection에만 쓴다.
-- 일반 title, category label, primary action은 색이 아니라 크기·굵기·위치·filled state로 위계를 만든다.
+- cool bluegray surface와 warm off-white text를 기본으로 사용한다.
+- cyan은 focus, current system state, navigation feedback에만 사용한다.
+- amber는 실제 유저 기체 content, Upgrade 선택, reward, confirmed selection에만 쓴다.
+- 일반 title과 primary action은 색이 아니라 크기·굵기·위치·filled state로 위계를 만든다.
+- bluegray/cyan을 선택했다고 해서 넓은 navy shell, cyan outline card grid, full-width row를 함께 채택하지 않는다.
 
 ## 3. 패널 폭 판단
 
@@ -190,11 +195,11 @@ Deployment는 이 원칙을 검증하기 좋은 화면이다. 기체가 고정�
 | 화면 | 1280 기준 기본 폭 | 넓힐 수 있는 조건 |
 | --- | ---: | --- |
 | Pause | 440–520 px | 없음 |
-| Deployment | 680–800 px | 여러 기체를 실제 선택할 때만 840–960 px |
+| Deployment | 760–860 px | 여러 기체를 실제 선택할 때만 900–960 px |
 | Settings | 720–880 px | 긴 key binding 편집과 200% text 검증 시 |
 | Guidebook | 900–1040 px | wide 3-column 유지에 필요한 범위 내 |
 | Upgrade | 920–1040 px | 3개 offer 비교가 깨지지 않는 범위 내 |
-| Report / Failure / Result | 720–880 px | 긴 locale text가 실제 overflow할 때 |
+| Report / Failure / Result | 720–820 px | 긴 locale text가 실제 overflow할 때 880 px까지 |
 
 폭은 위 범위의 최대값으로 고정하지 않는다. 내용의 preferred size로 시작해, locale·text scale·viewport가 요구할 때만 범위 안에서 늘린다. 960 px 이하에서는 더 좁은 layout으로 재배치하고 horizontal scroll로 해결하지 않는다.
 
@@ -202,7 +207,7 @@ Deployment는 이 원칙을 검증하기 좋은 화면이다. 기체가 고정�
 
 ### Deployment
 
-`출격 준비 → 주무장 한 줄 → 조작 4행 → 출격`의 단일 세로 흐름을 쓴다. 고정 기체 preview, 두 column, 빈 hero area를 제거한다. 기체 선택 기능이 생길 때만 preview를 별도 조건부 component로 추가한다.
+`출격 준비 → 기체/주무장 identity + 조작 legend → 출격` 순서를 쓴다. 왼쪽 200–240 px에는 104–112 px 기체 preview와 무기 한 줄을 두고, 오른쪽에는 네 조작을 2×2 compact cluster로 묶는다. 각 cluster는 `[현재 입력 칩] 행동명`을 12–16 px 간격으로 붙이며, 전체 행 양끝으로 벌리지 않는다.
 
 ### Pause
 
@@ -222,7 +227,52 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 
 ### Report / Failure / Result
 
-720–880 px의 단일 세로 report를 쓴다. label과 value를 화면 양끝으로 보내지 않는다. `outcome → time/Hull/progress → build → damage → defense → enemies → bosses → pacing → limitations`를 한 outer scroll로 유지하고 action만 고정한다.
+720–820 px의 단일 세로 report를 쓴다. 각 metric은 `label  value`의 좌측 정렬 inline phrase이며 값은 label 뒤 20–32 px 안에서 시작한다. `outcome → time/Hull/progress → build → damage → defense → enemies → bosses → pacing → limitations`를 한 outer scroll로 유지하고 action만 고정한다.
+
+## 4. 근접 정보 그룹과 3개 주요 화면
+
+### 로컬 원인
+
+- `scripts/ui/vehicle_deployment_panel.gd`는 본문을 40/60 `HBoxContainer`로 늘린다.
+- `scripts/ui/vehicle_ui_component_factory.gd`의 `text_row()`는 label과 value를 모두 `SIZE_EXPAND_FILL`로 만들어 먼 양끝에 배치한다.
+- 같은 row 문법이 Guidebook과 `vehicle_combat_report_body.gd`에도 이어져, 패널 폭을 줄여도 내부 gap은 남는다.
+
+따라서 modal width만 줄이는 것은 충분하지 않다. 공용 row primitive가 `분산 정렬`이 아니라 `근접 그룹`을 기본으로 가져야 한다.
+
+### 공용 grouping grammar
+
+| 정보 종류 | 권장 구성 | 금지 구성 |
+| --- | --- | --- |
+| 입력 안내 | `[현재 입력 칩] 행동명`, gap 12–16 px | label left + input far right |
+| 짧은 metric | `label  value`, gap 20–32 px | full-row space-between |
+| identity | 104–112 px semantic image + title/level/한 줄 설명 | hero image + 빈 preview well |
+| 상세 도움말 | focus/tooltip 또는 Guidebook detail | 모든 긴 설명을 기본 row에 상시 노출 |
+| 장치 전환 | 현재 입력 장치 한 세트만 표시 | keyboard와 controller 전체 목록 동시 표시 |
+
+#### Deployment — compact control legend
+
+![Deployment bluegray compact control concept](./assets/2026-08-22-general-uiux-analysis/compact-bluegray-pages/deployment-bluegray-compact-controls.png)
+
+- 유저 기체는 실제 player/reward yellow identity를 유지한다.
+- 조작은 네 개의 self-contained cluster로 바꾸고 큰 row/card를 제거한다.
+- 생성 이미지의 keycap과 glyph는 구조 참고일 뿐 production glyph 승인안이 아니다.
+- 현재 입력 장치만 표시하려면 runtime binding display owner가 필요하다. keyboard/controller 문자열을 화면에 하드코딩하지 않는다.
+
+#### Guidebook — stat-first identity detail
+
+![Guidebook bluegray stat-first concept](./assets/2026-08-22-general-uiux-analysis/compact-bluegray-pages/guidebook-bluegray-stat-first.png)
+
+- category/list/detail 3열 책임은 유지한다.
+- 기체 preview를 identity header 크기로 줄이고 첫 stat를 fold 위로 올린다.
+- 각 stat group 안에서 label과 value를 가까이 두며 전체 detail column 끝으로 보내지 않는다.
+
+#### Stage Report — inline metric phrases
+
+![Stage Report bluegray inline metric concept](./assets/2026-08-22-general-uiux-analysis/compact-bluegray-pages/stage-report-bluegray-inline-metrics.png)
+
+- metric을 독립된 오른쪽 value column에서 제거하고 좌측 inline phrase로 묶는다.
+- section은 spacing과 짧은 divider로 나누며 card grid를 만들지 않는다.
+- 한 outer scroll과 fixed primary action 계약을 유지한다.
 
 ## 외부 근거와 적용 판단
 
@@ -245,7 +295,21 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 | [Apple Designing for Games](https://developer.apple.com/design/human-interface-guidelines/designing-for-games) | 게임의 맥락과 입력 방식에 맞는 UI | desktop app 구조를 그대로 가져오지 않음 |
 | [GOV.UK Layout](https://design-system.service.gov.uk/styles/layout/) | 긴 line length를 피하고 content에 맞는 폭 사용 | viewport 충전 대신 readable content width 사용 |
 
-조사는 자산·색·폭의 세 질문마다 독립 근거가 3개 이상 모이고, 추가 자료가 결론을 바꾸지 않는 시점에 중단했다.
+### 조작·metric 근접 배치 집중 조사
+
+| 근거 | 관찰한 layout pattern | Cardborne 적용 |
+| --- | --- | --- |
+| [FINAL FANTASY XIV Operation Manual](https://na.finalfantasyxiv.com/game_manual/operation/) | `Command · Default Button`의 좁은 2열 표와 단계형 Active Help | 조작을 기능별 compact group으로 묶고 긴 설명은 단계 공개 |
+| [Apex Legends PC and Controller Settings](https://help.ea.com/sv/articles/apex-legends/pc-and-controller-settings/) | PC/controller별 `Action · Input` 정의 목록 | 현재 입력 장치 한 세트만 표시하고 action/input을 인접 배치 |
+| [Fortnite PC Controls](https://www.epicgames.com/help/en-US/fortnite-c75/c118/pc-a3337?lang=en-US) | 플레이 방식별 장치 구분과 해당 장치 icon | keyboard/controller 전체 목록을 동시에 노출하지 않음 |
+| [God of War Ragnarök Accessibility](https://www.playstation.com/en-us/games/god-of-war-ragnarok/accessibility/) | input visualization을 필요한 gameplay 맥락에만 표시 | Deployment에 큰 controller diagram을 상시 두지 않음 |
+| [Xbox XAG 106](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/106) | control 이름·유형·현재값을 한 의미 단위로 제공 | `[입력 칩 + 행동명]`을 한 focus group으로 구성 |
+| [Xbox XAG 112](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility/xbox-accessibility-guidelines/112?source=recommendations) | 입력 방식이 달라도 같은 순서와 prompt 위치 유지 | 세 화면의 visual order와 focus order를 일치 |
+| [Xbox XAG 114](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility/xbox-accessibility-guidelines/114) | label을 관련 control 가까이에 두고 긴 설명은 tooltip으로 분리 | label/value 분산 금지, 긴 조작 문장 단계 공개 |
+| [The Sandbox Evolution Controls Manual](https://cdn.steamstatic.com/steam/apps/466940/manuals/TheSandboxEvolution-ControlsHelpSheet.pdf?t=1513117405) | mode별 조작 그룹과 짧은 행동 옆 input 표시 | 네 기본 조작을 2×2 cluster로 압축 |
+| [Backstage: Murdered Sleep Manual](https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2687830/manuals/0cab3402e06d50d7a2de1b353493cbb8393b24c0/BACKSTAGE_MURDERED_SLEEP_GAME_MANUAL.pdf?t=1730938088) | key/analog icon과 짧은 동작명을 짝지어 기본·전투 조작 분리 | keycap과 한국어 동작명을 한 local group으로 묶음 |
+
+자산·색·폭과 compact grouping 패턴마다 독립 근거가 2개 이상 모이고, 추가 자료가 결론을 바꾸지 않는 시점에 조사를 중단했다.
 
 ## 구현 순서 제안
 
@@ -260,10 +324,12 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 ### P1 — compact shell과 Deployment
 
 - modal host를 content-fit preferred size + 화면별 max band로 바꾼다.
-- Deployment를 assetless single-column으로 재구성한다.
-- neutral graphite/cream + cyan focus의 code-native prototype을 만든다.
+- Deployment를 200–240 px identity zone + 420–520 px compact control zone으로 재구성한다.
+- current player craft preview를 104–112 px로 유지한다.
+- `text_row()` 대신 input/action과 label/value를 가까이 묶는 공용 compact pair primitive를 만든다.
+- bluegray surface + cyan focus의 code-native prototype을 만든다.
 
-완료 기준: 1280에서 Deployment가 680–800 px, 좌우 충분한 gameplay context, 빈 hero area 0, 고정 기체 preview 0이다.
+완료 기준: 1280에서 Deployment가 760–860 px, 좌우 충분한 gameplay context, 빈 hero area 0, input/action gap 16 px 이하, 기체 preview 104–112 px다.
 
 ### P2 — 화면군별 폭 축소
 
@@ -295,24 +361,28 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 | `deployment-wide-asset-concept.png` | `4f69a2b304993487c68be3d0d3b09c764b83e5da500c7e50e5c4f4a7bc51f02d` | 폐기 |
 | `guidebook-wide-asset-concept.png` | `95dea0ca0d337001e0347f6bbcf61076a91139958ed89ddf89d6bd019e9d2260` | 폐기 |
 | `stage-report-wide-navy-amber-concept.png` | `d636e3cc6344c20fad9a2ef7195bedb75d3693509e0099e1b0494d54be54dc9a` | 폐기 |
+| `deployment-bluegray-compact-controls.png` | `51734eb43affc3ba7b2cede3d9ad9d8231c301be2663cf975189d8e2ae51e860` | 사용자 선택 palette + compact grouping 기준 |
+| `guidebook-bluegray-stat-first.png` | `336b74f5b6320e3b5ad7742b96f2ccdf0235062096f9cf944d17a343bea1436a` | 3열 책임과 stat-first detail 기준 |
+| `stage-report-bluegray-inline-metrics.png` | `d47494bdbfba9f8fb3fdf826e2dd59d81831b30512bd5d28d20b55f676239840` | inline metric grouping 기준 |
 
 교정 실험의 공통 prompt 계약은 다음과 같다.
 
 - 정본 시트는 style grammar only, object/layout/palette 복제 금지.
-- latest Deployment capture는 content reference only.
-- 고정 기체 artwork와 장식 asset 제거.
-- 680–800 px compact modal, single vertical flow.
-- navy/amber branding 금지.
-- 한 번에 한 palette 변수만 비교.
+- current 화면은 content와 real identity reference only.
+- 유저 기체 artwork는 작은 identity content로 유지하고 장식 asset은 제거.
+- Deployment 760–860 px, Guidebook 900–1040 px, Report 720–820 px 범위.
+- bluegray/cyan chrome, yellow는 player/reward content에만 허용.
+- input/action과 label/value를 하나의 local group으로 묶고 distributed gap 금지.
 
 ## 결정 및 승인 경계
 
 이 교정판이 권고하는 방향은 다음과 같다.
 
-- general UI의 기본은 **assetless, compact, neutral graphite**.
+- general UI의 기본은 **compact bluegray surface + cyan system/focus**.
 - cyan은 focus/system, amber는 reward/confirmed selection, coral은 danger.
-- gameplay art는 식별·선택·상태 전달 가치가 있을 때만 사용.
+- 유저 기체와 Guidebook/Upgrade art는 식별·선택·상태 전달 가치가 있을 때 작은 content image로 사용.
 - max width는 기본값이 아니며, content-fit preferred size가 먼저다.
+- action/input과 metric label/value를 양끝으로 벌리는 공용 row 구조는 교체 대상이다.
 
 아직 승인하거나 수행하지 않은 항목은 다음과 같다.
 
@@ -321,4 +391,4 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 - 생성 이미지를 production texture로 승격.
 - 새 기능, 새 접근성 옵션, 새 gameplay 선택지 추가.
 
-다음 결정은 **P0 명세 교정과 P1 compact Deployment code prototype을 시작할지**다.
+다음 결정은 **이 3개 화면의 grouping grammar를 code-native prototype으로 옮길지**다.

@@ -46,6 +46,18 @@ related:
 
 ## Tasks
 
+### Compact information-layout continuation
+
+- [x] Record the user's preference for the bluegray/cyan palette and retain the player-craft identity preview.
+- [x] Refresh the visual-authority preflight after the canonical specification hash changed.
+- [x] Gather focused references for compact control legends and dense game information layouts.
+- [x] Lock a shared spacing/grouping grammar that removes distributed label/value gaps.
+- [x] Generate and inspect one coherent mockup each for Deployment, Guidebook, and Stage Report.
+- [x] Update the Korean evidence report with the focused references and three-screen decisions.
+- [x] Validate authority, image hashes, local links, and the task-only diff; commit only this continuation.
+
+Continuation gate: all three screens must use the same bluegray/cyan system, explain every retained image and width, and keep related labels, inputs, values, and units in one perceptual group.
+
 ### Correction pass: challenge foundational assumptions
 
 - [x] Record the user's rejection of the previous wide navy/amber, asset-heavy direction.
@@ -93,21 +105,21 @@ Phase gate: the report links current evidence and mockups, and all retained file
 ## Visual Authority Receipt
 
 - Canonical spec: `docs/design/VISUAL_SYSTEM.md`; read completely on 2026-08-22.
-- Spec SHA-256: `cd44b5f672043d68af4ee5c7bdc140ff81cadcd4a05cf3a9ed4850bad458e798`.
+- Spec SHA-256: `c8dde49b2506d01b4ff298622b0bf31a233f141c4ea609d8a42a7a17a01fb560`.
 - Canonical style reference: `docs/design/cardborne-universal-art-style-reference.png`; inspected at original 1448×1086 detail on 2026-08-22.
 - Expected and observed PNG SHA-256: `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 - Original provenance: `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`, 2026-08-02 12:13:44 KST.
-- Task constraints: information-first modals; one shared code-native Theme and six primitives; one boundary and at most one semantic rail; no nested frames, micro-panels, decorative seams, raster UI chrome, or baked text; Noto Sans KR; 44 px minimum targets; visible non-color focus/selection; Korean/English and 960/1280/1920 fit; dominant broad masses, matte planes, dark separation, sparse semantic accents.
+- Task constraints: information-first modals; Deployment retains craft preview, one-line primary-weapon description, complete controls, and a two-zone body without distributed label/value gaps; Guidebook remains stat-first and wide three-column; Report remains one left-aligned outer scroll with one fixed action; one shared code-native Theme and six primitives; one boundary and at most one semantic rail; no nested frames, micro-panels, decorative seams, raster UI chrome, or baked text; Noto Sans KR; 44 px minimum targets; visible non-color focus/selection; Korean/English and 960/1280/1920 fit; dominant broad masses, matte planes, dark separation, sparse semantic accents.
 - ImageGen rule: every call must receive the canonical repository PNG through `referenced_image_paths`; the prompt must state that it supplies style grammar only and must not be copied.
 - Approval status: analysis evidence only; no generated image is approved for production or runtime integration.
-- Receipt refresh: the spec changed concurrently after generation. The full 952-line document and the original-detail PNG were re-inspected on 2026-08-22. The change updates enemy-upgrade-device publication behavior and does not alter the modal, typography, responsive, focus, or media-ownership constraints used by these concepts, so regeneration is not required.
+- Receipt refresh: the spec changed again before this continuation. The full current 952-line document and the original-detail PNG were re-inspected on 2026-08-22. The current modal contract explicitly retains the Deployment craft preview and two-column information responsibility while also prohibiting distributed blank stat columns; the new concepts must satisfy both by using compact perceptual groups rather than a viewport-spanning definition list.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this file.
 - Current phase: complete.
-- Next task: none in this analysis scope. Runtime implementation requires a new approval decision because it changes the canonical visual specification and shared UI owners.
-- Last completed gate: the corrected Korean report, current-worktree snapshots, three inspected palette/density experiments, and rejected prior concepts are retained. Local links and the three correction image hashes passed; the Cardborne visual-authority validator passed with the expected canonical sheet hash; the task-only diff passed `git diff --check`.
+- Next task: none in this concept-and-evidence scope. Runtime implementation requires explicit approval because it changes the shared row primitive, three screen owners, and current visual specification wording.
+- Last completed gate: focused references converged on current-device input chips, action/input proximity, contextual help, and local metric pairs. The retained three-screen set applies one bluegray/cyan system: Deployment keeps a 104–112 px player-craft identity and open 2×2 control clusters, Guidebook keeps three-column responsibility with stat-first detail, and Stage Report removes the distributed right value column in favor of inline metric phrases. The Cardborne visual-authority validator, eight report-local links, three retained image hashes, and task-only `git diff --check` passed.
 - Update rule: preserve passing evidence until a relevant owned input changes; do not repeat the full capture for reassurance.
 
 ## Completion and Stop Conditions
