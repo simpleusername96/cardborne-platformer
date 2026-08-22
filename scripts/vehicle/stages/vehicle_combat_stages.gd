@@ -233,11 +233,9 @@ static func _opening_onboarding_packets(
 		result.append({
 			"id":"stage_1_onboarding_%02d" % [phase_index + 1],
 			"beat":phase_index,
-			"trigger":(
-				{"kind":&"time", "at":0.0}
-				if phase_index == 0
-				else {"kind":&"ordinary_defeats", "at":phase_index * 15}
-			),
+			# Preserve the teaching order while letting capacity, rather than a full
+			# clear, keep the early field populated like later cycles.
+			"trigger":{"kind":&"time", "at":0.0},
 			"squads":squads,
 			"packs":packs,
 			"spawn_composition":true,

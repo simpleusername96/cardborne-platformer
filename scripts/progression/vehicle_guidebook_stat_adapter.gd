@@ -15,7 +15,9 @@ const FamilyTraits = preload(
 	"res://scripts/enemies/vehicle_enemy_family_trait_catalog.gd"
 )
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
-const MysteryDeviceRuntime = preload("res://scripts/vehicle/vehicle_mystery_device_runtime.gd")
+const EnemyUpgradeDeviceRuntime = preload(
+	"res://scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd"
+)
 const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialist_runtime.gd")
 const StageDifficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
@@ -219,36 +221,36 @@ static func object_rows(
 		&"recall":
 			return [_row("GUIDE_STAT_EFFECT", "GUIDE_VALUE_RECALL", [], &"effect")]
 		&"mystery_device":
-			var result: Array[Dictionary] = [
+			return [
 				_row(
 					"GUIDE_STAT_HEALTH", "GUIDE_VALUE_HP",
-					[roundi(MysteryDeviceRuntime.DEVICE_HEALTH)], &"health"
+					[roundi(EnemyUpgradeDeviceRuntime.BASE_HEALTH)], &"health"
+				),
+				_row(
+					"GUIDE_STAT_DEVICE_CHANNEL", "GUIDE_VALUE_DEVICE_CHANNEL",
+					[
+						EnemyUpgradeDeviceRuntime.REQUIRED_ENEMY_COUNT,
+						EnemyUpgradeDeviceRuntime.CAPTURE_SECONDS,
+						roundi(EnemyUpgradeDeviceRuntime.CAPTURE_RADIUS),
+					],
+					&"activation"
+				),
+				_row(
+					"GUIDE_STAT_FUTURE_ENEMY_HEALTH", "GUIDE_VALUE_HP_BONUS",
+					[roundi(EnemyUpgradeDeviceRuntime.HEALTH_BONUS_PER_ACTIVATION)],
+					&"health"
+				),
+				_row(
+					"GUIDE_STAT_FUTURE_ENEMY_DAMAGE", "GUIDE_VALUE_PERCENT_UP",
+					[roundi(EnemyUpgradeDeviceRuntime.DAMAGE_MULTIPLIER_PER_ACTIVATION * 100.0)],
+					&"effect"
+				),
+				_row(
+					"GUIDE_STAT_FUTURE_ENEMY_SPEED", "GUIDE_VALUE_SPEED_BONUS",
+					[roundi(EnemyUpgradeDeviceRuntime.SPEED_BONUS_PER_ACTIVATION)],
+					&"effect"
 				),
 			]
-			for outcome in MysteryDeviceRuntime.OUTCOME_IDS:
-				var profile := Dictionary(
-					MysteryDeviceRuntime.OUTCOME_PROFILE[outcome]
-				)
-				var value_key := "GUIDE_VALUE_FACILITY_WEAKPOINT"
-				var value_args: Array = [roundi(float(profile["radius"]))]
-				match outcome:
-					&"repair":
-						value_key = "GUIDE_VALUE_FACILITY_REPAIR"
-						value_args.append(roundi(float(profile["hull_restore_per_second"]) * 100.0))
-					&"cryo":
-						value_key = "GUIDE_VALUE_FACILITY_CRYO"
-						value_args.append(roundi(float(profile["movement_multiplier"]) * 100.0))
-					&"lava":
-						value_key = "GUIDE_VALUE_FACILITY_LAVA"
-						value_args.append(float(profile["tick_seconds"]))
-						value_args.append(roundi(float(profile["damage_per_tick"])))
-				result.append(_row(
-					"MYSTERY_OUTCOME_%s" % String(outcome).to_upper(),
-					value_key,
-					value_args,
-					&"effect"
-				))
-			return result
 		&"transit_gate":
 			return [
 				_row(

@@ -165,17 +165,13 @@ func _run() -> void:
 	)
 	_expect(
 		panel.debug_select_entry(&"objects", &"object_mystery_device"),
-		"Anomaly Device detail is selectable"
+		"enemy upgrade-device detail is selectable"
 	)
 	contract = panel.debug_contract()
 	_expect(
-		Array(Dictionary(contract["preview"])["asset_ids"]) == [
-			&"world/facility_repair_beacon",
-			&"world/mystery_device_cryo",
-			&"world/mystery_device_weakpoint",
-			&"world/mystery_device_lava",
-		],
-		"Anomaly Device preview exposes all four reachable facility identities without a casing"
+		Array(Dictionary(contract["preview"])["asset_ids"])
+			== [&"world/mystery_device_weakpoint"],
+		"enemy upgrade-device preview hides retired facility identities"
 	)
 	var preview := GuidePreview.new()
 	get_root().add_child(preview)
@@ -328,7 +324,7 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 			and Array(anomaly["stat_rows"]).size() == 5
 			and String(Dictionary(Array(anomaly["stat_rows"])[0])["value_key"])
 				== "GUIDE_VALUE_HP",
-		"Anomaly Device exposes HP and all four timed activation outcomes"
+		"enemy upgrade device exposes base HP, channel, and three future-enemy bonuses"
 	)
 
 
