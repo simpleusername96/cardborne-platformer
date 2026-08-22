@@ -274,6 +274,43 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 - section은 spacing과 짧은 divider로 나누며 card grid를 만들지 않는다.
 - 한 outer scroll과 fixed primary action 계약을 유지한다.
 
+## 5. 필수 3화면 교정: Upgrade / Message / HUD
+
+앞의 Deployment·Guidebook·Stage Report 이미지는 compact grouping을 탐색한 자료일 뿐, 사용자가 요구한 최종 3화면 세트를 대신하지 않는다. 아래 세 이미지를 이번 교정의 필수 to-be 세트로 본다. 세 이미지는 모두 최신 한국어 1280×720 캡처와 현재 소스 계약을 기준으로 만들었고, `deployment-bluegray-cyan-no-asset.png`에서는 색 체계만 이어받았다.
+
+기준 캡처: [현재 Upgrade 선택 상태](./assets/2026-08-22-general-uiux-analysis/current-head-upgrade-message-hud/06b-first-weapon-selected.png), [현재 Message 표시 상태](./assets/2026-08-22-general-uiux-analysis/current-head-upgrade-message-hud/04c-progression-max.png), [현재 고밀도 HUD 상태](./assets/2026-08-22-general-uiux-analysis/current-head-upgrade-message-hud/03-peak-horde.png).
+
+### Upgrade — 3개 제안의 근접 비교
+
+![Upgrade bluegray compact comparison concept](./assets/2026-08-22-general-uiux-analysis/upgrade-message-hud-bluegray/upgrade-bluegray-compact-comparison.png)
+
+- 왼쪽 current-build summary와 오른쪽 3개 선택 행을 한 화면에서 동시에 읽는다.
+- category, title, stat phrase, description을 각 선택 행 안의 한 근접 정보 블록으로 묶는다.
+- 통계는 `반지름 285   지속 시간 1.4초   재사용 13초`처럼 label과 값을 붙이고, 행 양끝으로 흩어 놓지 않는다.
+- 첫 행의 amber rail은 selected, cyan outline은 focus를 뜻한다. `모듈 장착` 외의 이탈·건너뛰기 action은 두지 않는다.
+- 왼쪽 이미지들은 빌드 identity를 빠르게 찾는 semantic content다. 큰 illustration이나 card chrome으로 사용하지 않는다.
+
+### Message — minimap 아래 한 개의 보조 AI 알림
+
+![Message bluegray auxiliary AI concept](./assets/2026-08-22-general-uiux-analysis/upgrade-message-hud-bluegray/message-bluegray-auxiliary-ai.png)
+
+- 메시지는 화면 중앙 banner가 아니라 minimap 바로 아래의 작은 보조 Surface 한 개가 소유한다.
+- `CONTROL` sender와 최대 두 줄의 메시지만 표시한다. 예시는 실제 현재 문자열 형식인 `적 업그레이드 장치 · 적 활성화 2 / 파괴 1`이다.
+- 같은 tick의 활성화·파괴 결과는 하나로 합치며, toast stack이나 history panel을 만들지 않는다.
+- coral은 위험 사건의 작은 semantic accent로만 쓰고, system identity는 cyan으로 유지한다.
+
+### HUD — 전투를 가리지 않는 전체 정보 구조
+
+![HUD bluegray compact cockpit concept](./assets/2026-08-22-general-uiux-analysis/upgrade-message-hud-bluegray/hud-bluegray-cockpit-compact.png)
+
+- Hull과 XP는 viewport 최상단에서 gap 없이 쌓인 full-width meter 두 개만 사용한다.
+- 바로 아래 좌측은 `stage → defeats → dash → active → conditional status`의 한 줄 panel-free cluster다. 아이콘과 짧은 값만 남기고 card, label column, cooldown ring을 제거한다.
+- 우측 상단은 minimap과 그 아래 한 개의 메시지 Surface만 쓴다.
+- 유저 기체는 화면 중앙의 player/reward yellow identity로 유지한다. HUD 장식 때문에 기체나 탄환, 위험 대상을 가리지 않는다.
+- bottom-center active indicator, objective panel, 화면 가장자리 boss HP, upgrade icon list는 중복 정보이므로 추가하지 않는다.
+
+세 화면의 공통 판단은 “모든 정보를 패널에 넣기”가 아니다. 비교가 필요한 Upgrade만 compact modal을 사용하고, Message는 minimap에 붙은 보조 Surface, HUD의 나머지는 panel-free overlay로 분리한다.
+
 ## 외부 근거와 적용 판단
 
 외부 자료는 Cardborne의 비주얼 승인 기준이 아니다. 자산의 정보 가치, 색 의미, readable measure, focus와 navigation 판단만 전이했다.
@@ -364,6 +401,9 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 | `deployment-bluegray-compact-controls.png` | `51734eb43affc3ba7b2cede3d9ad9d8231c301be2663cf975189d8e2ae51e860` | 사용자 선택 palette + compact grouping 기준 |
 | `guidebook-bluegray-stat-first.png` | `336b74f5b6320e3b5ad7742b96f2ccdf0235062096f9cf944d17a343bea1436a` | 3열 책임과 stat-first detail 기준 |
 | `stage-report-bluegray-inline-metrics.png` | `d47494bdbfba9f8fb3fdf826e2dd59d81831b30512bd5d28d20b55f676239840` | inline metric grouping 기준 |
+| `upgrade-bluegray-compact-comparison.png` | `7a657581a7672265e6dfbf5d656da5b64076a8a4d8287de2796172073a9725db` | 필수 Upgrade 화면; 근접 비교 구조 기준 |
+| `message-bluegray-auxiliary-ai.png` | `21296a80a9f25421fa543223ac87fa616b6efdc9f97737d51a81c9dfc3e3084d` | 필수 Message 화면; minimap 아래 단일 알림 기준 |
+| `hud-bluegray-cockpit-compact.png` | `8942dd59fd29b011cf8b1642aa933d8f54ca9dcce7bdb4440d3c2be3dc257069` | 필수 HUD 화면; panel-free 전투 정보 구조 기준 |
 
 교정 실험의 공통 prompt 계약은 다음과 같다.
 
@@ -391,4 +431,4 @@ wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서
 - 생성 이미지를 production texture로 승격.
 - 새 기능, 새 접근성 옵션, 새 gameplay 선택지 추가.
 
-다음 결정은 **이 3개 화면의 grouping grammar를 code-native prototype으로 옮길지**다.
+다음 결정은 **Upgrade·Message·HUD 3화면의 grammar를 code-native prototype으로 옮길지**다.

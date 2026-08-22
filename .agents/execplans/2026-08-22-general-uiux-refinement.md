@@ -46,6 +46,18 @@ related:
 
 ## Tasks
 
+### Required-surface correction: Upgrade, Message, and HUD
+
+- [x] Record that Deployment, Guidebook, and Stage Report do not satisfy the required three-surface deliverable.
+- [x] Refresh the complete visual-authority preflight for the expanded Upgrade, auxiliary-message, and full-HUD scope.
+- [x] Capture the latest Korean 1280×720 core UI set from the current worktree and inspect the Upgrade, HUD, and live announcement states.
+- [x] Trace the current Upgrade, HUD, announcement, and localization owners so generated copy and placement stay within the product contract.
+- [x] Generate and inspect one independent 1280×720 concept each for Upgrade, Message, and HUD with the canonical style sheet supplied as an actual image reference.
+- [x] Add the three required images and their decisions to the Korean report; explicitly demote the previous three-screen set to exploratory evidence.
+- [x] Validate authority, report-local links, retained image hashes, and the task-only diff; commit only this correction.
+
+Correction gate: the report must visibly include three separate images whose primary subjects are Upgrade, Message, and the complete HUD. The three images must share the selected bluegray/cyan system without turning every HUD element into a panel.
+
 ### Compact information-layout continuation
 
 - [x] Record the user's preference for the bluegray/cyan palette and retain the player-craft identity preview.
@@ -109,17 +121,17 @@ Phase gate: the report links current evidence and mockups, and all retained file
 - Canonical style reference: `docs/design/cardborne-universal-art-style-reference.png`; inspected at original 1448×1086 detail on 2026-08-22.
 - Expected and observed PNG SHA-256: `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
 - Original provenance: `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`, 2026-08-02 12:13:44 KST.
-- Task constraints: information-first modals; Deployment retains craft preview, one-line primary-weapon description, complete controls, and a two-zone body without distributed label/value gaps; Guidebook remains stat-first and wide three-column; Report remains one left-aligned outer scroll with one fixed action; one shared code-native Theme and six primitives; one boundary and at most one semantic rail; no nested frames, micro-panels, decorative seams, raster UI chrome, or baked text; Noto Sans KR; 44 px minimum targets; visible non-color focus/selection; Korean/English and 960/1280/1920 fit; dominant broad masses, matte planes, dark separation, sparse semantic accents.
+- Task constraints: information-first modals; Upgrade uses a compact current-build rail plus exactly three selectable rows and one fixed Equip action, with inline stat phrases instead of distributed blank columns; normal messages use one auxiliary AI Surface directly below the minimap; HUD uses two full-width top meters, one panel-free top-left status cluster, and only the minimap plus announcement as subtle Surfaces; one shared code-native Theme and six primitives; one boundary and at most one semantic rail; no nested frames, micro-panels, decorative seams, raster UI chrome, baked text, center banners, toast stacks, bottom-center active indicator, or redundant objective/boss/upgrade panels; Noto Sans KR; 44 px minimum targets where interactive; visible non-color focus/selection; Korean/English and 960/1280/1920 fit; dominant broad masses, matte planes, dark separation, sparse semantic accents.
 - ImageGen rule: every call must receive the canonical repository PNG through `referenced_image_paths`; the prompt must state that it supplies style grammar only and must not be copied.
 - Approval status: analysis evidence only; no generated image is approved for production or runtime integration.
-- Receipt refresh: the spec changed again before this continuation. The full current 952-line document and the original-detail PNG were re-inspected on 2026-08-22. The current modal contract explicitly retains the Deployment craft preview and two-column information responsibility while also prohibiting distributed blank stat columns; the new concepts must satisfy both by using compact perceptual groups rather than a viewport-spanning definition list.
+- Receipt refresh: the expanded Upgrade/Message/HUD scope triggered a fresh preflight. The full current 952-line document and the original-detail PNG were re-inspected on 2026-08-22. Current-worktree Korean 1280×720 evidence was captured once and the three inspected frames were retained under `docs/reports/assets/2026-08-22-general-uiux-analysis/current-head-upgrade-message-hud/`: `06b-first-weapon-selected.png`, `04c-progression-max.png`, and `03-peak-horde.png`. Every retained ImageGen call received the canonical repository PNG through its actual image-reference input.
 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this file.
 - Current phase: complete.
 - Next task: none in this concept-and-evidence scope. Runtime implementation requires explicit approval because it changes the shared row primitive, three screen owners, and current visual specification wording.
-- Last completed gate: focused references converged on current-device input chips, action/input proximity, contextual help, and local metric pairs. The retained three-screen set applies one bluegray/cyan system: Deployment keeps a 104–112 px player-craft identity and open 2×2 control clusters, Guidebook keeps three-column responsibility with stat-first detail, and Stage Report removes the distributed right value column in favor of inline metric phrases. The Cardborne visual-authority validator, eight report-local links, three retained image hashes, and task-only `git diff --check` passed.
+- Last completed gate: the required visual set now contains one independent 1280×720 Upgrade page, one live Message state, and one complete HUD frame. Upgrade keeps three comparison rows and local stat phrases; Message stays directly beneath the minimap in one bounded Surface; HUD keeps top meters and the left status cluster panel-free. The prior Deployment/Guidebook/Stage Report set remains exploratory evidence and is no longer presented as satisfying this requirement. The Cardborne visual-authority validator passed, all 14 report-local links resolved, the three final hashes matched the report, and `git diff --check` passed with only the repository's existing LF-to-CRLF notices.
 - Update rule: preserve passing evidence until a relevant owned input changes; do not repeat the full capture for reassurance.
 
 ## Completion and Stop Conditions
