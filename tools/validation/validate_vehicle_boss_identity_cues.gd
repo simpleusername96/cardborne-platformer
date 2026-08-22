@@ -75,7 +75,10 @@ func _initialize() -> void:
 			and run_source.contains("BossPatterns.BEAM_RANGE"),
 		"Cross Beam gameplay creates two clipped, growing, one-hit beam axes"
 	)
-	_expect(Patterns.startup_seconds("common_broad_barrage") >= 1.30, "broad barrage keeps the high-threat minimum warning")
+	_expect(
+		is_equal_approx(Patterns.startup_seconds("common_broad_barrage"), 0.22),
+		"broad barrage uses the explicit rapid-commit startup"
+	)
 	_finish()
 
 

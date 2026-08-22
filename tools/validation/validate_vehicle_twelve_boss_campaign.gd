@@ -37,7 +37,16 @@ func _initialize() -> void:
 					and BossProfiles.move_speed(index) > BossProfiles.move_speed(index - 1),
 				"%s has stronger independently authored core stats" % stage_id
 			)
-	_expect(Phases.uses_shield(&"stage_3"), "stage 3 boss retains its offensive segmented defense")
+	_expect(
+		Phases.uses_shield(&"stage_3")
+			and Phases.defense_effect(&"stage_3") == &"guard",
+		"Stage 3 retains its offensive segmented guard"
+	)
+	_expect(
+		Phases.uses_shield(&"stage_10")
+			and Phases.defense_effect(&"stage_10") == &"reflect",
+		"Stage 10 reflection is a segmented defense"
+	)
 	_expect(not Phases.uses_shield(&"stage_1") and not Phases.uses_shield(&"stage_5") and not Phases.uses_shield(&"stage_12"), "other bosses do not inherit a global shield")
 	_expect(Patterns.is_common("common_squad_call"), "every boss shares the periodic squad-call family")
 	var flow := Flow.new()

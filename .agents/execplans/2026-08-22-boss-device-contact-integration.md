@@ -193,16 +193,16 @@ Preconditions:
 
 Source owners: `scripts/bosses/vehicle_boss_shield_runtime.gd`, `scripts/bosses/vehicle_late_boss_mechanics.gd`, `scripts/combat/vehicle_projectile_state.gd`, `scripts/presentation/vehicle_combat_renderer.gd`, `scripts/vehicle/vehicle_run.gd`, `scripts/progression/vehicle_guidebook_stat_adapter.gd`
 
-- [ ] **2.1** Complete Stage 6 distance-growth ordnance.
+- [x] **2.1** Complete Stage 6 distance-growth ordnance.
   - Change: start speed/radius/damage at `1.00x`, preserve monotonic caps `1.35x/1.50x/1.60x`, arm at `720` travelled units, trigger within `96` plus player radius, apply one `150`-radius radial detonation, and share one direct-contact/proximity retirement path.
   - Accept: pre-arm contact cannot detonate; growth samples are monotonic; proximity without body contact detonates once; direct contact cannot add a second hit; one Stage 6 scheduler emits one authored bank.
-- [ ] **2.2** Generalize Stage 3 guard and Stage 10 reflection under one segmented defense owner.
+- [x] **2.2** Generalize Stage 3 guard and Stage 10 reflection under one segmented defense owner.
   - Change: preserve Stage 3's three `80`-degree segments, three `40`-degree gaps, `8 s` active, `2 s` down, `15%` through-segment damage, rotation, and counterburst. Replace Stage 10's facing plate with three `70`-degree reflection segments and three `50`-degree gaps, `15 s` fully down, a non-blocking cue during the last exposed second, and `5 s` active.
   - Accept: Stage 3 values are unchanged; Stage 10 segment hits reflect, gap hits damage normally, full-down hits damage normally, and boss facing cannot alter angular coverage.
-- [ ] **2.3** Apply exact Stage 7 and Stage 9 wall scales.
+- [x] **2.3** Apply exact Stage 7 and Stage 9 wall scales.
   - Change: multiply boss-owned Stage 7 crossing-wall speed and damage and boss-owned Stage 9 compression-wall speed and damage by `0.70`; preserve geometry, openings, warnings, delays, and non-boss uses.
   - Accept: deterministic equal-duration samples measure exactly seventy percent of prior travel and damage for every wall variant while geometry and unrelated boss stats remain unchanged.
-- [ ] **2.4** Synchronize presentation and Guidebook truth.
+- [x] **2.4** Synchronize presentation and Guidebook truth.
   - Change: remove the false beam-like Stage 6 trail; render only the growing projectile and bounded armed cue; render Stage 3/10 defense segments from the exact collision snapshot; update only the corresponding boss Guidebook rows.
   - Accept: renderer fixtures expose no Stage 6 connecting line, armed cues appear only when collision is armed, and visible defense arcs/gaps/cue/down states equal runtime values.
 
@@ -219,6 +219,7 @@ Batch gate:
 Checkpoint and commit:
 
 - Record the focused receipts in this plan, check Tasks 2.1–2.4, and commit only Phase 2 files with a short explanatory body.
+- 2026-08-22 receipt: distance-growth projectile, late-boss mechanics, late-boss identities, combat renderer, boss identity cues, boss exams, twelve-boss campaign, and boss-difficulty validators passed under Godot `4.7.1.stable`. Stage 6 proximity and single-retirement paths, Stage 3/10 collision-owned segments, Stage 7/9 exact `0.70` boss-wall scales, retained Guidebook device rows, and the no-false-trail renderer contract were exercised. Two remote validator defects were corrected locally: explicit `Dictionary` typing for a dynamic runtime snapshot and five-family common-pool expectations after rejecting the lane volley.
 
 ### Phase 3: Four Contested Enemy Upgrade Devices per Non-Tutorial Cycle
 
@@ -386,9 +387,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 2.
-- Next task: Task 2.1, complete Stage 6 distance-growth ordnance.
-- Last completed gate: Phase 1 focused boss-pattern/runtime/exam/campaign gate.
+- Current phase: Phase 3.
+- Next task: Task 3.1, publish four cycle-scoped enemy upgrade devices outside the tutorial.
+- Last completed gate: Phase 2 focused projectile/late-mechanics/renderer/identity gate plus affected boss regression checks.
 - Update rule: on start or resume, read this contract and inspect the worktree only enough to confirm checkpoint inputs, then continue from the first unchecked task whose prerequisites pass. After each checkpoint, record concise evidence, check the task, advance this pointer, and commit the coherent phase. Do not mirror progress into another plan.
 
 ## Completion and Stop Conditions

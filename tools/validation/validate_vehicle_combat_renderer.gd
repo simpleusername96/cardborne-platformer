@@ -685,9 +685,13 @@ func _run() -> void:
 	shield_presentation["orbiting_blade_level"] = 0
 	shield_presentation["secondary"]["blade_count"] = 0
 	shield_presentation["boss_shield"] = {
-		"shield_kind":&"frontal_intercept",
+		"shield_kind":&"segmented_guard",
+		"effect":&"guard",
 		"state":&"shield_up",
-		"frontal_half_angle":deg_to_rad(35.0),
+		"segment_count":3,
+		"segment_arc":deg_to_rad(80.0),
+		"gap_arc":deg_to_rad(40.0),
+		"rotation":0.0,
 	}
 	renderer.sync(
 		[open_boss], no_projectiles, no_projectiles, [], [],
@@ -717,7 +721,7 @@ func _run() -> void:
 		boss_ring_batch.multimesh.visible_instance_count == 0
 			and beam_batch.multimesh.visible_instance_count == 30
 			and Renderer.BOSS_SHIELD_SEGMENT_THICKNESS >= 12.0,
-		"Stage 3 boss renders three separated shield segments without a full ring"
+		"Stage 3 boss renders three collision-matched shield segments without a full ring"
 	)
 	var destruction_presentation := _player_presentation(Vector2.ZERO, false)
 	destruction_presentation["dying_boss_id"] = open_boss.id

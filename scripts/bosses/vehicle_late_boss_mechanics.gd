@@ -33,6 +33,29 @@ const COMPRESSION_MAX_SHIFT := 280.0
 const COMPRESSION_PAIR_DELAY := 0.45
 const COMPRESSION_EDGE_CUE_SECONDS := 0.75
 
+const CROSSING_WALL_BASE_SPEED := 320.0
+const CROSSING_WALL_SPEED_SCALE := 0.70
+const CROSSING_WALL_DAMAGE_SCALE := 0.70
+const COMPRESSION_WALL_BASE_SPEED := 620.0
+const COMPRESSION_WALL_SPEED_SCALE := 0.70
+const COMPRESSION_WALL_DAMAGE_SCALE := 0.70
+
+
+static func crossing_wall_speed() -> float:
+	return CROSSING_WALL_BASE_SPEED * CROSSING_WALL_SPEED_SCALE
+
+
+static func crossing_wall_damage(base_damage: float) -> float:
+	return maxf(0.0, base_damage) * CROSSING_WALL_DAMAGE_SCALE
+
+
+static func compression_wall_speed() -> float:
+	return COMPRESSION_WALL_BASE_SPEED * COMPRESSION_WALL_SPEED_SCALE
+
+
+static func compression_wall_damage(base_damage: float) -> float:
+	return maxf(0.0, base_damage) * COMPRESSION_WALL_DAMAGE_SCALE
+
 
 static func reflection_active(elapsed_seconds: float) -> bool:
 	return reflection_cycle_time(elapsed_seconds) >= REFLECT_EXPOSED_SECONDS
