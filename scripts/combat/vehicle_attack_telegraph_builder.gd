@@ -178,6 +178,11 @@ static func refresh_boss(
 		)
 		_append_boss_aimed_burst(enemy, pattern, damage * 0.55)
 	elif kind == &"beam":
+		var topology := BossPatterns.beam_topology(pattern)
+		if topology.is_empty():
+			topology = AttackContract.HOSTILE_BEAM_TOPOLOGIES[
+				posmod(enemy.pattern_index - 1, AttackContract.HOSTILE_BEAM_TOPOLOGIES.size())
+			]
 		_append_hostile_beam_topology(
 			enemy,
 			pattern,
@@ -185,9 +190,7 @@ static func refresh_boss(
 			damage,
 			affinity,
 			resolve_path,
-			AttackContract.HOSTILE_BEAM_TOPOLOGIES[
-				posmod(enemy.pattern_index - 1, AttackContract.HOSTILE_BEAM_TOPOLOGIES.size())
-			]
+			topology
 		)
 	elif kind == &"switch_sweep":
 		_append_hostile_switch_sweep(

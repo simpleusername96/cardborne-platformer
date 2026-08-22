@@ -39,6 +39,20 @@ static func add_roles(stage_id: StringName, phase: int) -> Array[StringName]:
 static func tactic_id(stage_id: StringName, phase: int) -> StringName:
 	return StringName(Dictionary(definition(stage_id).get("tactic_ids", {})).get(phase, &""))
 
+
+static func squad_roles(stage_id: StringName, phase: int) -> Array[StringName]:
+	var source_phase := clampi(phase, 1, 3)
+	if source_phase == 1:
+		source_phase = 2
+	var result := add_roles(stage_id, source_phase)
+	if phase <= 1 and result.size() > 3:
+		result.resize(3)
+	return result
+
+
+static func squad_tactic_id(stage_id: StringName, phase: int) -> StringName:
+	return tactic_id(stage_id, 2 if phase <= 1 else phase)
+
 static func variant(stage_id: StringName) -> StringName:
 	return StringName(definition(stage_id).get("variant", &""))
 
@@ -54,8 +68,8 @@ static func validate_contract() -> PackedStringArray:
 		if definition(stage_id).is_empty():
 			errors.append("missing boss phase definition: %s" % stage_id)
 			continue
-		for phase in [2, 3]:
-			var roles := add_roles(stage_id, phase)
+		for phase in [1, 2, 3]:
+			var roles := squad_roles(stage_id, phase)
 			if roles.is_empty() or roles.size() > MAX_LIVE_ADDS:
-				errors.append("%s phase %d add packet is out of bounds" % [stage_id, phase])
+				errors.append("%s phase %d squad packet is out of bounds" % [stage_id, phase])
 	return errors

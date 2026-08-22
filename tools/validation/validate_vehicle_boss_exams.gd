@@ -23,10 +23,11 @@ func _validate_catalog() -> void:
 		_expect(not variant.is_empty(), "%s owns a boss variant" % stage_id)
 		_expect(not variants.has(variant), "%s boss variant is unique" % stage_id)
 		variants[variant] = true
-		for phase in [2, 3]:
+		for phase in [1, 2, 3]:
+			var roles := Catalog.squad_roles(stage_id, phase)
 			_expect(
-				Catalog.add_roles(stage_id, phase).size() <= Catalog.MAX_LIVE_ADDS,
-				"%s phase %d add packet stays at or below twelve" % [stage_id, phase]
+				not roles.is_empty() and roles.size() <= Catalog.MAX_LIVE_ADDS,
+				"%s phase %d periodic squad stays bounded" % [stage_id, phase]
 			)
 	_expect(variants.size() == 12, "all twelve cycles own distinct boss identities")
 	_expect(
@@ -93,9 +94,11 @@ func _validate_source_boundaries() -> void:
 	_expect(
 		run_source.contains("boss_shield_runtime.boss_damage_multiplier")
 			and run_source.contains("_spawn_boss_phase_adds")
+			and run_source.contains("boss_runtime.advance_squad")
+			and not run_source.contains("var payload := boss_shield_runtime.begin_phase")
 			and not run_source.contains("boss_pylon")
 			and not run_source.contains("boss_objective"),
-		"production boss flow consumes one boss-attached defense without objective actors"
+		"production boss flow consumes one boss-attached defense and periodic squads without phase-spawn objectives"
 	)
 
 

@@ -6434,6 +6434,18 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 		player_position
 	):
 		_execute_boss_autonomous(event)
+	var signature_active := (
+		boss.phase in [&"boss_startup", &"boss_active"]
+		and BossPatterns.is_signature(current_stage_id, String(boss.pattern))
+	)
+	var squad_event := boss_runtime.advance_squad(delta, boss, signature_active)
+	if not squad_event.is_empty():
+		_spawn_boss_phase_adds(
+			boss,
+			Array(squad_event.get("roles", [])),
+			StringName(squad_event.get("tactic_id", &"")),
+			String(squad_event.get("id", ""))
+		)
 	var receipt := boss_runtime.advance_direct_phase(boss, cadence_delta, false)
 	if not BossRuntime.valid_phase_receipt(receipt):
 		push_error("Boss runtime emitted an invalid phase receipt")
@@ -7082,14 +7094,9 @@ func _begin_boss_shield_phase(boss: EnemyState, next_phase: int) -> void:
 	boss.phase_time = 0.90
 	boss.pattern = &"phase_transition" if boss.boss_phase > 1 else &"system_wake"
 	boss.pattern_index = 0
-	boss.boss_shield_state = &"shield_up"
 	boss.attack_telegraphs.clear()
-	var payload := boss_shield_runtime.begin_phase(boss.boss_phase)
-	_spawn_boss_phase_adds(
-		boss,
-		Array(payload.get("add_roles", [])),
-		StringName(payload.get("tactic_id", &""))
-	)
+	boss_shield_runtime.begin_phase(boss.boss_phase)
+	boss.boss_shield_state = boss_shield_runtime.state()
 	_show_pending_boss_state_hint()
 	if boss.boss_phase > 1:
 		boss_phase_two_announced = true
@@ -7099,7 +7106,8 @@ func _begin_boss_shield_phase(boss: EnemyState, next_phase: int) -> void:
 func _spawn_boss_phase_adds(
 	boss: EnemyState,
 	roles: Array,
-	tactic_id: StringName
+	tactic_id: StringName,
+	squad_id_override: String = ""
 ) -> void:
 	var live_before := _live_boss_add_count()
 	var available := maxi(
@@ -7108,7 +7116,11 @@ func _spawn_boss_phase_adds(
 	)
 	var spawn_count := mini(available, roles.size())
 	var spawned := 0
-	var squad_id := "boss_wave_p%d" % boss.boss_phase
+	var squad_id := (
+		squad_id_override
+		if not squad_id_override.is_empty()
+		else "boss_wave_p%d" % boss.boss_phase
+	)
 	var emitter_indices: Array[int] = []
 	for role_index in spawn_count:
 		var role_definition := EnemyArchetypes.definition(StringName(roles[role_index]))

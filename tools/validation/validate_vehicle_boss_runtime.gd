@@ -2,6 +2,7 @@ extends SceneTree
 
 const BossRuntime = preload("res://scripts/bosses/vehicle_boss_runtime.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
+const PhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
@@ -62,117 +63,146 @@ class BossServiceStub:
 func _init() -> void:
 	var runtime := BossRuntime.new()
 	_expect(BossProfiles.PROFILES.size() == 12, "boss offense reads twelve absolute profiles")
-	var previous_gap := INF
-	var previous_initial_delay := INF
-	for boss_index in 12:
-		var stage_index := boss_index
-		var stage_id := StringName("stage_%d" % (stage_index + 1))
-		runtime.configure(stage_id)
-		var configured := runtime.snapshot()
-		_expect(
-			is_equal_approx(
-				float(configured["autonomous_timer"]),
-				float(BossProfiles.profile(stage_index)["initial_autonomous_delay"])
-			),
-			"%s applies stage cadence to the initial autonomous delay" % stage_id
-		)
-		_expect(
-			runtime.read_gap(1) <= previous_gap
-				and float(configured["autonomous_timer"]) <= previous_initial_delay,
-			"%s never slows the stage-owned direct or autonomous cadence" % stage_id
-		)
-		previous_gap = runtime.read_gap(1)
-		previous_initial_delay = float(configured["autonomous_timer"])
-		var boss := _boss()
-		for phase in range(1, 4):
-			_expect(
-				is_equal_approx(
-					runtime.read_gap(phase),
-					BossProfiles.read_gap(stage_index, phase)
-				),
-				"%s phase %d applies the exact direct read gap" % [stage_id, phase]
-			)
-			boss.boss_phase = phase
-			runtime.autonomous_timer = 0.0
-			runtime.advance_autonomous(0.0, boss, Vector2(320.0, 180.0))
-			_expect(
-				is_equal_approx(
-					float(runtime.snapshot()["autonomous_timer"]),
-					BossProfiles.autonomous_interval(stage_index, phase)
-				),
-				"%s phase %d applies the exact autonomous interval" % [stage_id, phase]
-			)
-		boss.boss_phase = 1
-		var cycle: Array[String] = []
-		for _index in 5:
-			cycle.append(runtime.select_direct(boss))
-		_expect(
-			cycle.duplicate().all(func(pattern): return cycle.count(pattern) == 1),
-			"%s direct cycle contains five distinct attacks" % stage_id
-		)
-		for pattern in cycle:
-			_expect(
-				BossPatterns.commit_mode(pattern) in [&"committed", &"autonomous"],
-				"%s direct selection declares execution ownership" % stage_id
-			)
-			_expect(
-				BossRuntime.supports_direct_pattern(pattern),
-				"%s direct selection has an explicit runtime route: %s" % [stage_id, pattern]
-			)
-		boss.last_pattern = StringName(BossPatterns.sequence(stage_id, 1)[0])
-		boss.pattern_index = 0
-		_expect(
-			runtime.select_direct(boss) != String(boss.last_pattern),
-			"%s does not immediately repeat its last direct attack" % stage_id
-		)
-		boss.boss_phase = 2
-		boss.pattern_index = 0
-		var later_cycle: Array[String] = []
-		for _index in 5:
-			later_cycle.append(runtime.select_direct(boss))
-		for pattern in later_cycle:
-			_expect(
-				BossPatterns.commit_mode(pattern) in [&"committed", &"autonomous"],
-				"%s phase-two direct selection declares execution ownership" % stage_id
-			)
-		var events := runtime.advance_autonomous(10.0, boss, Vector2(320.0, 180.0))
-		_expect(events.size() == 1, "%s emits its next bounded autonomous attack" % stage_id)
-		if not events.is_empty():
-			var event := events[0]
-			_expect(
-				BossRuntime.supports_autonomous_pattern(String(event["pattern"])),
-				"%s autonomous selection has an explicit world route" % stage_id
-			)
-			_expect(
-				StringName(event["kind"]) == BossPatterns.kind(String(event["pattern"])),
-				"%s preserves the authored autonomous shape" % stage_id
-			)
-			_expect(
-				is_equal_approx(
-					float(event["damage"]),
-					BossPatterns.damage(String(event["pattern"]), stage_index)
-				) and is_equal_approx(
-					float(event["radius"]),
-					BossPatterns.radius(String(event["pattern"]), stage_index)
-				) and is_equal_approx(
-					float(event["width"]),
-					BossPatterns.width(String(event["pattern"]), stage_index)
-				),
-				"%s autonomous event uses stage-scaled damage and footprint" % stage_id
-			)
-	_expect(
-		runtime.read_gap(1) > runtime.read_gap(3),
-		"direct-pattern read cadence escalates without owning semantic phase floors"
-	)
+	_validate_stage_selection(runtime)
+	_validate_squad_cadence(runtime)
+	_validate_autonomous_cadence(runtime)
 	_validate_late_stage_direct_area_coverage(runtime)
 	_validate_direct_beam_growth(runtime)
 	_validate_switch_sweep_geometry()
+	_validate_broad_barrage_geometry()
 	_validate_direct_identity_activation(runtime)
 	_validate_radial_volley_schedule(runtime)
 	_validate_direct_recovery_scale(runtime)
 	_validate_direct_long_banks(runtime)
 	_validate_phase_receipts(runtime)
 	_finish()
+
+
+func _validate_stage_selection(runtime: BossRuntime) -> void:
+	for stage_index in 12:
+		var stage_id := StringName("stage_%d" % (stage_index + 1))
+		runtime.configure(stage_id)
+		var boss := _boss()
+		var common := BossPatterns.common_sequence(stage_id, 1)
+		var signatures := BossPatterns.signature_sequence(stage_id, 1)
+		_expect(
+			common.size() == (3 if stage_index == 0 else 5),
+			"%s exposes the cumulative tutorial common pool" % stage_id
+		)
+		for pattern in common:
+			_expect(
+				BossPatterns.is_common(pattern)
+					and BossRuntime.supports_direct_pattern(pattern),
+				"%s common selection has an explicit direct route: %s" % [stage_id, pattern]
+			)
+		for pattern in signatures:
+			_expect(
+				BossPatterns.is_signature(stage_id, pattern)
+					and BossRuntime.supports_direct_pattern(pattern),
+				"%s signature selection has an explicit direct route: %s" % [stage_id, pattern]
+			)
+
+		var first := runtime.select_direct(boss)
+		boss.last_pattern = StringName(first)
+		var second := runtime.select_direct(boss)
+		_expect(
+			first in common and second in common and first != second,
+			"%s opens with two non-repeating common attacks" % stage_id
+		)
+		var third := runtime.select_direct(boss)
+		if signatures.is_empty():
+			_expect(third in common, "%s continues the common pool without a direct signature" % stage_id)
+		else:
+			_expect(third in signatures, "%s inserts one signature after two common attacks" % stage_id)
+			var fourth := runtime.select_direct(boss)
+			_expect(fourth in common, "%s returns to the common language after its signature" % stage_id)
+
+		for phase in range(1, 4):
+			_expect(
+				is_equal_approx(runtime.read_gap(phase), BossProfiles.read_gap(stage_index, phase)),
+				"%s phase %d preserves its exact direct read gap" % [stage_id, phase]
+			)
+			var phase_common := BossPatterns.common_sequence(stage_id, phase)
+			_expect(
+				phase_common.size() == common.size()
+					and phase_common.all(func(pattern): return pattern in common),
+				"%s phase %d reorders without removing common attacks" % [stage_id, phase]
+			)
+
+
+func _validate_squad_cadence(runtime: BossRuntime) -> void:
+	for stage_index in 12:
+		var stage_id := StringName("stage_%d" % (stage_index + 1))
+		runtime.configure(stage_id)
+		var boss := _boss()
+		_expect(
+			runtime.advance_squad(BossRuntime.SQUAD_INTERVAL_SECONDS - 0.01, boss).is_empty(),
+			"%s does not call a squad before ten seconds" % stage_id
+		)
+		var squad := runtime.advance_squad(0.01, boss)
+		_expect(
+			StringName(squad.get("pattern", &"")) == &"common_squad_call"
+				and Array(squad.get("roles", [])).size() == PhaseCatalog.squad_roles(stage_id, 1).size()
+				and StringName(squad.get("tactic_id", &"")) == PhaseCatalog.squad_tactic_id(stage_id, 1),
+			"%s emits its authored common squad at ten seconds" % stage_id
+		)
+		_expect(
+			runtime.advance_squad(BossRuntime.SQUAD_INTERVAL_SECONDS, boss, true).is_empty()
+				and is_zero_approx(float(runtime.snapshot()["squad_timer"])),
+			"%s holds a due squad while a major signature is active" % stage_id
+		)
+		var released := runtime.advance_squad(0.0, boss, false)
+		_expect(
+			not released.is_empty() and int(released.get("phase", 0)) == 1,
+			"%s releases the held squad after the signature ends" % stage_id
+		)
+
+
+func _validate_autonomous_cadence(runtime: BossRuntime) -> void:
+	for stage_index in 12:
+		var stage_id := StringName("stage_%d" % (stage_index + 1))
+		runtime.configure(stage_id)
+		var sequence := BossPatterns.autonomous_sequence(stage_id)
+		var snapshot := runtime.snapshot()
+		if sequence.is_empty():
+			_expect(
+				is_inf(float(snapshot["autonomous_timer"]))
+					and runtime.advance_autonomous(999.0, _boss(), Vector2.ZERO).is_empty(),
+				"%s disables its unused independent scheduler" % stage_id
+			)
+			continue
+		_expect(
+			is_equal_approx(
+				float(snapshot["autonomous_timer"]),
+				float(BossProfiles.profile(stage_index)["initial_autonomous_delay"])
+			),
+			"%s preserves its initial independent-system delay" % stage_id
+		)
+		var boss := _boss()
+		boss.boss_phase = 2
+		var events := runtime.advance_autonomous(999.0, boss, Vector2(320.0, 180.0))
+		_expect(events.size() == 1, "%s emits one bounded independent signature event" % stage_id)
+		if events.is_empty():
+			continue
+		var event := events[0]
+		_expect(
+			String(event["pattern"]) in sequence
+				and BossPatterns.is_signature(stage_id, String(event["pattern"]))
+				and BossRuntime.supports_autonomous_pattern(String(event["pattern"])),
+			"%s independent event remains stage-signature work" % stage_id
+		)
+		_expect(
+			is_equal_approx(
+				float(runtime.snapshot()["autonomous_timer"]),
+				BossProfiles.autonomous_interval(stage_index, 2)
+			),
+			"%s resets to its exact phase-two independent interval" % stage_id
+		)
+
+	_expect(
+		BossPatterns.autonomous_sequence(&"stage_6").is_empty(),
+		"Stage 6 has one direct owner for distance-growth ordnance"
+	)
 
 
 func _validate_phase_receipts(runtime: BossRuntime) -> void:
@@ -217,7 +247,7 @@ func _validate_phase_receipts(runtime: BossRuntime) -> void:
 
 func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
 	runtime.configure(&"stage_8")
-	var pattern := "thermal_ring"
+	var pattern := "common_radial_bombardment"
 	var default_radius := BossPatterns.radius(pattern)
 	var stage_radius := BossPatterns.radius(pattern, 7)
 	var services := BossServiceStub.new()
@@ -232,7 +262,7 @@ func _validate_late_stage_direct_area_coverage(runtime: BossRuntime) -> void:
 	runtime.update_active(boss, 0.01, services)
 	_expect(
 		services.damage_calls == 1,
-		"Cycle 8 direct area damage reaches beyond the default boss footprint"
+		"Cycle 8 common radial damage reaches its authored boss footprint"
 	)
 
 
@@ -240,7 +270,7 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 	runtime.configure(&"stage_1")
 	var services := BossServiceStub.new()
 	var boss := _boss()
-	boss.pattern = &"thermal_ring"
+	boss.pattern = &"common_radial_bombardment"
 	boss.phase = &"boss_active"
 	boss.phase_time = 0.01
 	boss.pattern_volleys = 1
@@ -249,8 +279,11 @@ func _validate_direct_recovery_scale(runtime: BossRuntime) -> void:
 	runtime.update_active(boss, 0.02, services)
 	_expect(
 		boss.phase == &"boss_recovery"
-			and is_equal_approx(boss.phase_time, BossPatterns.recovery_seconds("thermal_ring", 0)),
-		"direct recovery reads the boss pattern's absolute value"
+			and is_equal_approx(
+				boss.phase_time,
+				BossPatterns.recovery_seconds("common_radial_bombardment", 0)
+			),
+		"direct recovery reads the common pattern's absolute value"
 	)
 
 
@@ -395,6 +428,59 @@ func _validate_switch_sweep_geometry() -> void:
 	_expect(delays == [0.0, 0.18, 0.36], "switch-sweep headings release in one fixed sequence")
 
 
+func _validate_broad_barrage_geometry() -> void:
+	var boss := _boss()
+	boss.phase = &"boss_startup"
+	boss.pattern = &"common_broad_barrage"
+	boss.committed_dir = Vector2.RIGHT
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"common_broad_barrage",
+		func(origin: Vector2, direction: Vector2, distance: float, _padding: float):
+			return origin + direction * distance,
+		Callable(),
+		0
+	)
+	_expect(boss.attack_telegraphs.size() == 18, "spread barrage publishes exactly eighteen projectiles")
+	var spread_counts := {0.0: 0, 0.38: 0, 0.76: 0}
+	for descriptor in boss.attack_telegraphs:
+		var delay := snappedf(float(descriptor.get("row_delay", -1.0)), 0.01)
+		spread_counts[delay] = int(spread_counts.get(delay, 0)) + 1
+	_expect(
+		spread_counts == {0.0: 6, 0.38: 6, 0.76: 6}
+			and is_equal_approx(
+				Vector2(boss.attack_telegraphs[0]["direction"]).angle(),
+				deg_to_rad(-21.0)
+			)
+			and is_equal_approx(
+				Vector2(boss.attack_telegraphs[5]["direction"]).angle(),
+				deg_to_rad(21.0)
+			),
+		"spread barrage keeps three six-shot rows and the authored plus/minus 21-degree fan"
+	)
+	AttackTelegraphs.refresh_boss(
+		boss,
+		"common_broad_barrage",
+		func(origin: Vector2, direction: Vector2, distance: float, _padding: float):
+			return origin + direction * distance,
+		Callable(),
+		1
+	)
+	_expect(
+		boss.attack_telegraphs.size() == 18
+			and is_equal_approx(Vector2(boss.attack_telegraphs[0]["direction"]).angle(), 0.0)
+			and is_equal_approx(
+				Vector2(boss.attack_telegraphs[6]["direction"]).angle(),
+				deg_to_rad(22.5)
+			)
+			and is_equal_approx(
+				Vector2(boss.attack_telegraphs[12]["direction"]).angle(),
+				deg_to_rad(45.0)
+			),
+		"rotate barrage changes its six-shot row axis by 22.5 degrees"
+	)
+
+
 func _boss() -> EnemyState:
 	var boss := EnemyState.new()
 	boss.health = 100.0
@@ -402,6 +488,7 @@ func _boss() -> EnemyState:
 	boss.boss_phase = 1
 	boss.pattern_index = 0
 	boss.visual_radius = 146.0
+	boss.radius = 76.0
 	return boss
 
 

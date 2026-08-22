@@ -154,18 +154,18 @@ Preconditions:
 
 Source owners: `scripts/bosses/vehicle_boss_patterns.gd`, `scripts/bosses/vehicle_boss_runtime.gd`, `scripts/bosses/vehicle_boss_phase_catalog.gd`, `scripts/combat/vehicle_attack_telegraph_builder.gd`, `scripts/vehicle/vehicle_run.gd`, `tools/validation/validate_vehicle_boss_patterns.gd`, `tools/validation/validate_vehicle_boss_runtime.gd`
 
-- [ ] **1.1** Publish exact common and signature catalogs.
+- [x] **1.1** Publish exact common and signature catalogs.
   - Change: port the remote common/signature queries and per-stage signature sequences; define the five direct common IDs and periodic squad family listed in this contract; set Stage 1 and Stage 2 unlocks to three and five direct families; remove every runtime definition, query, validator expectation, and canonical product or visual-document mention of `common_lane_volley`. This plan may retain the name only to record the rejected remote behavior.
   - Accept: Stages 1, 2, and 3 resolve the locked cumulative sets; Stages 4–12 resolve all five direct common families; common and signature queries are disjoint; no tracked runtime or validator reference to `common_lane_volley` remains.
   - Guard: do not copy remote neutral-facility, CI, migration, or patch-recovery changes while moving the catalog.
-- [ ] **1.2** Make the broad barrage exactly three rows by six shots.
+- [x] **1.2** Make the broad barrage exactly three rows by six shots.
   - Change: keep one fixed-cap broad-barrage scheduler, publish rows at `0.00/0.38/0.76 s`, force six projectiles per row in every cycle, preserve spread mode, and preserve the `22.5`-degree row-axis rotation in Stages 2, 4, 7, and 8.
   - Accept: a deterministic fixture observes exactly eighteen projectiles per execution, three six-shot row receipts, correct row times, unchanged spread angles, and rotated row axes in every named rotate stage.
   - Guard: one barrage execution may schedule the eighteen projectiles once only; direct and autonomous owners cannot duplicate it.
-- [ ] **1.3** Apply rapid committed startup without retargeting.
+- [x] **1.3** Apply rapid committed startup without retargeting.
   - Change: port the remote `0.18/0.22/0.28/0.30 s` startup caps by boss pattern kind; capture target/direction once; preserve longer radial, beam, crossing-wall, and compression warnings; leave the current ordinary attack table and recovery-rate constant unchanged.
   - Accept: focused fixtures prove each rapid cap, non-tracking startup/active behavior, unchanged radial/beam/wall warning values, and byte- or value-equivalent ordinary attack startup/recovery data.
-- [ ] **1.4** Separate common/signature cursors and publish periodic squads.
+- [x] **1.4** Separate common/signature cursors and publish periodic squads.
   - Change: select two common direct attacks before an available signature, prevent immediate repeat where an alternative exists, reset cursors per boss, use the remote ten-second phase-aware squad timer, and prevent a squad call from beginning during a major signature execution.
   - Accept: all twelve bosses produce valid bounded common actions; bosses with signatures produce the exact two-common/one-signature rhythm; squad packets remain within the existing live-add cap and phase composition; health thresholds no longer create duplicate immediate squads.
 
@@ -181,6 +181,7 @@ Batch gate:
 Checkpoint and commit:
 
 - Record the focused receipts in this plan, check Tasks 1.1–1.4, and commit only Phase 1 files with a short explanatory body.
+- 2026-08-22 receipt: Godot `4.7.1.stable`; boss-pattern, boss-runtime, boss-exam, and twelve-boss-campaign validators passed. The runtime fixture observed eighteen projectiles, six receipts at each `0.00/0.38/0.76 s` row, spread edges at `+/-21` degrees, and rotate axes at `0/22.5/45` degrees. Runtime and validator sources contain no `common_lane_volley`; ordinary attack-contract and encounter-cadence owners were unchanged.
 
 ### Phase 2: Stage 6, Segmented Defenses, and Wall Corrections
 
@@ -385,9 +386,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 1.
-- Next task: Task 1.1, publish exact common and signature catalogs without `common_lane_volley`.
-- Last completed gate: Discovery Closure Gate and visual-authority receipt reuse.
+- Current phase: Phase 2.
+- Next task: Task 2.1, complete Stage 6 distance-growth ordnance.
+- Last completed gate: Phase 1 focused boss-pattern/runtime/exam/campaign gate.
 - Update rule: on start or resume, read this contract and inspect the worktree only enough to confirm checkpoint inputs, then continue from the first unchecked task whose prerequisites pass. After each checkpoint, record concise evidence, check the task, advance this pointer, and commit the coherent phase. Do not mirror progress into another plan.
 
 ## Completion and Stop Conditions
