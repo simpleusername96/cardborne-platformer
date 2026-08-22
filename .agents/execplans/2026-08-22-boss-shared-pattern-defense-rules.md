@@ -96,7 +96,7 @@ Stage 10 replaces the facing-based 100-degree plate with segmented reflection co
 - No experimental movement archetype system, reactive director, echo attacks, moving safe lanes, commander objective, or other optional follow-up idea from the preceding discussion.
 - No merge to `master` and no release publication.
 
-## Current Implementation Facts
+## Baseline Implementation Facts at Branch Creation
 
 - Direct attacks currently advance through one stage-owned list and reorder at the 65% and 30% phase thresholds.
 - Autonomous attacks currently use an independent timer and may overlap direct attacks.
@@ -129,13 +129,16 @@ Expected canonical PNG SHA-256:
 
 - `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`
 
-Preflight status at plan creation:
+Completed root-task receipt:
 
-- both repository paths exist;
-- current Git blob identities match the authority files used by the immediately preceding verified boss-visual task;
-- the fresh root-task SHA-256 computation, complete document read, and original-detail image inspection remain required before the first material renderer or defense-presentation change;
-- a focused CI preflight validator will compute both hashes and place the exact canonical PNG in the workflow evidence artifact for local original-detail inspection;
-- no raster, SVG, or ImageGen creation is in scope, so actual image-reference input is not applicable.
+- both canonical repository paths exist;
+- expected and observed PNG SHA-256: `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`;
+- final current `VISUAL_SYSTEM.md` SHA-256 after the task-owned contract update: `3ac96b5a8135f4d0e3d1fb189b0a505e2b9fcd3f582f1936a42e0e0856c11791`;
+- the complete current 950-line visual specification was read after that update;
+- the canonical `1448 x 1086` PNG was inspected at original detail;
+- original artifact provenance remains `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`, timestamp `2026-08-02 12:13:44 KST`;
+- the focused authority validator copies the exact PNG and a machine-readable receipt into the workflow evidence artifact;
+- no raster, SVG, or ImageGen deliverable exists in this task, so actual image-reference input is not applicable.
 
 Task-specific visual constraints:
 
@@ -291,9 +294,10 @@ Focused validators added or updated by this task must cover:
 
 ## Progress and Next Step
 
-- Current phase: Phase 0.
-- Next task: 0.1, add the authority preflight validator and obtain the fresh visual receipt before material presentation changes.
-- Last completed gate: branch created from `8d762af1c233471632f1f3ffc9ae9da13e55caf7`; repository instructions and plan rules read; implementation contract committed.
+- Current phase: Phase 5 integration and validation.
+- Implementation checkpoint: common/signature data and scheduling, periodic squads, rapid commitment timing, Stage 6 growth/proximity ordnance, shared segmented defenses, Stage 10 reflection, Stage 7/9 wall scales, renderer changes, canonical documentation, and focused validators are present in the working branch patch.
+- Next task: commit the bounded implementation, run the complete GitHub workflow, repair any failing production validator, then archive this plan as `done` and mark pull request 5 ready for review.
+- Last completed gate: fresh visual-authority receipt completed; `git diff --check`, delimiter balance, and stale-contract searches pass in the reconstructed source tree.
 - Update rule: check a task only after its acceptance evidence exists, then advance this pointer in the same plan update.
 
 ## Completion and Stop Conditions

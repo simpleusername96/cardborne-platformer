@@ -6,6 +6,7 @@ const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd"
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
 const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const BossPhaseCatalog = preload("res://scripts/bosses/vehicle_boss_phase_catalog.gd")
+const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
@@ -1022,7 +1023,7 @@ func _check_boss_committed_recovery(run) -> void:
 
 
 func _check_boss_autonomous_shapes(run) -> void:
-	for boss_index in 8:
+	for boss_index in 12:
 		var stage_index := boss_index
 		var stage_id := StringName("stage_%d" % (stage_index + 1))
 		for pattern_name in BossPatterns.autonomous_sequence(stage_id):
@@ -1099,8 +1100,25 @@ func _check_boss_autonomous_shapes(run) -> void:
 			elif kind == &"crossing_weave":
 				_expect(
 					run.denied_zones.size() == 8
-						and run.denied_zones.all(func(zone): return StringName(zone["shape"]) == &"corridor" and Vector2(zone["motion"]).length() > 0.0 and is_equal_approx(float(zone["safe_gap"]), 200.0) and not zone.has("beam_emission_mode")),
-					"%s creates crossing translating walls with collision-true gaps" % pattern
+						and run.denied_zones.all(func(zone): return (
+							StringName(zone["shape"]) == &"corridor"
+							and is_equal_approx(Vector2(zone["motion"]).length(), LateBossMechanics.crossing_wall_speed())
+							and is_equal_approx(float(zone["damage"]), LateBossMechanics.crossing_wall_damage(BossPatterns.damage(pattern, stage_index)))
+							and is_equal_approx(float(zone["safe_gap"]), 200.0)
+							and not zone.has("beam_emission_mode")
+						)),
+					"%s creates 0.70-speed, 0.70-damage walls with unchanged gaps" % pattern
+				)
+			elif kind == &"compression":
+				_expect(
+					not run.denied_zones.is_empty()
+						and run.denied_zones.all(func(zone): return (
+							StringName(zone["shape"]) == &"corridor"
+							and is_equal_approx(Vector2(zone["motion"]).length(), LateBossMechanics.compression_wall_speed())
+							and is_equal_approx(float(zone["damage"]), LateBossMechanics.compression_wall_damage(BossPatterns.damage(pattern, stage_index)))
+							and is_equal_approx(float(zone["safe_gap"]), LateBossMechanics.COMPRESSION_GAP)
+						)),
+					"%s creates 0.70-speed, 0.70-damage compression walls with unchanged gaps" % pattern
 				)
 			elif kind == &"radial_volley":
 				_expect(

@@ -6,192 +6,229 @@ const Patterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 const Difficulty = preload("res://scripts/enemies/vehicle_stage_difficulty.gd")
 const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const EncounterDirector = preload("res://scripts/encounters/vehicle_encounter_director.gd")
-const PLAYER_BASE_SPEED := 280.0
 
 var failures: Array[String] = []
 
 
 func _initialize() -> void:
+	_validate_common_progression()
+	_validate_pattern_contracts()
+	_validate_signature_ownership()
+	_validate_absolute_profiles()
+	_finish()
+
+
+func _validate_common_progression() -> void:
+	var expected_stage_one := [
+		"common_charge",
+		"common_lane_volley",
+		"common_broad_barrage",
+		"common_radial_bombardment",
+	]
+	var expected_complete := [
+		"common_charge",
+		"common_lane_volley",
+		"common_broad_barrage",
+		"common_radial_bombardment",
+		"common_parallel_beam",
+		"common_x_beam",
+	]
+	_expect(
+		Patterns.common_sequence(&"stage_1") == expected_stage_one,
+		"Stage 1 teaches the first four committed common attacks"
+	)
+	_expect(
+		Patterns.common_sequence(&"stage_2") == expected_complete,
+		"Stage 2 retains Stage 1 and adds parallel and X beams"
+	)
+	_expect(
+		Patterns.common_sequence(&"stage_3") == expected_complete,
+		"Stage 3 retains the complete direct common attack language"
+	)
 	for stage_index in Catalog.STAGE_IDS.size():
 		var stage_id := Catalog.STAGE_IDS[stage_index]
 		if not Catalog.has_boss(stage_id):
 			_expect(
-				Patterns.sequence(stage_id, false).is_empty()
+				Patterns.sequence(stage_id).is_empty()
 					and Patterns.autonomous_sequence(stage_id).is_empty(),
 				"%s fails closed without boss patterns" % stage_id
 			)
 			continue
-		var phase_one := Patterns.sequence(stage_id, false)
-		var phase_two := Patterns.sequence(stage_id, true)
-		var phase_three := Patterns.sequence(stage_id, 3)
+		var common := Patterns.common_sequence(stage_id)
+		var signatures := Patterns.signature_sequence(stage_id)
+		var selected := Patterns.sequence(stage_id)
+		var expected_common := expected_stage_one if stage_index == 0 else expected_complete
 		_expect(
-			phase_one.size() == 5
-				and phase_one.duplicate().all(func(pattern): return phase_one.count(pattern) == 1)
-				and (
-					("common_charge" in phase_one and "common_broad_barrage" in phase_one)
-					if stage_index < 8
-					else ("common_charge" not in phase_one and "common_broad_barrage" not in phase_one)
-				),
-			"%s has five distinct attacks with the correct common-pattern policy" % stage_id
+			common == expected_common,
+			"%s resolves its cumulative common attack set" % stage_id
 		)
-		_expect(phase_two.size() == 5 and phase_two != phase_one, "%s changes order in phase two" % stage_id)
-		_expect(phase_three.size() == 5 and phase_three != phase_two, "%s has an authored phase-three order" % stage_id)
-		for pattern in phase_one:
+		_expect(
+			selected == common + signatures,
+			"%s keeps common and signature selections queryable and ordered" % stage_id
+		)
+		for pattern in common:
+			_expect(Patterns.is_common(pattern), "%s is classified as common" % pattern)
 			_expect(
-				not Patterns.behavior_family(pattern).is_empty(),
-				"%s resolves a canonical behavior family" % pattern
+				not Patterns.is_signature(stage_id, pattern),
+				"%s is not misclassified as a %s signature" % [pattern, stage_id]
+			)
+		for pattern in signatures:
+			_expect(
+				Patterns.is_signature(stage_id, pattern),
+				"%s is classified as a %s signature" % [pattern, stage_id]
+			)
+	_expect(
+		Patterns.is_common("common_squad_call")
+			and Patterns.kind("common_squad_call") == &"squad"
+			and Patterns.commit_mode("common_squad_call") == &"periodic",
+		"the ten-second squad call is an explicit periodic common family"
+	)
+
+
+func _validate_pattern_contracts() -> void:
+	for stage_index in Catalog.STAGE_IDS.size():
+		var stage_id := Catalog.STAGE_IDS[stage_index]
+		if not Catalog.has_boss(stage_id):
+			continue
+		for pattern in Patterns.sequence(stage_id):
+			_expect(
+				Patterns.kind(pattern) in [
+					&"lanes", &"fan", &"cross", &"broad_barrage",
+					&"crossing_weave", &"compression", &"radial_volley",
+					&"charge", &"beam", &"switch_sweep", &"area",
+					&"pylons", &"summon", &"long_banks",
+				],
+				"%s resolves a supported direct shape" % pattern
 			)
 			_expect(
-				Patterns.startup_seconds(pattern, stage_index) >= (
-					0.45 if Patterns.kind(pattern) in [&"beam", &"switch_sweep", &"cross_corridors"] else 0.65
-				),
-				"%s startup is visible" % pattern
-			)
-			_expect(Patterns.active_seconds(pattern, stage_index) >= 0.4, "%s active window is explicit" % pattern)
-			_expect(
-				Patterns.recovery_seconds(pattern, stage_index) > 0.0
-					or Patterns.commit_mode(pattern) == &"autonomous",
-				"%s recovery or autonomous ownership is explicit" % pattern
+				Patterns.commit_mode(pattern) in [&"committed", &"autonomous"],
+				"%s declares direct execution ownership" % pattern
 			)
 			_expect(
 				Patterns.affinity(pattern) in AttackContract.AFFINITIES,
-				"%s declares a supported attack affinity" % pattern
+				"%s declares a supported affinity" % pattern
 			)
-			_expect(Patterns.commit_mode(pattern) in [&"committed", &"autonomous"], "%s declares execution ownership" % pattern)
-			if Patterns.damage(pattern, stage_index) > 0.0:
-				_expect(
-					Patterns.affinity(pattern) != AttackContract.SUPPORT,
-					"%s does not present damage as support" % pattern
-				)
-			if Patterns.kind(pattern) in [&"lanes", &"fan", &"cross"]:
-				_expect(Patterns.volley_interval(pattern) > 0.0 and Patterns.volley_limit(pattern, false) >= 3, "%s repeats aimed projectile volleys" % pattern)
-				_expect(Patterns.volley_limit(pattern, true) > Patterns.volley_limit(pattern, false), "%s adds one phase-two volley" % pattern)
-			if (
-				stage_index < 8
-				and
-				Patterns.damage(pattern, stage_index) > 0.0
-				and Patterns.kind(pattern) in [&"area", &"pylons", &"summon"]
-			):
-				_expect(
-					Patterns.startup_seconds(pattern, stage_index) * PLAYER_BASE_SPEED
-						>= Patterns.radius(pattern, stage_index)
-							+ Patterns.MIN_BASE_WALK_ESCAPE_MARGIN,
-					"%s can be escaped from its center with ordinary movement" % pattern
-				)
-		var autonomous := Patterns.autonomous_sequence(stage_id)
-		_expect(autonomous.size() == 2, "%s owns two bounded autonomous systems" % stage_id)
-		for pattern in autonomous:
 			_expect(
 				not Patterns.behavior_family(pattern).is_empty(),
-				"%s autonomous selection resolves a canonical behavior family" % pattern
+				"%s resolves a behavior family" % pattern
 			)
-			if stage_index >= 8:
-				continue
+		for pattern in Patterns.autonomous_sequence(stage_id):
 			_expect(
-				Patterns.commit_mode(pattern) == &"autonomous",
-				"%s remains independent of boss-body state" % pattern
+				Patterns.kind(String(pattern)) in [
+					&"area", &"lanes", &"beam", &"summon", &"long_banks",
+					&"crossing_weave", &"radial_volley", &"compression",
+				],
+				"%s resolves a supported autonomous shape" % pattern
 			)
 			_expect(
-				Patterns.kind(pattern) in [&"area", &"lanes", &"beam", &"summon", &"long_banks", &"crossing_weave", &"radial_volley"],
-				"%s has an explicitly dispatched autonomous shape" % pattern
+				Patterns.is_signature(stage_id, String(pattern)),
+				"%s autonomous system remains stage-signature content" % pattern
 			)
-			if Patterns.kind(pattern) == &"area" and Patterns.damage(pattern, stage_index) > 0.0:
-				_expect(
-					Patterns.startup_seconds(pattern, stage_index) * PLAYER_BASE_SPEED
-						>= Patterns.radius(pattern, stage_index)
-							+ Patterns.MIN_BASE_WALK_ESCAPE_MARGIN,
-					"%s scaled autonomous area keeps its walk-escape margin" % pattern
-				)
+	_expect(
+		is_equal_approx(Patterns.startup_seconds("common_lane_volley", 11), 0.18)
+			and is_equal_approx(Patterns.startup_seconds("common_broad_barrage", 11), 0.22)
+			and is_equal_approx(Patterns.startup_seconds("common_charge", 11), 0.28)
+			and is_equal_approx(Patterns.startup_seconds("long_bank_barrage", 5), 0.30),
+		"projectile volleys, barrages, charges, and Stage 6 ordnance use brief commitment reads"
+	)
+	_expect(
+		is_equal_approx(Patterns.startup_seconds("common_parallel_beam", 11), 0.45)
+			and is_equal_approx(Patterns.startup_seconds("common_x_beam", 11), 0.45)
+			and Patterns.startup_seconds("crossing_weave_a", 6) >= 1.0
+			and Patterns.startup_seconds("compression_single", 8) >= 0.65,
+		"beams and placed walls retain their longer readable warnings"
+	)
+	_expect(
+		Patterns.beam_topology("common_parallel_beam") == AttackContract.BEAM_TOPOLOGY_PARALLEL
+			and Patterns.beam_topology("common_x_beam") == AttackContract.BEAM_TOPOLOGY_X,
+		"the two shared beam exams own fixed, distinct topologies"
+	)
+
+
+func _validate_signature_ownership() -> void:
+	_expect(Patterns.signature_sequence(&"stage_1").is_empty(), "Stage 1 remains a pure common-language tutorial")
+	_expect(Patterns.signature_sequence(&"stage_2").is_empty(), "Stage 2 remains a cumulative common-language tutorial")
+	_expect(Patterns.signature_sequence(&"stage_3") == ["shield_counterburst"], "Stage 3 adds its shield-fed counterattack")
+	_expect(Patterns.signature_sequence(&"stage_4") == ["switch_sweep"], "Stage 4 retains its sequential sweep")
+	_expect(Patterns.signature_sequence(&"stage_5") == ["carrier_wave"], "Stage 5 retains its carrier summon")
+	_expect(
+		Patterns.signature_sequence(&"stage_6") == ["long_bank_barrage"]
+			and Patterns.autonomous_sequence(&"stage_6").is_empty(),
+		"Stage 6 distance-growth ordnance has one scheduler owner"
+	)
+	_expect(
+		Patterns.signature_sequence(&"stage_7") == ["crossing_weave_a", "crossing_weave_b"],
+		"Stage 7 keeps the crossing-wall signature variants"
+	)
+	_expect(
+		Patterns.signature_sequence(&"stage_8") == ["radial_volley_a", "radial_volley_b"],
+		"Stage 8 keeps the two radial projectile variants"
+	)
+	_expect(
+		Patterns.signature_sequence(&"stage_9").size() == 4
+			and "compression_single" in Patterns.signature_sequence(&"stage_9"),
+		"Stage 9 layers its compression variants over the common pool"
+	)
+	for stage_id in [&"stage_10", &"stage_11", &"stage_12"]:
 		_expect(
-			is_equal_approx(Difficulty.boss_health(stage_index), BossProfiles.health(stage_index)),
-			"%s reads its independently authored health" % stage_id
+			Patterns.common_sequence(stage_id).size() == 6,
+			"%s keeps the complete direct common pool beside its state mechanic" % stage_id
 		)
-	_expect(
-		Patterns.sequence(&"stage_7").count("crossing_weave_a") == 1
-			and Patterns.sequence(&"stage_7").count("crossing_weave_b") == 1
-			and "cross_beam" not in Patterns.sequence(&"stage_7"),
-		"Stage 7 Boss owns two crossing-weave identity selections without Cross Beam"
-	)
-	_expect(
-		Patterns.sequence(&"stage_8").count("radial_volley_a") == 1
-			and Patterns.sequence(&"stage_8").count("radial_volley_b") == 1
-			and "mirror_cross" not in Patterns.sequence(&"stage_8"),
-		"Stage 8 Boss owns two projectile-only radial-volley selections without Mirror Cross"
-	)
 	_expect(
 		Patterns.behavior_family("reflect_fan") == &"fan_volley"
 			and Patterns.behavior_family("resonance_fan") == &"fan_volley"
-			and Patterns.behavior_family("ricochet_volley") == &"fan_volley"
 			and Patterns.is_shared_behavior("reflect_fan"),
-		"differently named fan aliases resolve to one shared behavior"
-	)
-	_expect(
-		Patterns.behavior_family("reflect_lance") == &"emitted_beam"
-			and Patterns.behavior_family("focused_beam") == &"emitted_beam"
-			and Patterns.is_shared_behavior("reflect_lance"),
-		"differently named emitted beams resolve to one shared behavior"
+		"differently named projectile aliases still resolve to shared behavior"
 	)
 	_expect(
 		Patterns.behavior_family("switch_sweep") == &"sequential_beam_sweep"
 			and not Patterns.is_shared_behavior("switch_sweep"),
-		"Stage 4 sequential sweep is a real signature behavior, not a beam alias"
+		"the Stage 4 sequential sweep remains a real signature behavior"
 	)
-	_expect(
-		not Patterns.is_shared_behavior("crossing_weave_a")
-			and Patterns.stages_using_behavior(&"crossing_weave") == [&"stage_7"]
-			and not Patterns.is_shared_behavior("radial_volley_a")
-			and Patterns.stages_using_behavior(&"radial_volley") == [&"stage_8"],
-		"single-stage execution families remain signature behaviors"
-	)
+
+
+func _validate_absolute_profiles() -> void:
 	_expect(BossProfiles.PROFILES.size() == 12, "boss catalog exposes twelve independent profiles")
-	_expect(
-		is_equal_approx(Patterns.damage("thermal_gates", 0), 22.0)
-			and is_equal_approx(Patterns.damage("reflect_lance", 9), 55.08)
-			and is_equal_approx(Patterns.damage("overload_rush_return", 11), 74.76),
-		"boss attacks expose independently authored damage"
-	)
-	_expect(
-		is_equal_approx(Patterns.radius("thermal_ring", 0), 287.5)
-			and is_equal_approx(Patterns.radius("depth_area", 1), 240.5)
-			and is_equal_approx(Patterns.radius("gate_shockwave", 5), 360.0)
-			and is_equal_approx(Patterns.width("switch_sweep", 3), 87.36)
-			and is_equal_approx(Patterns.width("focused_beam", 7), 104.96)
-			and is_equal_approx(Patterns.radius("resonance_pulse", 10), 385.25),
-		"representative boss attacks expose exact authored coverage"
-	)
 	for stage_index in 11:
 		_expect(
 			BossProfiles.health(stage_index + 1) > BossProfiles.health(stage_index)
 				and BossProfiles.move_speed(stage_index + 1) > BossProfiles.move_speed(stage_index),
-			"Stage %d to %d uses stronger independently authored core stats"
+			"Stage %d to %d retains stronger independently authored core stats"
 				% [stage_index + 1, stage_index + 2]
 		)
+	for stage_index in Catalog.STAGE_IDS.size():
+		_expect(
+			is_equal_approx(Difficulty.boss_health(stage_index), BossProfiles.health(stage_index)),
+			"Stage %d retains its independently authored health" % (stage_index + 1)
+		)
+	_expect(
+		is_equal_approx(Patterns.damage("thermal_gates", 0), 22.0)
+			and is_equal_approx(Patterns.damage("reflect_lance", 9), 55.08)
+			and is_equal_approx(Patterns.damage("overload_rush_return", 11), 74.76),
+		"unrelated authored signature damage remains unchanged"
+	)
+	_expect(
+		Patterns.damage("common_lane_volley", 11) > Patterns.damage("common_lane_volley", 0)
+			and Patterns.damage("common_x_beam", 11) > Patterns.damage("common_x_beam", 0),
+		"later bosses strengthen newly shared common attacks without a global boss-stat rewrite"
+	)
 	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),
-		"boss prediction and projectile motion share the reduced hostile speed contract"
+		"boss prediction and projectile motion retain the hostile speed contract"
 	)
-	_expect(
-		Patterns.AREA_TARGET_MAX_LEAD == 96.0,
-		"boss circular attacks keep their committed center close to the player"
-	)
-	_expect(
-		Patterns.affinity("thermal_gates") == AttackContract.THERMAL
-			and Patterns.affinity("direct_charge") == AttackContract.KINETIC
-			and Patterns.affinity("thermal_ring") == AttackContract.THERMAL
-			and Patterns.affinity("forge_vent") == AttackContract.ARC,
-		"stage-one boss patterns expose distinct thermal, kinetic, and arc families"
-	)
-	_finish()
+	_expect(Patterns.AREA_TARGET_MAX_LEAD == 96.0, "boss radial attacks keep bounded target lead")
 
 
 func _expect(condition: bool, message: String) -> void:
-	if not condition: failures.append(message)
+	if not condition:
+		failures.append(message)
 
 
 func _finish() -> void:
 	if failures.is_empty():
 		print("VEHICLE_BOSS_PATTERNS_VALIDATION_OK")
 		quit(0)
-	else:
-		for failure in failures: push_error(failure)
-		quit(1)
+		return
+	for failure in failures:
+		push_error(failure)
+	quit(1)

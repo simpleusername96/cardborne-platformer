@@ -4770,7 +4770,34 @@ func _update_projectile_buffer(
 
 		projectile.pos = to
 		if hostile:
-			if Rules.point_segment_distance(player_position, from, to) <= Rules.PLAYER_RADIUS + projectile.radius:
+			var direct_contact := (
+				Rules.point_segment_distance(player_position, from, to)
+					<= Rules.PLAYER_RADIUS + projectile.radius
+			)
+			if (
+				projectile.distance_growth_kind
+					== ProjectileState.DISTANCE_GROWTH_GROWTH_KIND
+				and projectile.distance_growth_proximity_armed
+				and (
+					direct_contact
+					or projectile.can_proximity_detonate_on_segment(
+						from, to, player_position, Rules.PLAYER_RADIUS
+					)
+				)
+			):
+				var trigger_t := AttackContract.segment_circle_first_t(
+					from,
+					to,
+					player_position,
+					ProjectileState.DISTANCE_GROWTH_PROXIMITY_TRIGGER_RADIUS
+						+ Rules.PLAYER_RADIUS
+				)
+				if trigger_t <= 1.0:
+					projectile.pos = from.lerp(to, clampf(trigger_t, 0.0, 1.0))
+				_detonate_distance_growth_projectile(projectile)
+				projectile_store.remove_hostile_at_swap(index)
+				continue
+			if direct_contact:
 				if projectile.owner.begins_with("boss_barrage:") and _boss_barrage_hit_lock_remaining > 0.0:
 					projectile_store.remove_hostile_at_swap(index)
 					continue
@@ -4944,14 +4971,22 @@ func _try_reflect_direct_projectile(
 	)
 	if not is_reflect_boss and not is_teaching_enemy:
 		return false
-	var elapsed := enemy.pattern_timer if is_reflect_boss else 0.0
-	if not LateBossMechanics.hits_reflection_plate(
-		enemy.presentation_facing,
-		projectile.velocity,
-		elapsed
-	):
+	var reflected := (
+		boss_shield_runtime.reflects_projectile(projectile.velocity)
+		if is_reflect_boss
+		else LateBossMechanics.hits_reflection_plate(
+			enemy.presentation_facing,
+			projectile.velocity,
+			0.0
+		)
+	)
+	if not reflected:
 		return false
-	var normal := enemy.presentation_facing.normalized()
+	var normal := (
+		boss_shield_runtime.reflection_normal(projectile.velocity)
+		if is_reflect_boss
+		else enemy.presentation_facing.normalized()
+	)
 	if normal.is_zero_approx():
 		normal = -projectile.velocity.normalized()
 	var reflected_velocity := projectile.velocity.bounce(normal)
@@ -4974,9 +5009,37 @@ func _try_reflect_direct_projectile(
 		"affinity":projectile.affinity,
 		"threat_tier":AttackContract.THREAT_BOSS if is_reflect_boss else AttackContract.THREAT_ORDINARY,
 	}, is_reflect_boss)
-	# Capacity rejection still absorbs the shot at the plate and never damages
-	# the owner, as required by the reflection contract.
+	# Capacity rejection still absorbs the shot at a live segment and never
+	# damages the owner, as required by the reflection contract.
 	_play_sound(&"cover", 1.12)
+	return true
+
+
+func _detonate_distance_growth_projectile(projectile: ProjectileState) -> bool:
+	if projectile == null or not projectile.consume_distance_growth_detonation():
+		return false
+	var explosion_radius := ProjectileState.DISTANCE_GROWTH_EXPLOSION_RADIUS
+	var explosion_damage := AttackContract.radial_damage(
+		projectile.damage,
+		player_position.distance_to(projectile.pos),
+		explosion_radius
+	)
+	if explosion_damage > 0.0:
+		_damage_player(
+			explosion_damage,
+			"%s proximity detonation" % projectile.owner,
+			false,
+			true,
+			projectile.final_damage
+		)
+	_add_effect(
+		EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND,
+		projectile.pos,
+		Art.DANGER,
+		0.18,
+		explosion_radius
+	)
+	_play_sound(&"impact", 0.92)
 	return true
 
 
@@ -6420,6 +6483,18 @@ func _update_stage_boss(boss: EnemyState, delta: float) -> void:
 		player_position
 	):
 		_execute_boss_autonomous(event)
+	var signature_active := (
+		boss.phase in [&"boss_startup", &"boss_active"]
+		and BossPatterns.is_signature(current_stage_id, String(boss.pattern))
+	)
+	var squad_event := boss_runtime.advance_squad(delta, boss, signature_active)
+	if not squad_event.is_empty():
+		_spawn_boss_phase_adds(
+			boss,
+			Array(squad_event.get("roles", [])),
+			StringName(squad_event.get("tactic_id", &"")),
+			String(squad_event.get("id", ""))
+		)
 	var receipt := boss_runtime.advance_direct_phase(boss, cadence_delta, false)
 	if not BossRuntime.valid_phase_receipt(receipt):
 		push_error("Boss runtime emitted an invalid phase receipt")
@@ -6784,7 +6859,15 @@ func _append_boss_compression_pass(
 		LateBossMechanics.COMPRESSION_MAX_SHIFT
 	)
 	var gap_half := LateBossMechanics.COMPRESSION_GAP * 0.5
-	var motion_speed := 620.0
+	var boss_owned := StringName(event.get("owner_kind", &"boss_actor")) == &"boss_actor"
+	var motion_speed := (
+		LateBossMechanics.compression_wall_speed()
+		if boss_owned else LateBossMechanics.COMPRESSION_WALL_BASE_SPEED
+	)
+	var wall_damage := (
+		LateBossMechanics.compression_wall_damage(float(event["damage"]))
+		if boss_owned else float(event["damage"])
+	)
 	for segment_index in [-1, 1]:
 		var segment_from := gap_center - tangent * span * 0.5 if segment_index < 0 else gap_center + tangent * gap_half
 		var segment_to := gap_center - tangent * gap_half if segment_index < 0 else gap_center + tangent * span * 0.5
@@ -6799,7 +6882,7 @@ func _append_boss_compression_pass(
 			"warning_total":LateBossMechanics.COMPRESSION_EDGE_CUE_SECONDS + warning_offset,
 			"duration":maxf(1.2, float(event["duration"])),
 			"tick":0.0,
-			"damage":float(event["damage"]),
+			"damage":wall_damage,
 			"source":String(event["pattern"]),
 			"owner_kind":StringName(event.get("owner_kind", &"boss_actor")),
 			"affinity":StringName(event["affinity"]),
@@ -6867,12 +6950,14 @@ func _append_boss_weave_pass(
 				"from":segment_from,
 				"to":segment_to,
 				"width":72.0,
-				"motion":axis * (-320.0 * float(wall_index)),
+				"motion":axis * (
+					-LateBossMechanics.crossing_wall_speed() * float(wall_index)
+				),
 				"warning":float(event["startup"]) + warning_offset,
 				"warning_total":float(event["startup"]) + warning_offset,
 				"duration":1.10,
 				"tick":0.0,
-				"damage":float(event["damage"]),
+				"damage":LateBossMechanics.crossing_wall_damage(float(event["damage"])),
 				"source":String(event["pattern"]),
 				"owner_kind":&"boss_actor",
 				"affinity":StringName(event["affinity"]),
@@ -7048,8 +7133,9 @@ func _refresh_late_boss_mechanic_state(boss: EnemyState) -> void:
 		8:
 			boss.mechanic_state = &"compression"
 		9:
-			boss.mechanic_cue_active = LateBossMechanics.reflection_cue_active(boss.pattern_timer)
-			boss.mechanic_state = &"reflect_active" if LateBossMechanics.reflection_active(boss.pattern_timer) else (&"reflect_cue" if boss.mechanic_cue_active else &"reflect_exposed")
+			# Stage 10 reflection is a shared segmented defense; its state and cue
+			# are published by VehicleBossShieldRuntime instead of this overlay.
+			boss.mechanic_state = &""
 		10:
 			var band := LateBossMechanics.resonance_band(boss.pattern_timer)
 			boss.mechanic_state = &"resonance_shifted" if LateBossMechanics.resonance_shifted(boss.pattern_timer) else &"resonance_base"
@@ -7068,14 +7154,9 @@ func _begin_boss_shield_phase(boss: EnemyState, next_phase: int) -> void:
 	boss.phase_time = 0.90
 	boss.pattern = &"phase_transition" if boss.boss_phase > 1 else &"system_wake"
 	boss.pattern_index = 0
-	boss.boss_shield_state = &"shield_up"
 	boss.attack_telegraphs.clear()
-	var payload := boss_shield_runtime.begin_phase(boss.boss_phase)
-	_spawn_boss_phase_adds(
-		boss,
-		Array(payload.get("add_roles", [])),
-		StringName(payload.get("tactic_id", &""))
-	)
+	boss_shield_runtime.begin_phase(boss.boss_phase)
+	boss.boss_shield_state = boss_shield_runtime.state()
 	_show_pending_boss_state_hint()
 	if boss.boss_phase > 1:
 		boss_phase_two_announced = true
@@ -7085,7 +7166,8 @@ func _begin_boss_shield_phase(boss: EnemyState, next_phase: int) -> void:
 func _spawn_boss_phase_adds(
 	boss: EnemyState,
 	roles: Array,
-	tactic_id: StringName
+	tactic_id: StringName,
+	squad_id_override: String = ""
 ) -> void:
 	var live_before := _live_boss_add_count()
 	var available := maxi(
@@ -7094,7 +7176,11 @@ func _spawn_boss_phase_adds(
 	)
 	var spawn_count := mini(available, roles.size())
 	var spawned := 0
-	var squad_id := "boss_wave_p%d" % boss.boss_phase
+	var squad_id := (
+		squad_id_override
+		if not squad_id_override.is_empty()
+		else "boss_wave_p%d" % boss.boss_phase
+	)
 	var emitter_indices: Array[int] = []
 	for role_index in spawn_count:
 		var role_definition := EnemyArchetypes.definition(StringName(roles[role_index]))

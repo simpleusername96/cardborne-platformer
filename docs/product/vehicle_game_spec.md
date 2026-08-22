@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field twelve-boss-cycle vehicle campaign
 related:
@@ -285,19 +285,35 @@ second global elite-stat layer.
    ordinary enemies.
 5. Quota completion starts a 1.5-second boss warning. Twelve bosses appear in stage order
    under generic labels from Stage 1 Boss through Stage 12 Boss.
-6. Bosses in stages 1-8 may use the shared committed charge and broad three-row projectile
-   barrage. Stages 9-12 do not select `common_charge` or `common_broad_barrage`; each uses
-   only its dedicated mechanic and state rules.
-7. Stage 3 boss alone uses directional defense, and it directly charges an attack. Its
-   body-attached shield has three thick rotating 80-degree segments separated by three 40-degree
-   gaps. Segment hits deal 15% damage. The shield stays up for eight seconds, then disappears
-   for two seconds, and blocked damage charges its counterburst. Stage 5 boss has no shield. No boss is defense-only and no
-   global shield-down rule exists.
-8. High-threat attacks deal 60-85 damage once per execution, warn for at least 1.30
-   seconds, use collision-matching committed geometry, and leave an escape corridor at
-   least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
-   No true instant-kill attack exists.
-9. Every boss owns an independent absolute profile. Maximum health is
+6. The first three bosses teach one cumulative common attack language. Stage 1 selects
+   committed charge, two-lane projectiles, the fast three-row broad barrage, and radial
+   bombardment, while its ten-second periodic squad call is owned outside the direct attack
+   sequence. Stage 2 retains every Stage 1 family and adds fixed parallel and X-shaped emitted
+   beams. Stage 3 retains the complete Stage 2 set and introduces segmented cyclic defense.
+   Stages 4-12 retain all six direct common attacks and the periodic squad call while selecting
+   their existing signature attacks or state mechanics separately. Damage, width, lane count,
+   affinity, cadence, or ordering changes do not turn a common family into a signature.
+7. Projectile volleys capture the player once and commit after `0.18 s`; the broad barrage
+   commits after `0.22 s`; charge commits after `0.28 s`; Stage 6 distance-growth ordnance
+   commits after `0.30 s`. These attacks do not continue tracking during startup or active
+   execution. Emitted beams retain their `0.45 s` source-only charge, and radial bombardment,
+   Stage 7 crossing walls, and Stage 9 compression walls retain longer collision-readable
+   warnings. No true instant-kill attack exists.
+8. Boss squads use one ten-second periodic owner instead of spawning immediately at the
+   `65%` and `30%` health floors. The current phase selects the existing authored role packet
+   and collective tactic. A due squad waits while a major signature attack is active, then
+   materializes when that attack ends. The existing twelve-add live cap remains authoritative.
+9. Every boss defense is a body-attached set of rotating angular segments with real attackable
+   gaps and a recurring complete down window. Segment and gap angles are shared by collision
+   and presentation and never derive from boss facing. Stage 3 preserves three 80-degree guard
+   segments, three 40-degree gaps, `18 deg/s` rotation, eight seconds active, two seconds fully
+   down, 15% damage through a live segment, normal damage through a gap, and blocked-damage
+   counterburst charge. Stage 10 uses the same defense owner with three 70-degree reflection
+   segments and three 50-degree gaps: fifteen seconds fully down, a non-blocking cue during the
+   final exposed second, then five seconds active. Only direct player projectiles that hit a
+   live segment reflect; gap shots damage the boss normally. No defense creates complete or
+   permanent invulnerability.
+10. Every boss owns an independent absolute profile. Maximum health is
    `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890` and move speed is
    `405/420/435/450/465/480/500/515/525/535/545/555`. Each profile also directly records
    attack-movement speed, phase read gaps, initial autonomous delay, autonomous intervals,
@@ -313,35 +329,39 @@ second global elite-stat layer.
    Every hostile boss-emitted beam uses a `0.45 s` source-only charge followed by `0.20 s`
    collision-matched growth. Stage 4 `switch_sweep` releases three forward headings at
    `0.00/0.18/0.36 s` within its active window.
-   Cross Beam commits two clipped perpendicular X corridors. Stage 6 Boss alone
-   uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed
-   `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
-   Stage 7 Boss commits paired translating walls with one collision-true opening, then
-   crosses the field with a delayed orthogonal pass whose opening moves to a different
-   axis. Startup shows only short entry-edge markers rather than the complete routes.
+   Cross Beam commits two clipped perpendicular X corridors. Stage 6 Boss alone uses
+   distance-growth ammunition that begins at the same speed, radius, and damage as an ordinary
+   boss projectile. Growth begins after 360 traveled units and caps at 880, interpolating speed
+   `1.0x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`. At 720 traveled units the
+   projectile arms a 96-unit proximity trigger. Entering that trigger without body contact
+   produces one 150-unit radial detonation; direct contact and proximity detonation share one
+   retirement path and cannot deal duplicate damage. The projectile has no beam-like trail.
+   Stage 7 Boss commits paired translating walls with one collision-true opening, then crosses
+   the field with a delayed orthogonal pass whose opening moves to a different axis. Wall
+   geometry and warning remain unchanged while movement speed and damage are each multiplied
+   by `0.70`. Startup shows only short entry-edge markers rather than the complete routes.
    Stage 8 Boss commits projectile-only twelve-shot radial volleys with alternating
    angular offsets. Direct and autonomous selections use a gameplay-owned delay with no
    ring damage, warning zone, predicted route, impact preview, or other pre-fire world
-   effect; only the live projectile bodies appear when each volley is emitted. Stage 9 uses 180-unit-deep moving
-   compression slabs with a 360-unit gap that can shift by at most 280 units; paired slabs
-   enter at least 0.45 seconds apart and never close every route together. Stage 10 starts
-   exposed and carries a body-attached 100-degree frontal reflection plate for five seconds
-   after fifteen exposed seconds in each twenty-second cycle. The final exposed second shows
-   a body-attached activation cue. It reflects only direct player projectiles while active,
-   preserving speed and life;
-   reflected damage is 35% capped at 24, cannot reflect again, and a full hostile store
-   absorbs the shot without boss damage. Stage 11 takes full damage only at radius 420-760
+   effect; only the live projectile bodies appear when each volley is emitted. Stage 9 uses
+   180-unit-deep moving compression slabs with a 360-unit gap that can shift by at most 280
+   units; paired slabs enter at least 0.45 seconds apart and never close every route together.
+   Compression geometry and warning remain unchanged while slab movement speed and damage are
+   each multiplied by `0.70`. Stage 10 follows the segmented reflection defense contract in
+   item 9. Reflected shots preserve speed and life; reflected damage is 35% capped at 24,
+   cannot reflect again, and a full hostile store absorbs the shot without boss damage.
+   Stage 11 takes full damage only at radius 420-760
    and 20% inside or outside; every eight seconds a one-second module cue shifts the band
    to 520-880 for the next interval, then back. Stage 12 first overloads 12 seconds after
    arrival and then every 18 seconds for six seconds: movement `1.35x`, cadence `0.75x`,
    dealt damage `1.30x`, and received damage `1.50x`. Their ordinary teaching families are
    Emitter T3, Defender T3, Coordinator T3, and Pursuer T3, respectively.
-10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
+11. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
     summons/facilities stagger-shrink/fade without reward or quota. Transition waits for
     cleanup completion.
-11. Cycle completion preserves the tactical layout, facilities and their current states,
+12. Cycle completion preserves the tactical layout, facilities and their current states,
     pickups, living ordinary enemies, player position, velocity, aim, projectiles, XP,
     build, cooldowns, fixed Hard state, exploration, and terrain. It changes only the
     profile used for future ordinary admissions, the next quota, and the next boss.
@@ -523,10 +543,16 @@ second global elite-stat layer.
 
 - Exactly twelve boss cycles complete in order; every boss follows its quota and safe
   cleanup, and no player-facing ten-stage/paired language remains.
-- Every boss charges, fires simultaneous multi-projectile rows, and emphasizes its
-  identity patterns. Base stats strengthen monotonically.
-- Stage 3 boss alone uses defense and links it to offense. No global shield rule,
-  defense-only boss, true instant kill, or mismatched high-threat warning remains.
+- Stage 1-3 teach the cumulative common language; every later boss retains the complete
+  common pool and keeps signature selections queryable separately. Base stats strengthen
+  monotonically without a broad rebalance.
+- Stage 3 guard and Stage 10 reflection use collision-matched segmented defenses with live
+  attackable gaps and complete down windows. No facing-based permanent block, defense-only
+  boss, true instant kill, or mismatched high-threat warning remains.
+- Stage 6 distance-growth ammunition starts at ordinary projectile values, grows monotonically,
+  arms at 720 traveled units, detonates once on proximity, and renders no false line trail.
+- Stage 7 crossing walls and Stage 9 compression walls preserve geometry and warnings while
+  speed and damage are exactly 70% of their previous values.
 - Boss death lasts exactly 2.00 seconds and permits no boss-owned damage, reward, quota,
   or early transition. Reduced motion preserves state/timing while removing growth,
   impulse, and hit-stop.

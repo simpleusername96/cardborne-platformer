@@ -39,13 +39,18 @@ var distance_growth_ratio := 0.0
 var distance_growth_base_speed := 0.0
 var distance_growth_base_radius := 0.0
 var distance_growth_base_damage := 0.0
+var distance_growth_proximity_armed := false
+var distance_growth_detonated := false
 var applies_player_slow := false
 var player_slow_duration := 0.0
 
 const DISTANCE_GROWTH_GROWTH_KIND: StringName = &"distance_growth"
 const DISTANCE_GROWTH_ARM_DISTANCE := 360.0
 const DISTANCE_GROWTH_CAP_DISTANCE := 880.0
-const DISTANCE_GROWTH_SPEED_SCALE := Vector2(0.75, 1.35)
+const DISTANCE_GROWTH_PROXIMITY_ARM_DISTANCE := 720.0
+const DISTANCE_GROWTH_PROXIMITY_TRIGGER_RADIUS := 96.0
+const DISTANCE_GROWTH_EXPLOSION_RADIUS := 150.0
+const DISTANCE_GROWTH_SPEED_SCALE := Vector2(1.0, 1.35)
 const DISTANCE_GROWTH_RADIUS_SCALE := Vector2(1.0, 1.5)
 const DISTANCE_GROWTH_DAMAGE_SCALE := Vector2(1.0, 1.6)
 
@@ -91,6 +96,8 @@ func configure(
 	distance_growth_base_speed = velocity.length()
 	distance_growth_base_radius = radius
 	distance_growth_base_damage = damage
+	distance_growth_proximity_armed = false
+	distance_growth_detonated = false
 	applies_player_slow = bool(spec.get("applies_player_slow", false))
 	player_slow_duration = maxf(0.0, float(spec.get("player_slow_duration", 0.0)))
 	_apply_distance_growth()
@@ -103,9 +110,52 @@ func advance_distance_growth(step_distance: float) -> void:
 	_apply_distance_growth()
 
 
+func can_proximity_detonate(target_position: Vector2, target_radius: float = 0.0) -> bool:
+	return (
+		distance_growth_kind == DISTANCE_GROWTH_GROWTH_KIND
+		and distance_growth_proximity_armed
+		and not distance_growth_detonated
+		and pos.distance_to(target_position)
+			<= DISTANCE_GROWTH_PROXIMITY_TRIGGER_RADIUS + maxf(0.0, target_radius)
+	)
+
+
+func can_proximity_detonate_on_segment(
+	from: Vector2,
+	to: Vector2,
+	target_position: Vector2,
+	target_radius: float = 0.0
+) -> bool:
+	if (
+		distance_growth_kind != DISTANCE_GROWTH_GROWTH_KIND
+		or not distance_growth_proximity_armed
+		or distance_growth_detonated
+	):
+		return false
+	return AttackContract.segment_circle_first_t(
+		from,
+		to,
+		target_position,
+		DISTANCE_GROWTH_PROXIMITY_TRIGGER_RADIUS + maxf(0.0, target_radius)
+	) <= 1.0
+
+
+func consume_distance_growth_detonation() -> bool:
+	if (
+		distance_growth_kind != DISTANCE_GROWTH_GROWTH_KIND
+		or distance_growth_detonated
+	):
+		return false
+	distance_growth_detonated = true
+	return true
+
+
 func _apply_distance_growth() -> void:
 	if distance_growth_kind != DISTANCE_GROWTH_GROWTH_KIND:
 		return
+	distance_growth_proximity_armed = (
+		distance_traveled >= DISTANCE_GROWTH_PROXIMITY_ARM_DISTANCE
+	)
 	distance_growth_ratio = clampf(
 		(distance_traveled - DISTANCE_GROWTH_ARM_DISTANCE)
 			/ (DISTANCE_GROWTH_CAP_DISTANCE - DISTANCE_GROWTH_ARM_DISTANCE),

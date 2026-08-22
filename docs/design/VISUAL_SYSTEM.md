@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -131,10 +131,12 @@ rule과 collision truth는 각 기존 owner의 책임이며 이 문서는 표현
   filled plane으로 구성한다. boss body도 같은 문법을 확대해 4–6개의 큰
   filled plane과 한 겹의 외곽선으로 제한한다. 미세 panel, 반복 lamp,
   nested outline과 greeble로 boss 등급을 표현하지 않는다.
-- 보스 방어막은 외부 objective나 별도 actor가 아니라 boss body에 붙은 한 겹의
-  command-color directional boundary다. Stage 3 boss만 세 개의 독립된 두꺼운 arc
-  segment를 사용하며 collision truth도 각 segment의 각도와 gap을 따른다. `shield_up`과
-  `shield_down` 두 상태만 사용하며, 별도 node, pylon, module, objective marker를 만들지 않는다.
+- Every boss defense is one body-attached command-color boundary, never an external
+  objective or separate actor. Stage 3 guard and Stage 10 reflection both use three independent
+  thick arc segments with collision-owned gaps. Presentation consumes the exact segment count,
+  arc, gap, rotation, cue, active, and down state published by the shared defense runtime. A
+  defense is absent during its complete down window. Do not add a pylon, module, objective
+  marker, facing-derived frontal plate, separate node, or second collision owner.
 - 짧은 한 방향 shadow, hard edge highlight와 얕은 inset은 승인 시안의
   기계적 깊이를 설명할 때 사용한다. soft glow, photoreal material,
   uncontrolled glossy effect와 반복 nested outline은 사용하지 않는다.
@@ -473,6 +475,12 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   player primary는 선택한 단일 element affinity tint를 사용하고 Seeker와 hostile
   bolt는 authored identity를 유지한다. cadence, speed, homing, collision과 damage는
   gameplay code가 소유한다.
+- Stage 6 distance-growth ammunition reuses the hostile bolt identity. Runtime scale follows
+  its collision-owned radius. Before 720 traveled units it adds no extra cue. Once proximity
+  detonation is armed, one restrained danger ring shows the exact 96-unit trigger radius.
+  Never draw a beam, connecting line, trailing capsule, predicted path, repeated orbit detail,
+  or decorative growth streak behind the projectile. Its 150-unit detonation reuses the bounded
+  code-native impact disk and retires with the same one-shot gameplay receipt.
 - hostile thermal/toxin/cryo/arc hue는 direct-damage affinity이며 현재 존재하지
   않는 persistent condition을 약속하지 않는다. poison/chill은 별도
   projectile badge나 orbit icon 없이 실제 actor state feedback으로만 표시한다.
@@ -548,17 +556,17 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   bracket, crosshair, ring 또는 route overlay를 붙이지 않는다. manual-aim cursor는
   적 상태와 독립된 system-color cue이며, 보스 `shield_down` 상태도
   authored body, HUD와 체력 정보로 전달하고 player-reward overlay를 사용하지 않는다.
-- boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 방어막은
-  body에 붙은 세 개의 독립된 두꺼운 directional segment로만 표시하며 별도 actor나
-  asset family를 사용하지 않는다. Stage 3 boss만 80-degree segment 세 개와 40-degree
-  gap 세 개를 보여 주며 alpha `0.38`, body radius `+8`를 사용한다. 각 segment의
-  radial thickness는 body silhouette와 분리되어 1x에서 읽혀야 한다. `shield_down`에는
-  표시하지 않는다.
+- Boss identity remains owned by the complete silhouette and large-mass proportions. Every
+  defense renders only the independent thick segments published by simulation and never uses a
+  separate actor or asset family. Stage 3 shows three 80-degree system-color guard segments with
+  three 40-degree gaps at alpha `0.38`, body radius `+10`, and no geometry while down. Stage 10
+  shows three 70-degree coral reflection segments with three 50-degree gaps. It is absent for
+  the first 14 exposed seconds, uses the same segments at restrained half alpha during the final
+  non-blocking cue second, and uses full segment alpha during its five active seconds. Segment
+  radial thickness must remain distinct from the body silhouette at 1x, and visible gaps must
+  match collision angles exactly.
 - Stage 9 compression uses a 180-world-unit matte danger slab, one dark mass separator,
-  and one large directional edge cut. It never uses a bright laser core. Stage 10 reflection
-  is absent during the first 14 exposed seconds, uses a restrained half-alpha body-attached
-  frontal plate cue during the final exposed second, and uses one full body-attached frontal
-  plate boundary during its five active seconds. Stage 11 shows exactly one filled annulus and
+  and one large directional edge cut. It never uses a bright laser core. Stage 11 shows exactly one filled annulus and
   its two boundaries, with no decorative repeated circles. Stage 12 overload preserves the
   authored silhouette and facing while the body becomes near-black with one coral hot edge.
 - Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
@@ -865,9 +873,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   every hostile emitted beam exposes no startup path and its borderless rounded active
   branch or branches match the collision-owned grown segments and width on every frame;
   translating laser walls remain explicitly classified as placed moving hazards
-- 8개 boss body가 1× runtime scale에서 큰 silhouette와 4–6개 plane으로
-  판독되고, 외부 boss objective actor와 방어막 장치 asset이 0이며 body-attached
-  `shield_up/shield_down` 상태만 사용됨
+- all 12 boss bodies read as one large silhouette with 4-6 planes at 1x runtime scale;
+  external boss-objective actors and shield-device assets remain zero, while Stage 3 and
+  Stage 10 defenses use body-attached collision-matched segmented cue/up/down states
 - final gameplay manifest가 boss-death explosion과 effect/cue raster를 색인하지 않음;
   user-approved SurfaceDetail SVG 3개만 예외다.
   전용 hostile bolt를 포함하며, candidate/intermediate와
