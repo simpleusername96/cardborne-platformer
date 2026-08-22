@@ -281,6 +281,20 @@ func _validate_collision_ordering_and_minimap_markers() -> void:
 	)
 	var run := FeatureRun.new()
 	run.mystery_device_runtime = runtime
+	var expected_device_index := runtime._device_index_by_id(StringName(expected["id"]))
+	var health_before := float(runtime.devices[expected_device_index]["health"])
+	run._damage_mystery_devices_in_radius(
+		Vector2(expected["position"])
+			+ Vector2.RIGHT * (DeviceRuntime.COLLISION_RADIUS + 10.1),
+		10.0,
+		1.0
+	)
+	_expect(
+		is_equal_approx(
+			float(runtime.devices[expected_device_index]["health"]), health_before
+		),
+		"Area damage just outside the device snapshot radius must remain safe."
+	)
 	var minimap := run._minimap_snapshot(false)
 	var marker_count := 0
 	for marker_variant in Array(minimap["markers"]):

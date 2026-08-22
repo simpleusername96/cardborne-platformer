@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 canonical_for: Cardborne gameplay and product behavior
 scope: Current run-selected-field twelve-boss-cycle vehicle campaign
 related:
@@ -136,15 +136,16 @@ second global elite-stat layer.
   contact, crowd, and wall radii do not change. Swept collision chooses the earliest intersected enemy. A round without
   explicit pierce is retired at that first enemy instead of crossing the
   visible body.
-- Ordinary hull contact uses the relative swept path between the player's and
+- Hostile hull contact uses the relative swept path between the player's and
   enemy's physics-start and physics-end positions, so two moving bodies cannot
-  cross between endpoint checks. Pursuer and committed Charger contact can damage
-  at most once per warned active attack. Defender and Coordinator use persistent
-  hull contact with a `0.8 s` per-enemy retry cooldown that starts only when barrier
-  or hull accepts damage; an invulnerability rejection leaves the contact armed.
-  Emitter uses low hull-scrape contact for `6` damage with a `1.0 s` per-enemy
-  accepted-hit cooldown. Overlap outside a family's authored contact attack remains
-  damage-inert. Boss contact remains independently authored.
+  cross between endpoint checks. Warned charge, lunge, shield-bash, collective,
+  and boss-charge contact owns its crossing and cannot also apply a generic hit.
+  Defender and Coordinator persistent contact deals `12` damage with a `0.8 s`
+  per-enemy accepted-hit cooldown. Every other living active hostile body,
+  including pursuit, support, fixed, mine, and boss actors, applies generic hull
+  scrape: ordinary actors deal `6` and bosses deal `12`, with a `1.0 s` per-enemy
+  accepted-hit cooldown and no hidden contact padding. A dash-protected or
+  post-hit-protected rejection leaves persistent contact armed.
 - Every hostile attack has a startup descriptor produced from simulation
   values. Its `danger footprint` is the exact set of player-center positions
   that can receive damage: projectile radius plus player radius, contact
@@ -154,6 +155,11 @@ second global elite-stat layer.
   attacks hold their warned origin, direction, and target through impact; only
   warning readiness changes. These descriptors remain simulation truth and do
   not require a visible world route.
+- Hostile projectiles compare projectile start/end motion against player start/end
+  motion in relative space. Active radial areas use the minimum player-path distance,
+  and active beam corridors use exact segment distance; translated corridors include
+  both their previous and current geometry. These swept checks do not increase any
+  projectile radius, beam width, area radius, contact padding, or rendered footprint.
 - Projectile attacks use muzzle/cadence and the actual projectile without a
   predicted route, including off-screen sources and live shots approaching the
   viewport. The threat radar owns the directional warning for an off-screen
@@ -189,7 +195,7 @@ second global elite-stat layer.
   and stop on contact; hostile projectiles pass through and hostile damage is ignored, so
   the device cannot become unintended cover against enemy fire. Other accepted player
   direct, projectile, and area damage can damage it without changing their own collision
-  rules. Only its three assigned ordinary enemies target it.
+  rules. At most three assigned ordinary enemies target each active device.
 - The built-in primary weapon has an authored 1600-pixel range. At runtime its
   effective range is never shorter than the current visible world rectangle's
   diagonal plus 80 pixels, so an unobstructed target visible from any
@@ -224,7 +230,7 @@ second global elite-stat layer.
   cycles so a run reads as one continuous field rather than twelve reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. A new run
-  keeps six enemy upgrade-device sockets, two experience-recall pickups, and ten XP shards with explicit
+  keeps six enemy upgrade-device sockets, four experience-recall pickups, and ten XP shards with explicit
   separation; boss cleanup never replaces or relocates them. No cycle owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
@@ -245,23 +251,31 @@ second global elite-stat layer.
 
 - Run-selected inner walls and paired Transit Gates preserve their geometry, collision,
   line-of-sight, dwell, cooldown, and deterministic layout owners.
-- The field keeps six run-level device sockets. Exactly one unresolved enemy upgrade
-  device is active at a time, at the socket farthest from the player's current position.
-  A resolved device is never republished; the next unresolved device becomes eligible
-  nine seconds later. A run can resolve at most six devices.
+- The field keeps six run-level device sockets. Cycle 1 publishes no enemy upgrade
+  device. At the start of cycles 2-12, the prior cycle's device state retires and exactly
+  four sockets publish simultaneously. Selection first chooses the socket farthest from
+  the player's cycle-start position, then repeatedly maximizes minimum squared distance
+  from the player and already selected sockets, with stable socket-ID tie breaking.
+  A resolved device never republishes during the same cycle.
 - An active device has base health `360`, multiplied by `1 + 0.12 * (cycle - 1)`. It
   accepts player damage, ignores hostile damage, and does not grant quota, XP, defeat
   credit, or player-damage credit when destroyed.
-- The three nearest eligible living ordinary mobile enemies are assigned to the device.
-  They temporarily prioritize reaching it over ordinary combat and collective tactics,
-  use one shared device-targeted route field around run-selected walls, and are not turned
-  back toward the player by ordinary pursuit steering.
-  When all three remain within radius `180` for five uninterrupted seconds, the device
-  activates. Losing any required participant resets the channel.
-- Each activation permanently upgrades future ordinary enemy admissions by `+30` maximum
-  health, `+12%` pack-owned attack damage, and `+3` movement speed. Existing enemies,
-  bosses, boss summons, and boss attacks are unchanged. Destroying the device prevents
-  that activation.
+- Each device has an invisible `720`-unit influence radius and three stable participant
+  slots. A living active mobile ordinary enemy that enters influence may claim one device;
+  leash bounds do not exclude it. Bosses, summons, fixed actors, and mines cannot claim.
+  Claimed enemies prioritize their device over ordinary combat and player pursuit, use
+  one of four bounded device-ID route fields around run-selected walls, and stop within
+  `115.2` units. The route owner shares one walkability mask and expands at most `512`
+  combined cells per physics tick. A valid claim persists through temporary range departure.
+  When all three participants remain within radius `180` for five uninterrupted seconds,
+  the device activates. Losing an in-radius participant resets channel time but not its claim.
+- Activation immediately grants each living participant one non-stacking personal bonus of
+  `+30` current and maximum health, `+12%` pack-owned attack damage, and `+3` movement speed.
+  It also raises the run upgrade tier for future eligible ordinary admissions, capped at six
+  activations. Later activations still upgrade their current participants and publish an
+  outcome but cannot raise that future-admission tier. Bosses, summons, and boss attacks remain
+  unchanged. Destruction prevents that device's activation. Same-tick activation/destruction
+  feedback coalesces into one bilingual current-cycle count announcement; no HUD counter is used.
 - Neutral-facility runtime code and its Repair, Cryo, Weakpoint, and Lava assets remain
   in the repository as retired compatibility material. The default run does not publish
   those facilities or apply their effects.
@@ -292,18 +306,27 @@ second global elite-stat layer.
    ordinary enemies.
 5. Quota completion starts a 1.5-second boss warning. Twelve bosses appear in stage order
    under generic labels from Stage 1 Boss through Stage 12 Boss.
-6. Bosses in stages 1-8 may use the shared committed charge and broad three-row projectile
-   barrage. Stages 9-12 do not select `common_charge` or `common_broad_barrage`; each uses
-   only its dedicated mechanic and state rules.
+6. The common direct attack pool is exactly committed charge, broad barrage, radial
+   bombardment, parallel beam, and X beam. Stage 1 teaches charge, barrage, and radial
+   bombardment; Stage 2 adds both beam families, and stages 2-12 retain all five. A boss
+   selects two common direct attacks before an available signature attack, while a
+   phase-aware common squad call is due every ten seconds and waits during a major signature.
+   Broad barrage always fires three rows of six at `0.00/0.38/0.76 s`; spread rows use an
+   approximately `+/-21`-degree fan, while stages 2, 4, 7, and 8 rotate successive row axes
+   by `22.5` degrees. No two-lane volley is part of the common pool.
 7. Stage 3 boss alone uses directional defense, and it directly charges an attack. Its
    body-attached shield has three thick rotating 80-degree segments separated by three 40-degree
    gaps. Segment hits deal 15% damage. The shield stays up for eight seconds, then disappears
    for two seconds, and blocked damage charges its counterburst. Stage 5 boss has no shield. No boss is defense-only and no
    global shield-down rule exists.
-8. High-threat attacks deal 60-85 damage once per execution, warn for at least 1.30
-   seconds, use collision-matching committed geometry, and leave an escape corridor at
-   least player diameter + 80 units. Pressure damage is 10-18 and normal damage is 22-38.
-   No true instant-kill attack exists.
+8. High-threat attacks deal 60-85 damage once per execution, use collision-matching
+   committed geometry, and leave an escape corridor at least player diameter + 80 units.
+   Rapid lane, fan, and cross projectiles commit within `0.18 s`; broad barrage within
+   `0.22 s`; charge within `0.28 s`; and Stage 6 distance-growth ordnance within `0.30 s`.
+   They capture direction or target at commitment and do not track during startup or active
+   execution. Radial bombardment, emitted beams, and moving walls retain their authored
+   longer warnings. Pressure damage is 10-18 and normal damage is 22-38. No true instant-kill
+   attack exists.
 9. Every boss owns an independent absolute profile. Maximum health is
    `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890` and move speed is
    `405/420/435/450/465/480/500/515/525/535/545/555`. Each profile also directly records
@@ -321,20 +344,24 @@ second global elite-stat layer.
    collision-matched growth. Stage 4 `switch_sweep` releases three forward headings at
    `0.00/0.18/0.36 s` within its active window.
    Cross Beam commits two clipped perpendicular X corridors. Stage 6 Boss alone
-   uses ammunition that arms at 360 traveled units and caps at 880, interpolating speed
-   `0.75x->1.35x`, radius `1.0x->1.5x`, and damage `1.0x->1.6x`.
-   Stage 7 Boss commits paired translating walls with one collision-true opening, then
+   uses ammunition that begins at `1.0x` speed/radius/damage, starts growth at 360 travelled
+   units, and caps at 880, interpolating to `1.35x/1.5x/1.6x`. At 720 travelled units it
+   arms a `96`-unit proximity trigger and retires through one direct-contact/proximity path
+   that produces one `150`-radius detonation.
+   Stage 7 Boss commits paired translating walls with one collision-true opening at `0.70x`
+   its prior wall speed and damage, then
    crosses the field with a delayed orthogonal pass whose opening moves to a different
    axis. Startup shows only short entry-edge markers rather than the complete routes.
    Stage 8 Boss commits projectile-only twelve-shot radial volleys with alternating
    angular offsets. Direct and autonomous selections use a gameplay-owned delay with no
    ring damage, warning zone, predicted route, impact preview, or other pre-fire world
    effect; only the live projectile bodies appear when each volley is emitted. Stage 9 uses 180-unit-deep moving
-   compression slabs with a 360-unit gap that can shift by at most 280 units; paired slabs
+   compression slabs at `0.70x` prior speed and damage, with a 360-unit gap that can shift by at most 280 units; paired slabs
    enter at least 0.45 seconds apart and never close every route together. Stage 10 starts
-   exposed and carries a body-attached 100-degree frontal reflection plate for five seconds
-   after fifteen exposed seconds in each twenty-second cycle. The final exposed second shows
-   a body-attached activation cue. It reflects only direct player projectiles while active,
+   exposed. After fifteen fully down seconds, it activates three body-attached `70`-degree
+   reflection segments separated by three `50`-degree gaps for five seconds; the final exposed
+   second shows a non-blocking activation cue. Segment coverage comes from the defense angle,
+   not boss facing. It reflects only direct player projectiles while active,
    preserving speed and life;
    reflected damage is 35% capped at 24, cannot reflect again, and a full hostile store
    absorbs the shot without boss damage. Stage 11 takes full damage only at radius 420-760
@@ -348,10 +375,11 @@ second global elite-stat layer.
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
     summons stagger-shrink/fade without reward or quota. Transition waits for
     cleanup completion.
-11. Cycle completion preserves the tactical layout, device resolution and active channel state,
-    pickups, living ordinary enemies, player position, velocity, aim, projectiles, XP,
+11. Cycle completion preserves the tactical layout, pickups, living ordinary enemies,
+    player position, velocity, aim, projectiles, XP,
     build, cooldowns, fixed Hard state, exploration, and terrain. It changes only the
-    profile used for future ordinary admissions, the next quota, and the next boss.
+    profile used for future ordinary admissions, the next quota, the next boss, and the
+    cycle-scoped device set: prior unresolved/channel state retires before the next four publish.
     Cycle 12 opens Result; failure opens Failure Report.
 
 | Boss cycle | Quota | Authored mobile population | Boss |
@@ -414,10 +442,10 @@ second global elite-stat layer.
   trace uses composed family traits, collects the initial ten authored shards once,
   excludes boss and boss-add XP, and reaches levels
   `16/22/26/30/33/36/39/42/46/49/52/55` after cycles 1-12.
-- A new run places four experience-recall pickups. After 90 active seconds, if fewer than
-  two remain active, one consumed recall returns every 30 seconds, never above four.
-- The actual viewport publishes at most one placed direct item and one active enemy
-  upgrade device. XP dropped by defeated enemies is exempt. `visible_world.grow(240)` is the
+- A new run places four experience-recall pickups. After 45 active seconds, if fewer than
+  four remain active, one consumed recall returns every 15 seconds, never above four.
+- The actual viewport publishes at most one placed direct item and all four active enemy
+  upgrade devices. XP dropped by defeated enemies is exempt. `visible_world.grow(240)` is the
   activation safety region: an already visible object stays published and any conflicting
   second object has rendering and collision disabled until the nearest validated off-screen
   anchor becomes eligible. An uncollected direct item may retire only after 60 published
@@ -508,8 +536,10 @@ second global elite-stat layer.
   spatial-query path, presentation batch, retirement rule, and deterministic
   performance-scenario coverage before increasing runtime load.
 - Static minimap geometry and each bounded dynamic tactical snapshot use one
-  vertex-colored mesh surface. At most one active enemy upgrade device reuses one
-  retained world batch and creates no per-actor canvas draws or per-field scene nodes.
+  vertex-colored mesh surface. Up to four active enemy upgrade devices reuse one
+  retained world batch and create no per-actor canvas draws or per-field scene nodes.
+  Their route owner retains four fixed-capacity cost arrays, one shared walkability
+  mask, and one combined `512`-cell expansion budget per physics tick.
 - Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
   batches. The hard ceiling remains 80 combat batches.

@@ -6093,9 +6093,12 @@ func _damage_mystery_devices_in_radius(
 		if StringName(device["state"]) != &"dormant" or not bool(device.get("published", true)):
 			continue
 		var device_position := Vector2(device["position"])
+		var device_radius := float(device.get(
+			"radius", MysteryDeviceRuntime.DEVICE_RADIUS
+		))
 		if (
 			device_position.distance_to(center)
-			> radius + MysteryDeviceRuntime.DEVICE_RADIUS
+			> radius + device_radius
 		):
 			continue
 		_damage_mystery_device(

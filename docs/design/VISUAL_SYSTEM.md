@@ -3,7 +3,7 @@ type: spec
 status: active
 owner: BK
 created: 2026-07-21
-last_reviewed: 2026-08-21
+last_reviewed: 2026-08-22
 canonical_for: Cardborne vehicle-game art direction and UI presentation
 scope: All player-facing world, combat, HUD, modal, preview, and effect surfaces
 related:
@@ -299,6 +299,9 @@ collision.
   radius `180`을 한 개의 얇은 code-native danger boundary로 표시하고, reduced motion은
   같은 정적 boundary를 유지한다. 파괴 또는 활성화 시 seeker/explosion raster를
   재사용하지 않고 restrained hit tint, dim과 fade로 장치를 retire한다.
+  Cycle 1에는 표시하지 않고 cycle 2-12에는 같은 retained world batch로 네 장치를
+  동시에 표시한다. 적 배정용 radius `720`은 항상 invisible이며 새로운 range ring,
+  route line, objective panel 또는 HUD counter를 만들지 않는다.
 - Repair, Cryo, Weakpoint와 Lava neutral-facility PNG 및 runtime code는 삭제하지 않고
   retired compatibility material로 유지한다. default run, minimap, guidebook와 effect
   presentation은 이 symbol을 publish하지 않는다.
@@ -387,14 +390,14 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - neutral 또는 traversable damage-zone surface는 사용하지 않는다. 바닥 detail은
   presentation-only이며 damage, collision, danger telegraph 또는 objective 의미를
   가질 수 없다.
-- 적 업그레이드 장치는 unresolved socket 중 player에게 가장 먼 위치에 한 개만
-  publish한다. authored body의 optical size는 기존 `288` world-unit facility symbol의
+- 적 업그레이드 장치는 cycle 1에는 publish하지 않고 cycle 2-12에는 여섯 socket 중
+  farthest-first/maximum-separation으로 선택한 네 위치에 동시에 publish한다. authored body의 optical size는 기존 `288` world-unit facility symbol의
   `70%`를 기준으로 하며 gameplay collision, health와 channel radius는 code truth다.
   장치 본체는 넓은 비대칭 또는 삼방향 silhouette, dark perimeter, danger-coral main
   plane, restrained cool-neutral secondary plane과 한 개의 warm-off-white core를 사용한다.
   작은 원, 반복 lamp, ring stack, nested border, screen, 글자와 decorative seam을 금지한다.
   damage는 같은 body 위의 짧은 tint로, channel은 실제 radius `180`의 얇은 boundary로,
-  resolution은 dim/fade로 표시한다. 다음 장치는 별도 effect burst 없이 publish한다.
+  resolution은 dim/fade로 표시한다. 다음 cycle의 네 장치는 별도 effect burst 없이 publish한다.
 - Transit Gate는 antialiased outer contour, uniform radial thickness, one dark
   body ring, one broad system-cyan active plane과 one short live highlight를 가진
   complete circular floor portal을 유지한다. Uneven edge, notch, lamp, panel seam과
@@ -476,6 +479,13 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   radar가 방향만 전달하고 실제 projectile body가 화면에 들어온 뒤부터 world에
   표시한다. charge startup도 이동 경로, endpoint cap, corridor boundary를 표시하지
   않는다.
+- common broad barrage는 별도 two-lane symbol이나 asset 없이 실제 hostile projectile
+  body만 사용한다. 한 번의 실행은 `0.00/0.38/0.76s`에 여섯 발씩 세 row를 만들며,
+  spread는 row 안에서 약 `+/-21` degree, rotate는 row마다 axis를 `22.5` degree
+  바꾼다. Visual timing은 simulation receipt를 따르고 추가 predicted path를 만들지 않는다.
+- Stage 6 distance-growth projectile은 실제 성장한 projectile body와 radius 안의 bounded
+  armed cue만 표시한다. Boss와 projectile 사이를 연결하는 beam/trail은 없으며 proximity
+  detonation은 실제 `150` radius 안에서만 기존 code-native impact를 사용한다.
 - boss-owned Fixed Beam Pattern과 모든 hostile boss-emitted beam은 gameplay가 committed direction,
   endpoint, width와 active timing을 소유한다. 여기에는 단방향 `switch_sweep`,
   `switch_sweeps`, `radial_beam`, 보스 중심에서 네 방향으로 발사되는
@@ -498,7 +508,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   emission 계약의 대상이 아니다.
 - Stage 7 Boss의 crossing weave는 같은 placed moving hazard 계약을 사용한다. 첫 paired
   wall pass와 지연된 orthogonal pass는 startup에 각 entry edge의 짧은 marker만 보이고,
-  active부터 현재 collision과 gap을 표시한다. Stage 8 Boss의 두 radial volley 선택은
+  active부터 현재 collision과 gap을 표시한다. `0.70x` speed/damage tuning은 wall depth,
+  opening, marker와 collision/presentation alignment를 바꾸지 않는다. Stage 8 Boss의 두 radial volley 선택은
   gameplay-owned delay 뒤 각도 offset이 반대인 12발 projectile body만 생성한다. Startup과
   delay 동안 wedge-ring, safe sector, damage zone, predicted route, impact preview, source effect와
   그 밖의 pre-fire world effect를 모두 표시하지 않는다. 탄환이 실제 생성된 frame부터 authored
@@ -514,6 +525,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   boundary 하나, radius `120` 이상은 `33%/67%` boundary 두 개를 near-black ring으로
   표시하고, warning 전 구간에 exact outer footprint와 함께 유지한다. 이 ring은 장식이
   아니라 `100/45%` 또는 `100/70/40%` damage band의 직접 표시다.
+  Player start/end sweep는 tick 사이의 교차를 찾기 위한 simulation 방식이며 projectile
+  radius, area radius, beam width, contact padding 또는 이 visual footprint를 늘리지 않는다.
 - threat radar는 기존 5 Hz hostile scan을 유지하며 sampled player origin,
   generation과 12개 이하 sector record를 한 frame으로 교체한다. HUD는 매 render
   frame 현재 player world position으로 이 bounded record를 rebase하고, 같은 frame의
@@ -536,17 +549,20 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   bracket, crosshair, ring 또는 route overlay를 붙이지 않는다. manual-aim cursor는
   적 상태와 독립된 system-color cue이며, 보스 `shield_down` 상태도
   authored body, HUD와 체력 정보로 전달하고 player-reward overlay를 사용하지 않는다.
-- boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. 방어막은
+- boss body의 고유성은 전체 silhouette와 큰 mass 비율이 소유한다. Segmented defense는
   body에 붙은 세 개의 독립된 두꺼운 directional segment로만 표시하며 별도 actor나
-  asset family를 사용하지 않는다. Stage 3 boss만 80-degree segment 세 개와 40-degree
-  gap 세 개를 보여 주며 alpha `0.38`, body radius `+8`를 사용한다. 각 segment의
-  radial thickness는 body silhouette와 분리되어 1x에서 읽혀야 한다. `shield_down`에는
-  표시하지 않는다.
+  asset family를 사용하지 않는다. Stage 3은 80-degree segment 세 개와 40-degree
+  gap 세 개를 alpha `0.38`, body radius `+8`로 표시한다. Stage 10은 active 동안
+  70-degree reflection segment 세 개와 50-degree gap 세 개를 표시한다. 두 표현 모두
+  collision snapshot의 exact start angle과 segment/gap 값을 사용하며 boss facing으로
+  재구성하지 않는다. 각 segment의 radial thickness는 body silhouette와 분리되어 1x에서
+  읽혀야 하며 완전 down state에는 표시하지 않는다.
 - Stage 9 compression uses a 180-world-unit matte danger slab, one dark mass separator,
-  and one large directional edge cut. It never uses a bright laser core. Stage 10 reflection
+  and one large directional edge cut. Its `0.70x` speed/damage tuning does not change slab
+  depth, gap, warning, or collision-matched presentation. It never uses a bright laser core. Stage 10 reflection
   is absent during the first 14 exposed seconds, uses a restrained half-alpha body-attached
-  frontal plate cue during the final exposed second, and uses one full body-attached frontal
-  plate boundary during its five active seconds. Stage 11 shows exactly one filled annulus and
+  segmented cue during the final exposed second, and uses the three collision-owned segment
+  boundaries during its five active seconds. Stage 11 shows exactly one filled annulus and
   its two boundaries, with no decorative repeated circles. Stage 12 overload preserves the
   authored silhouette and facing while the body becomes near-black with one coral hot edge.
 - Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
@@ -756,7 +772,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   Korean/English text를 자르지 않는다. bounded priority queue는 duplicate를
   coalesce하고 semantic color로 종류를 구분한다. gameplay announcement는 boss
   inbound, barrier depleted, boss shield-down, progression complete와 verified enemy
-  upgrade-device activation/destruction event만 허용한다.
+  upgrade-device activation/destruction event만 허용한다. 같은 tick의 device event는
+  현재 cycle의 activated/destroyed 최종 count를 한/영 한 message로 coalesce한다.
   stage transition banner는 사용하지 않는다.
 - 화면에 보이는 모든 살아 있는 hostile `EnemyState`는 최대 체력이어도 world body 위에
   backed health bar를 둔다. 이동 일반 적, 고정 적, boss add/summon과 boss를 포함한다.
@@ -901,7 +918,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - The enemy upgrade device is the default field-device system. Its production authored
   PNG is the user-approved `candidate-a-triad-forge.png`, published as
   `world/enemy_upgrade_device` with exact approved source bytes.
-  The device uses one retained world batch, no bob, an optional channel-only radius boundary,
+  Up to four devices use one retained world batch, no bob, an optional channel-only radius boundary,
   a bright body-wide damage tint, and a dim/fade retirement. Collision, health, assignment, channel,
   future-enemy bonuses, and resolution remain code-owned.
 - The four retired neutral-facility role rasters and their runtime code remain preserved

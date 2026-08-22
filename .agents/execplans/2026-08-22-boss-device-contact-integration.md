@@ -7,7 +7,7 @@ scope: Selective boss-pattern integration, enemy upgrade-device competition, rec
 related:
   - ../PLANS.md
   - ./2026-08-21-onboarding-progression-and-combat-pressure.md
-  - ./2026-08-22-enemy-upgrade-devices.md
+  - ../completed-plans/2026-08-22-enemy-upgrade-devices.md
   - ../cardborne-performance-engineering-policy.md
   - ../../docs/product/vehicle_game_spec.md
   - ../../docs/design/VISUAL_SYSTEM.md
@@ -140,6 +140,7 @@ Readiness statement:
 - User sketch inspected at original detail: `D:/Program Files/ImageMagick-7.1.1-Q16-HDRI/captures/2026-08-22 11 24 36.png`. It is a gameplay-arrangement reference for the existing broad barrage, not an asset source.
 - `actual_image_reference_used=false`; `reference_input_method=not_applicable`. No raster or SVG deliverable is authorized.
 - Task constraints: preserve collision/presentation separation; render shield gaps from the exact angular collision snapshot; keep Stage 6 projectiles disconnected from false beam trails; keep the device's approved authored PNG and semantic marker; show up to four devices through retained batches; use counted bilingual announcements; add no HUD panel or live upgrade rail; do not increase any collision footprint to match effects.
+- Phase 5 authority refresh after editing the canonical visual contract: the text was completely reread at SHA-256 `e4473a3e06cb84e9752293def68f9a535f25d19adcfe71175ebdfcc92cfa5218`; the canonical sheet remained SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889` and was reinspected at original `1448 x 1086` detail. `actual_image_reference_used=false`; `reference_input_method=not_applicable`; no image was created, edited, or promoted.
 
 ## Tasks
 
@@ -321,11 +322,11 @@ Preconditions:
 
 Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`, this plan, affected validators, `.github/workflows/vehicle-run-validation.yml`
 
-- [ ] **5.1** Update canonical product and visual contracts from current local documents.
+- [x] **5.1** Update canonical product and visual contracts from current local documents.
   - Change: edit current local documents in place for the five-family common pool, three-by-six spread/rotate barrage, rapid boss timing, common/signature rhythm, Stage 6/7/9/10 rules, four-device cycle lifecycle, personal and bounded run upgrades, counted messages, recall `45/15/4/4`, universal contact attempts, preserved hit protection, and unchanged collision footprints. Do not copy remote documents wholesale or restore neutral-facility text.
   - Accept: canonical product and visual-document searches find no active contract for `common_lane_volley`, one-device-per-run publication, a six-device-resolution lifecycle, `90/30` recall, harmless hostile overlap, a facing-based Stage 10 plate, or a contradictory minimum-`1.30 s` rule for rapid boss projectile/charge kinds. Historical rejection text in this execution plan is allowed.
   - Guard: the older active onboarding plan's “do not shorten startup” decision is historical for this scope and must not override the newer explicit user decision recorded here.
-- [ ] **5.2** Run the task-scoped quality audit and correct only safe owned findings.
+- [x] **5.2** Run the task-scoped quality audit and correct only safe owned findings.
   - Change: load `$codebase-quality-auditor`; review responsibility creep, competing schedulers, catch-all expansion, mutable snapshot leakage, device collision ordering, contact double-hit paths, public contract drift, localization completeness, and missing integration fixtures. Apply only small task-scoped corrections.
   - Accept: no reachable task-owned failure path, competing common/signature/device/contact owner, stale fallback publication, or missing validator remains; material redesign findings stop this phase and trigger contract revision.
 - [ ] **5.3** Run the single final broad gate after user alignment.
@@ -335,6 +336,8 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
 - [ ] **5.4** Close the execution contract.
   - Change: record final commit IDs, commands/workflow run, exact partial-pass labels, capture/evidence locations, known non-blocking warnings, and any unqualified performance boundary; change frontmatter to `status: done` only after every completion condition passes.
   - Accept: the task checkboxes are the only progress source, this plan names the final evidence, and no required behavior remains only documented or only implemented.
+
+Phase 5 documentation and audit checkpoint (2026-08-22): the product and visual specs now match the integrated five-family boss language, three-by-six barrage, rapid commits, stage-specific defenses and hazards, four-device lifecycle, immediate participant and bounded future upgrades, counted outcomes, recall policy, and swept hostile-hit rules. Targeted stale-contract searches returned no active match. The refreshed visual-authority validator passed with the unchanged canonical sheet hash. Document authority passed across `91` Markdown files after updating its obsolete neutral-facility section title and archiving the completed predecessor device plan. The task-scoped quality audit found no competing scheduler, device/contact owner, mutable snapshot leak, localization gap, or material responsibility redesign. It corrected one reachable footprint defect: player area damage used the retired facility radius `84` instead of each device snapshot's collision radius `58.8`; a new boundary fixture passes. Obsolete uncounted device notification keys were removed. The focused enemy-upgrade-device validator and `git diff --check` pass after these corrections.
 
 Final local checks before any approval-gated external workflow:
 
@@ -390,8 +393,8 @@ Implementation-local discoveries may be handled inside the locked contract when 
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 5.
-- Next task: Task 5.1, synchronize canonical product and visual documentation with runtime truth.
-- Last completed gate: Phase 4 focused recall/contact/attack/damage/readability gate plus affected boss-runtime regression coverage.
+- Next task: Task 5.3, obtain user alignment immediately before the single final broad validation and rendered evidence gate.
+- Last completed gate: Phase 5.1–5.2 canonical documentation, visual/document authority, focused device-radius regression, and task-scoped quality audit.
 - Update rule: on start or resume, read this contract and inspect the worktree only enough to confirm checkpoint inputs, then continue from the first unchecked task whose prerequisites pass. After each checkpoint, record concise evidence, check the task, advance this pointer, and commit the coherent phase. Do not mirror progress into another plan.
 
 ## Completion and Stop Conditions

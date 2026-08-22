@@ -286,8 +286,6 @@ NOTIFY_FACILITY_WEAKPOINT_ACTIVATED,"약점 시설 활성 · 범위 안의 적�
 NOTIFY_FACILITY_LAVA_ACTIVATED,"용암 시설 활성 · 범위 안의 모두 지속 피해","Lava field active · all units inside take periodic damage"
 NOTIFY_FACILITY_EXPIRY_WARNING,"%s · 3초 후 종료","%s · shutting down in 3s"
 NOTIFY_FACILITY_SHUTDOWN,"%s 종료","%s offline"
-NOTIFY_ENEMY_UPGRADE_DEVICE_DESTROYED,"적 업그레이드 장치를 파괴했습니다.","Enemy upgrade device destroyed."
-NOTIFY_ENEMY_UPGRADE_DEVICE_ACTIVATED,"적 업그레이드 장치 활성화 · 이후 등장하는 적 강화","Enemy upgrade device activated · future enemies strengthened"
 NOTIFY_ENEMY_UPGRADE_DEVICE_COUNTS,"적 업그레이드 장치 · 적 활성화 %d / 파괴 %d","Enemy upgrade devices · enemy activated %d / destroyed %d"
 SECONDARY_HOMING_MISSILES_NAME,"추적 미사일","Homing Missiles"
 SECONDARY_HOMING_MISSILES_DESC,"시야 안의 우선 표적을 자동으로 추적합니다.","Automatically tracks priority targets in line of sight."
