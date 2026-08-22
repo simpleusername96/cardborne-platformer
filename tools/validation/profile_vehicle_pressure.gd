@@ -33,7 +33,8 @@ func _profile_difficulty(difficulty: StringName) -> bool:
 	stage.call("_reset_run", false, true, false)
 	stage.mode = 1
 	stage.encounter_runtime.current_beat = 4
-	stage.call("_debug_append_packet_enemies", 320)
+	var cap: int = int(stage.encounter_runtime.active_cap())
+	stage.call("_debug_append_packet_enemies", cap)
 	var mobile_index := 0
 	for enemy in stage.enemies:
 		if enemy.counts_active_cap:
@@ -47,7 +48,6 @@ func _profile_difficulty(difficulty: StringName) -> bool:
 			enemy.leash_rect = Rect2(stage.player_position - Vector2(1200.0, 1000.0), Vector2(2400.0, 2000.0))
 			mobile_index += 1
 	stage.player_invulnerable = 999.0
-	stage.call("_enforce_active_enemy_cap")
 	for shard_index in 192:
 		stage.experience_runtime.spawn_shard(Vector2(4200.0 + float(shard_index % 12), 2600.0 + float(shard_index / 12)), 1)
 	for _index in WARMUP_STEPS:
@@ -71,7 +71,6 @@ func _profile_difficulty(difficulty: StringName) -> bool:
 			active_capped += 1
 	var scheduler_ms := float(scheduler["step_ms"])
 	var combined_ms := moving_ms + hud_ms + scheduler_ms
-	var cap: int = int(stage.encounter_runtime.active_cap())
 	var shard_count: int = stage.experience_runtime.shards.size()
 	var result := (
 		active_capped == cap
