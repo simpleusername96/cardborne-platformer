@@ -1,6 +1,6 @@
 ---
 type: plan
-status: done
+status: active
 created: 2026-08-22
 scope: General Cardborne UI/UX analysis and to-be mockups
 related:
@@ -45,6 +45,18 @@ related:
 | C. Screen-specific themed panels | strongest per-screen expression | theme and immediate recognition | competing owners, nested frames, inconsistent navigation |
 
 ## Tasks
+
+### Core-surface contract and line-removal pass
+
+- [x] Record the user's selected HUD direction and the new line/empty-space constraints.
+- [x] Refresh the complete visual-authority preflight after the canonical specification changed.
+- [x] Inspect the retained current-worktree captures and source owners for all ten core surfaces.
+- [x] Lock one shared density and boundary-economy grammar plus a page-specific size and information contract.
+- [ ] Generate and inspect one coherent 1280×720 image for each core surface: Deployment, Upgrade, Pause, Settings, Guidebook, Stage Report, Failure Report, Result, HUD, and Message.
+- [ ] Update the Korean report with the full contract, ten-screen image set, prompt provenance, and concept-only status.
+- [ ] Validate the canonical authority, dimensions, hashes, local links, and task-only diff; commit only this pass.
+
+Pass gate: every normal static separator must justify actual containment or state, no content body keeps an unexplained 48 px vertical or 64 px horizontal void, and all ten images share the selected bluegray/cyan direction without turning static rows into bordered cards.
 
 ### Required-surface correction: Upgrade, Message, and HUD
 
