@@ -188,11 +188,12 @@ Implementation-local discoveries may be handled inside the locked contract when 
 
 - Canonical progress: the task checkboxes in this contract.
 - Current phase: Phase 3.
-- Next task: 3.4 commit and push; itch deployment remains conditional on document-deletion approval.
-- Last completed gate: Phase 3 final Web gate.
+- Next task: obtain explicit approval to delete the unreferenced done plan, then dispatch the existing itch workflow with `publish=true` and require success.
+- Last completed gate: implementation commit `349e3390` pushed to `origin/feat/general-uiux-refinement`.
 - Phase 1-2 evidence: experience, upgrade, attack, guidebook, spawn composition, family trait, route readability, projectile store/readability, combat renderer, and integrated vehicle-run validators passed. The current semantic-pack progression trace exposed a pre-existing stale expectation from the prior pack correction; production truth is 15,510 XP, level 51 after cycle 10, and level 58 after cycle 12, and only the spec/validator expectation changed.
 - Phase 3 focused/render evidence: the refreshed visual-authority validator passed for sheet SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`. One Korean 1280x720 capture completed at `.agents/evidence/2026-08-22-xp-ranged-pressure-ko-1280`; original-detail inspection of `09-effects-projectile-hostile-startup.png`, `09-effects-projectile-hostile-flight.png`, and `09-effects-projectile-hostile-hit.png` confirmed that the enlarged bolt keeps a distinct opaque core and danger contour without obscuring the source, player, or warning cue.
 - Phase 3 quality/Web evidence: the diff-scoped quality audit found stale expectations in the fallback-progression and specialist-integration validators; both now derive from their owning constants and pass. The final Web export completed with four primary files, and the itch static release validator passed with nine release files, raw size `56,359,942`, gzip size `24,706,893`, and allowance `26,949,682`.
+- Phase 3 git/deployment evidence: commit `349e3390` contains only the task-owned implementation, authority, specification, plan, and validator changes and is pushed. Itch workflow run `32564272222` remains the current deployment evidence: it stopped before upload because `.agents/execplans/2026-08-22-enemy-pack-traits-and-boss-pressure-correction.md` is `status: done` but still lives in the active plan directory. No validator or deployment path has been bypassed.
 - Update rule: after a checkpoint passes, record concise evidence, check the task, and advance this pointer in the same edit.
 
 ## Completion and Stop Conditions
