@@ -118,20 +118,13 @@ func _validate_opening_runtime(stage_id: StringName, stage_index: int, packets: 
 			break
 	_expect(opening_spawns == expected_opening_spawns, "%s emits its complete opening packet before the next gate" % stage_id)
 	if stage_index == 0:
-		for _continuation_step in 120:
+		var emitted_before_gate := Array(runtime.debug_snapshot()["stage_emitted_packs"]).size()
+		for _blocked_step in 30:
 			runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, visible_world)
-			if Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() >= 6:
-				break
 		_expect(
-			Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() >= 6,
-			"stage_1 admits later lessons without a full-clear defeat gate"
-		)
-		runtime.stop_spawning()
-		_expect(
-			not runtime.spawning_enabled()
-				and runtime.debug_snapshot()["queued_spawns"] == 0
-				and runtime.debug_snapshot()["reserved_arrival_slots"] == 0,
-			"stage_1 explicit teardown can stop future arrivals"
+			emitted_before_gate == 3
+				and Array(runtime.debug_snapshot()["stage_emitted_packs"]).size() == 3,
+			"stage_1 holds the next lesson until the 15-defeat gate"
 		)
 		return
 	var cue_count := 0

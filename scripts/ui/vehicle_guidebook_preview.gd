@@ -46,8 +46,7 @@ func show_preview(preview: Dictionary) -> void:
 		&"boss":
 			_add_asset(StringName("boss/%s" % preview_id), 220.0)
 		&"mystery_device":
-			# Temporary until the user promotes one enemy upgrade-device candidate.
-			_add_asset(&"world/mystery_device_weakpoint", 88.0)
+			_add_asset(&"world/enemy_upgrade_device", 88.0)
 		&"terrain":
 			_add_terrain(preview_id)
 		&"facility":

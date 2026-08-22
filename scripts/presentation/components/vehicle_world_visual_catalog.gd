@@ -32,6 +32,12 @@ const WORLD_OBJECT_DESCRIPTORS := {
 	&"mystery_device_lava": {
 		"asset": &"world/mystery_device_lava", "kind": &"mystery_device_symbol", "shape": &"thermal_vent",
 	},
+	&"enemy_upgrade_device": {
+		"asset": &"world/enemy_upgrade_device",
+		"kind": &"enemy_upgrade_device",
+		"shape": &"triad_forge",
+		"color": &"danger",
+	},
 }
 
 const SURFACE_DETAIL_DESCRIPTORS := {

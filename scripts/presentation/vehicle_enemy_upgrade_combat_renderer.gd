@@ -1,7 +1,7 @@
 class_name VehicleEnemyUpgradeCombatRenderer
 extends "res://scripts/presentation/vehicle_combat_renderer.gd"
 
-## Temporary device presentation until one review-only authored candidate is approved.
+## Production presentation for the player-approved enemy upgrade device.
 
 const UpgradeDeviceRuntime = preload(
 	"res://scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd"
@@ -27,7 +27,7 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 		if StringName(device.get("state", &"")) != &"dormant":
 			continue
 		var outcome_id := StringName(device.get("outcome", &"weakpoint"))
-		var symbol_descriptor := &"mystery_device_weakpoint"
+		var symbol_descriptor := &"enemy_upgrade_device"
 		var symbol_asset := StringName(
 			UpgradeWorldCatalog.world_object_descriptor(symbol_descriptor).get("asset", &"")
 		)
@@ -78,17 +78,17 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			0.0,
 			1.0
 		)
-		var danger_mix := clampf(
-			0.18 + capture_ratio * 0.52 + hit_ratio * 0.72,
-			0.0,
-			1.0
-		)
+		var danger_mix := clampf(0.10 + capture_ratio * 0.52, 0.0, 1.0)
+		var body_tint := Color.WHITE.lerp(UpgradeArt.DANGER, danger_mix)
+		# A bright body-wide flash remains readable against the device's coral
+		# armor; another danger tint was too similar to its idle identity.
+		body_tint = body_tint.lerp(UpgradeArt.TEXT_PRIMARY, hit_ratio * 0.96)
 		_queue_semantic_texture(
 			symbol_asset,
 			position,
 			0.0,
 			symbol_radius,
-			Color.WHITE.lerp(UpgradeArt.DANGER, danger_mix)
+			body_tint
 		)
 
 

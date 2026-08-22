@@ -50,6 +50,7 @@ const REQUIRED_RUNTIME_IDS: Array[StringName] = [
 	&"world/mystery_device_cryo",
 	&"world/mystery_device_weakpoint",
 	&"world/mystery_device_lava",
+	&"world/enemy_upgrade_device",
 	&"world/surface_detail_crack",
 	&"world/surface_detail_stain",
 	&"world/surface_detail_embedded_chip",
@@ -145,7 +146,7 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var ids := AssetProvider.asset_ids()
-	_expect(ids.size() == 116, "all 113 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
+	_expect(ids.size() == 117, "all 114 semantic PNGs and three approved SurfaceDetail SVGs are indexed")
 	for asset_id in REQUIRED_RUNTIME_IDS:
 		_expect(AssetProvider.has_asset(asset_id), "%s is indexed" % asset_id)
 	for family in FamilyTraits.FAMILIES:
@@ -204,9 +205,9 @@ func _initialize() -> void:
 	)
 	var manifest := AssetProvider.manifest()
 	_expect(
-		int(manifest.get("final_asset_count", 0)) == 116
+		int(manifest.get("final_asset_count", 0)) == 117
 			and not manifest.has("animations"),
-		"manifest declares 116 static semantic images and no frame animations"
+		"manifest declares 117 static semantic images and no frame animations"
 	)
 	_validate_ordinary_family_identity_assets()
 	_validate_surface_details()

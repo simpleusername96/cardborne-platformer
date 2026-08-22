@@ -62,6 +62,7 @@ func _validate_catalog() -> void:
 		&"mystery_device_cryo": [ &"world/mystery_device_cryo", &"broad_snowflake" ],
 		&"mystery_device_weakpoint": [ &"world/mystery_device_weakpoint", &"opened_armor" ],
 		&"mystery_device_lava": [ &"world/mystery_device_lava", &"thermal_vent" ],
+		&"enemy_upgrade_device": [ &"world/enemy_upgrade_device", &"triad_forge" ],
 	}
 	_expect(
 		WorldCatalog.WORLD_OBJECT_DESCRIPTORS.size() == expected_objects.size(),

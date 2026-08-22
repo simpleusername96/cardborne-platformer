@@ -27,7 +27,7 @@
     "shared_world_cue_rule": "Fixed world surface and wall identities remain authored PNGs. The three approved SurfaceDetail identities are exact deterministic SVG sources. Dynamic health rectangles, rings, beam corridors, disks, and simple markers are code-native geometry.",
     "code_native_rule": "Collision geometry, topology clipping, telegraph dimensions, health and progress ratios, localized text, live timing, and shape/color-only dynamic primitives remain runtime truth; they do not create a second visual-identity asset."
   },
-  "final_asset_count": 116,
+  "final_asset_count": 117,
   "family_counts": {
     "player": 1,
     "ordinary_enemy": 53,
@@ -37,7 +37,7 @@
     "projectile": 2,
     "defense_status": 0,
     "pickup_reward": 4,
-    "world_facility": 18,
+    "world_facility": 19,
     "world_presentation": 2,
     "surface_detail": 3,
     "cue": 0,
@@ -169,6 +169,7 @@
     {"id": "world/mystery_device_cryo", "path": "world/mystery_device_cryo.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/mystery_device_weakpoint", "path": "world/mystery_device_weakpoint.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/mystery_device_lava", "path": "world/mystery_device_lava.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
+    {"id": "world/enemy_upgrade_device", "path": "world/enemy_upgrade_device.png", "canvas": [512, 512], "content_rect": [27, 52, 456, 404], "pivot": [256, 256], "category": "world"},
     {"id": "world/terrain_solid_cover_block", "path": "world/terrain_solid_cover_block.png", "canvas": [192, 192], "pivot": [96, 96], "category": "world"},
     {"id": "world/wear_tile_intact", "path": "world/wear_tile_intact.png", "canvas": [240, 160], "pivot": [120, 80], "category": "world"},
     {"id": "world/wear_tile_cracked", "path": "world/wear_tile_cracked.png", "canvas": [240, 160], "pivot": [120, 80], "category": "world"},

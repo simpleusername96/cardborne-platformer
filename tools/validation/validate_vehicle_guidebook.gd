@@ -170,7 +170,7 @@ func _run() -> void:
 	contract = panel.debug_contract()
 	_expect(
 		Array(Dictionary(contract["preview"])["asset_ids"])
-			== [&"world/mystery_device_weakpoint"],
+			== [&"world/enemy_upgrade_device"],
 		"enemy upgrade-device preview hides retired facility identities"
 	)
 	var preview := GuidePreview.new()

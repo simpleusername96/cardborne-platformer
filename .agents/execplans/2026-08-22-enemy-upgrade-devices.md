@@ -1,6 +1,6 @@
 ---
 type: plan
-status: done
+status: active
 created: 2026-08-22
 updated: 2026-08-22
 ---
@@ -86,8 +86,8 @@ Locked decisions:
 - Preserve early tiers, threat budgets, ranged/denial commit caps, defeat quotas,
   and authored reserve totals so higher density does not import late-cycle damage
   pressure into early play.
-- Preserve Stage 1 teaching compositions but remove full-clear defeat gates; admit
-  those packets sequentially under the same `72/56` capacity contract.
+- Preserve Stage 1 teaching compositions and their original `0/15/30/45/60` tutorial
+  gates. The shared `72/56` capacity contract applies without bypassing those lessons.
 - Create three transparent PNG candidates for a new hostile device identity. Keep
   them review-only until the user selects an exact candidate; do not promote a
   candidate to the production manifest in this phase.
@@ -118,8 +118,9 @@ Locked decisions:
 ## Progress and Next Steps
 
 - Canonical progress: the continuation task checkboxes above.
-- Current phase: complete.
-- Next task: await exact user candidate selection before any production visual switch.
+- Current phase: follow-up integration and validation.
+- Next task: validate the selected production visual, projectile contact, objective
+  routing, and restored tutorial gates.
 - Completed gates: device, encounter pacing, spawn composition, guidebook,
   bilingual localization, active-run clock, full Run, and visual-authority validators;
   Godot import; four-file production Web export; `git diff --check`; and the bounded
@@ -158,5 +159,18 @@ Locked decisions:
   ImageMagick edge-connected alpha cleanup removed only the background; all
   three retained files were non-creatively resized to `512×512` and report
   `srgba`, `opaque=False`, and transparent corner/background samples.
-- Approval state: review-only; exact user selection remains pending. No candidate
-  is a production asset, workbench TO-BE deliverable, or runtime replacement.
+- Approval state: BK selected `candidate-a-triad-forge.png` on 2026-08-22. The exact
+  approved bytes (SHA-256
+  `F4229F8EEE2CDED317C1A1198B3EEAFD3885E15EBE7C97E1C4A116F80C8B38D0`) are published
+  as `art/visuals/production/gameplay/world/enemy_upgrade_device.png`; no resize,
+  repaint, or other byte-changing adaptation was applied.
+
+## Follow-up Corrections
+
+- [x] Restore the Stage 1 tutorial defeat gates while retaining `72/56` density.
+- [x] Stop player-primary rounds at the device and retain hostile pass-through.
+- [x] Strengthen the body-wide hit flash against the device's coral idle body.
+- [x] Give assigned enemies a shared wall-aware route to the active device and exempt
+  their objective motion from player-pursuit correction.
+- [x] Promote the exact user-selected Triad Forge PNG to runtime and Guidebook use.
+- [ ] Run focused gameplay, presentation, asset, and visual-authority validation.

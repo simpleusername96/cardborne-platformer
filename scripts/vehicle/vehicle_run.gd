@@ -4314,6 +4314,7 @@ func _smoothed_enemy_velocity(
 	)
 	if (
 		enemy.movement_family == EnemyMovementPolicy.PURSUIT
+		and _allows_player_pursuit_bias(enemy)
 		and enemy.phase in [&"move", &"recovery"]
 		and enemy.reposition_time <= 0.0
 	):
@@ -4322,6 +4323,10 @@ func _smoothed_enemy_velocity(
 			var lateral := adjusted - toward_player * adjusted.dot(toward_player)
 			adjusted = (lateral + toward_player * speed_cap * 0.05).limit_length(speed_cap)
 	return adjusted
+
+
+func _allows_player_pursuit_bias(_enemy: EnemyState) -> bool:
+	return true
 
 
 func _move_enemy_with_recovery(enemy: EnemyState, velocity: Vector2, delta: float) -> void:
@@ -4690,7 +4695,16 @@ func _update_projectile_buffer(
 		):
 			var device_index := int(_mystery_device_hit_receipt["device_index"])
 			var device_bit := 1 << device_index
-			if (projectile.facility_hit_mask & device_bit) == 0:
+			# A blocking player-primary hit is resolved once through the ordered
+			# structure route below. Pass-through projectile families retain this
+			# one-hit-per-device path.
+			var resolves_as_blocking_structure := (
+				not hostile and projectile.owner == "player_primary"
+			)
+			if (
+				not resolves_as_blocking_structure
+				and (projectile.facility_hit_mask & device_bit) == 0
+			):
 				projectile.facility_hit_mask |= device_bit
 				_damage_mystery_device(
 					StringName(_mystery_device_hit_receipt["device_id"]),

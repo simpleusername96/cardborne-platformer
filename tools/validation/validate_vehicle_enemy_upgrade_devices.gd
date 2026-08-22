@@ -19,6 +19,7 @@ func _initialize() -> void:
 	_validate_feature_scene_integration()
 	_validate_capture_and_activation()
 	_validate_player_owned_destruction()
+	_validate_objective_intent()
 	_validate_stage_health_scaling()
 	_validate_recall_frequency()
 	if failures.is_empty():
@@ -105,8 +106,33 @@ func _validate_player_owned_destruction() -> void:
 		_expect(false, "Destruction validation requires an active device.")
 		return
 	var device_id := StringName(snapshot[0]["id"])
+	var center := Vector2(snapshot[0]["position"])
+	var segment_hit := {}
+	_expect(
+		runtime.first_intact_segment_hit(
+			center + Vector2(-200.0, 0.0),
+			center + Vector2(200.0, 0.0),
+			0.0,
+			segment_hit
+		),
+		"Player-primary structure queries must stop at the device."
+	)
+	_expect(
+		float(segment_hit.get("t", INF)) >= 0.0
+			and float(segment_hit.get("t", INF)) <= 1.0,
+		"Device projectile blocking must publish an ordered segment hit."
+	)
 	var hostile := runtime.receive_damage(device_id, 9999.0, &"hostile", &"projectile")
 	_expect(not bool(hostile["accepted"]), "Hostile attacks must not damage the device.")
+	var first_player_hit := runtime.receive_damage(device_id, 1.0, &"player", &"projectile")
+	_expect(bool(first_player_hit["accepted"]), "Player projectile damage must be accepted.")
+	runtime.fill_device_snapshot(snapshot)
+	_expect(
+		float(snapshot[0].get("hit_flash_remaining", 0.0)) > 0.0
+			and not bool(snapshot[0].get("projectiles_blocked", true))
+			and bool(snapshot[0].get("player_primary_projectiles_blocked", false)),
+		"Accepted damage must publish hit feedback and player-projectile blocking."
+	)
 	var player := runtime.receive_damage(device_id, 9999.0, &"player", &"projectile")
 	_expect(bool(player["accepted"]), "Player projectile damage must be accepted.")
 	_expect(bool(player["broken"]), "Player damage must destroy the device at zero health.")
@@ -126,6 +152,45 @@ func _validate_player_owned_destruction() -> void:
 		snapshot.size() == 1 and StringName(snapshot[0]["id"]) != device_id,
 		"A different unresolved device must publish after the delay."
 	)
+
+
+func _validate_objective_intent() -> void:
+	var runtime := DeviceRuntime.new()
+	runtime.configure(_blueprint(), 505, &"stage_01")
+	runtime.refresh_publication(Rect2(), Vector2.ZERO)
+	var snapshot: Array[Dictionary] = []
+	runtime.fill_device_snapshot(snapshot)
+	if snapshot.is_empty():
+		_expect(false, "Objective-intent validation requires an active device.")
+		return
+	var center := Vector2(snapshot[0]["position"])
+	var enemies: Array[EnemyState] = [
+		_enemy("objective_a", center + Vector2(700.0, 0.0)),
+		_enemy("objective_b", center + Vector2(760.0, 80.0)),
+		_enemy("objective_c", center + Vector2(820.0, -80.0)),
+	]
+	runtime.set_context(enemies, 0)
+	var events: Array[Dictionary] = []
+	runtime.advance(0.01, events)
+	for enemy in enemies:
+		_expect(
+			runtime.is_enemy_assigned(enemy.id),
+			"The three nearest mobile enemies must be assigned to the device."
+		)
+	var run := FeatureRun.new()
+	run._enemy_upgrade_runtime = runtime
+	run.enemies.assign(enemies)
+	run.player_position = center + Vector2(2000.0, 0.0)
+	var assigned := enemies[0]
+	run._prepare_enemy_for_upgrade_objective(assigned)
+	assigned.desired_velocity = run._desired_enemy_velocity(assigned, false)
+	var smoothed := run._smoothed_enemy_velocity(assigned, 0.1, false)
+	_expect(
+		smoothed.dot(center - assigned.pos) > 0.0
+			and assigned.movement_reason == &"enemy_upgrade_device",
+		"Assigned pursuit enemies must keep moving toward the device even when it is away from the player."
+	)
+	run.free()
 
 
 func _validate_stage_health_scaling() -> void:

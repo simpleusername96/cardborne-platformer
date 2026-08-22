@@ -1,12 +1,16 @@
 extends SceneTree
 
 const Renderer = preload("res://scripts/presentation/vehicle_combat_renderer.gd")
+const EnemyUpgradeRenderer = preload(
+	"res://scripts/presentation/vehicle_enemy_upgrade_combat_renderer.gd"
+)
 const Art = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ExperienceShard = preload("res://scripts/progression/vehicle_experience_shard.gd")
 const EffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
+const EffectState = preload("res://scripts/combat/vehicle_effect_state.gd")
 const DashUpgradeRuntime = preload(
 	"res://scripts/player/vehicle_dash_upgrade_runtime.gd"
 )
@@ -498,6 +502,9 @@ func _run() -> void:
 		"player and hostile projectiles retain distinct texture-capable surfaces"
 	)
 	_validate_mystery_device_presentation(renderer, no_enemies, no_projectiles, no_shards)
+	await _validate_enemy_upgrade_device_presentation(
+		no_enemies, no_projectiles, no_shards, effect_store.live
+	)
 	_validate_conditional_attack_footprints(
 		renderer, no_enemies, no_projectiles, no_shards
 	)
@@ -1516,6 +1523,8 @@ func _validate_mystery_device_presentation(
 		no_enemies, no_projectiles, no_projectiles, no_shards, [],
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 0.0, true, "", presentation
 	)
+
+
 	var lava_contour := renderer.get_node(
 		"MysteryDeviceContour_lava"
 	) as MultiMeshInstance2D
@@ -1736,6 +1745,50 @@ func _validate_mystery_device_presentation(
 			and disks.multimesh.visible_instance_count == 0,
 		"inactive mystery device and timed-effect inputs clear their retained instances"
 	)
+func _validate_enemy_upgrade_device_presentation(
+	no_enemies: Array[EnemyState],
+	no_projectiles: Array[ProjectileState],
+	no_shards: Array[ExperienceShard],
+	no_effects: Array[EffectState]
+) -> void:
+	var renderer := EnemyUpgradeRenderer.new()
+	root.add_child(renderer)
+	await process_frame
+	var position := Vector2(520.0, 300.0)
+	var presentation := _player_presentation(Vector2(260.0, 300.0), false)
+	presentation["mystery_devices"] = [{
+		"id":"upgrade-device-a",
+		"state":&"dormant",
+		"visible":true,
+		"position":position,
+		"visual_radius":100.8,
+		"capture_ratio":0.0,
+		"capture_count":0,
+		"hit_flash_remaining":0.14,
+	}]
+	renderer.sync(
+		no_enemies, no_projectiles, no_projectiles, no_shards, no_effects,
+		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 1.0, true, "",
+		presentation
+	)
+	var draws := renderer.debug_semantic_texture_draws(
+		&"world/enemy_upgrade_device"
+	)
+	_expect(
+		draws.size() == 1
+			and Vector2(draws[0]["position"]).is_equal_approx(position)
+			and is_equal_approx(float(draws[0]["radius"]), 100.8),
+		"enemy upgrade device uses the approved Triad Forge production PNG"
+	)
+	if not draws.is_empty():
+		var hit_color := Color(draws[0]["modulate"])
+		_expect(
+			hit_color.get_luminance() >= Art.TEXT_PRIMARY.get_luminance() * 0.90,
+			"device damage publishes a bright body-wide hit flash"
+		)
+	renderer.queue_free()
+
+
 func _validate_conditional_attack_footprints(
 	renderer: Renderer,
 	no_enemies: Array[EnemyState],

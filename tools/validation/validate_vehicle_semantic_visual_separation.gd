@@ -25,6 +25,9 @@ const DISTINCT_GROUPS := {
 		&"world/mystery_device_weakpoint",
 		&"world/mystery_device_lava",
 	],
+	"hostile_device_role":[
+		&"world/enemy_upgrade_device",
+	],
 }
 
 var _failures: Array[String] = []
@@ -47,6 +50,7 @@ func _validate_active_world_roles() -> void:
 		&"mystery_device_cryo",
 		&"mystery_device_weakpoint",
 		&"mystery_device_lava",
+		&"enemy_upgrade_device",
 		&"transit_gate",
 	]
 	var active_ids := WorldCatalog.WORLD_OBJECT_DESCRIPTORS.keys()
@@ -55,7 +59,7 @@ func _validate_active_world_roles() -> void:
 		matches = matches and active_ids.has(expected_id)
 	_expect(
 		matches,
-		"active world visual roles include four facilities and exclude retired identities"
+		"world visual roles include the hostile device and preserved facility identities"
 	)
 
 

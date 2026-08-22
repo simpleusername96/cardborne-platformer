@@ -12,6 +12,7 @@ const EnemyUpgradeRenderer = preload(
 )
 const UpgradeStatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const UpgradeArt = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
+const ObjectivePursuitField = preload("res://scripts/enemies/vehicle_pursuit_field.gd")
 
 const OBJECTIVE_STOP_RATIO := 0.64
 
@@ -21,6 +22,7 @@ var enemy_upgrade_speed_bonus := 0.0
 var enemy_upgrade_activations := 0
 
 var _enemy_upgrade_runtime
+var _enemy_upgrade_pursuit_field := ObjectivePursuitField.new()
 var _enemy_damage_multiplier_by_id: Dictionary = {}
 var _enemy_applied_multiplier_by_id: Dictionary = {}
 
@@ -58,11 +60,18 @@ func _reset_run(
 		preserve_upgrades,
 		_preserve_field_state
 	)
+	_enemy_upgrade_pursuit_field.reset(
+		current_stage_id, _runtime_cover_rects()
+	)
 
 
 func _physics_process(delta: float) -> void:
 	if _enemy_upgrade_runtime != null:
 		_enemy_upgrade_runtime.set_context(enemies, current_stage_index)
+		if _enemy_upgrade_runtime.has_active_device():
+			_enemy_upgrade_pursuit_field.update(
+				delta, _enemy_upgrade_runtime.active_position()
+			)
 	super._physics_process(delta)
 
 
@@ -128,6 +137,11 @@ func _desired_enemy_velocity(enemy: EnemyState, recovering: bool) -> Vector2:
 		var offset: Vector2 = _enemy_upgrade_runtime.active_position() - enemy.pos
 		if offset.length() <= EnemyUpgradeRuntime.CAPTURE_RADIUS * OBJECTIVE_STOP_RATIO:
 			return Vector2.ZERO
+		var route_direction := _enemy_upgrade_pursuit_field.direction_at(
+			enemy.pos, enemy.radius
+		)
+		if not route_direction.is_zero_approx():
+			offset = route_direction
 		return (
 			offset.normalized()
 			* _effective_enemy_speed(enemy)
@@ -144,6 +158,13 @@ func _apply_engagement_gap_steering(
 	if _enemy_upgrade_runtime != null and _enemy_upgrade_runtime.is_enemy_assigned(enemy.id):
 		return
 	super._apply_engagement_gap_steering(enemy, delta, update_spatial_grid)
+
+
+func _allows_player_pursuit_bias(enemy: EnemyState) -> bool:
+	return (
+		_enemy_upgrade_runtime == null
+		or not _enemy_upgrade_runtime.is_enemy_assigned(enemy.id)
+	)
 
 
 func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:

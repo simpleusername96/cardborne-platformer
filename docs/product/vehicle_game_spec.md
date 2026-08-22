@@ -185,10 +185,11 @@ second global elite-stat layer.
   route and are never treated as reward cover. `wall_piercing` is an explicit projectile capability whose
   default is false. No current ordinary enemy, boss pattern, primary shot, or
   secondary shot receives that capability implicitly.
-- An active enemy upgrade device blocks actors while every projectile passes through it.
-  Player direct, projectile, and area damage can damage the device; hostile damage is
-  ignored. Only its three assigned ordinary enemies target it, so it cannot become an
-  unintended shield against enemy fire.
+- An active enemy upgrade device blocks actors. Player-primary rounds damage the device
+  and stop on contact; hostile projectiles pass through and hostile damage is ignored, so
+  the device cannot become unintended cover against enemy fire. Other accepted player
+  direct, projectile, and area damage can damage it without changing their own collision
+  rules. Only its three assigned ordinary enemies target it.
 - The built-in primary weapon has an authored 1600-pixel range. At runtime its
   effective range is never shorter than the current visible world rectangle's
   diagonal plus 80 pixels, so an unobstructed target visible from any
@@ -252,7 +253,9 @@ second global elite-stat layer.
   accepts player damage, ignores hostile damage, and does not grant quota, XP, defeat
   credit, or player-damage credit when destroyed.
 - The three nearest eligible living ordinary mobile enemies are assigned to the device.
-  They temporarily prioritize reaching it over ordinary combat and collective tactics.
+  They temporarily prioritize reaching it over ordinary combat and collective tactics,
+  use one shared device-targeted route field around run-selected walls, and are not turned
+  back toward the player by ordinary pursuit steering.
   When all three remain within radius `180` for five uninterrupted seconds, the device
   activates. Losing any required participant resets the channel.
 - Each activation permanently upgrades future ordinary enemy admissions by `+30` maximum

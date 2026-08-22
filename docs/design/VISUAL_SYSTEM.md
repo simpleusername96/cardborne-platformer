@@ -899,10 +899,10 @@ Web export만으로 interactive built-Web smoke나 release performance를
   code-native cues defined above and select their matching texture batch, keeping the combat
   renderer at or below its 80-batch ceiling.
 - The enemy upgrade device is the default field-device system. Its production authored
-  PNG is pending explicit candidate approval; until approval, the current weakpoint-symbol
-  reuse is a temporary implementation placeholder and is not visual-contract acceptance.
+  PNG is the user-approved `candidate-a-triad-forge.png`, published as
+  `world/enemy_upgrade_device` with exact approved source bytes.
   The device uses one retained world batch, no bob, an optional channel-only radius boundary,
-  restrained damage tint, and a dim/fade retirement. Collision, health, assignment, channel,
+  a bright body-wide damage tint, and a dim/fade retirement. Collision, health, assignment, channel,
   future-enemy bonuses, and resolution remain code-owned.
 - The four retired neutral-facility role rasters and their runtime code remain preserved
   for compatibility and history. Repair, Cryo, Weakpoint, and Lava are not published by

@@ -6,6 +6,7 @@ extends "res://scripts/vehicle/vehicle_mystery_device_runtime.gd"
 ## Five uninterrupted seconds with all three inside the capture radius activates it.
 
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
+const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 
 const MAX_DEVICES := 6
 const BASE_HEALTH := 360.0
@@ -155,6 +156,10 @@ func active_position() -> Vector2:
 	return Vector2(devices[active_index]["position"]) if active_index >= 0 else Vector2.ZERO
 
 
+func has_active_device() -> bool:
+	return _active_device_index() >= 0
+
+
 static func _accepts_upgrade_damage(source_team: StringName, attack_kind: StringName) -> bool:
 	return source_team == &"player" and attack_kind in [&"direct", &"area", &"projectile"]
 
@@ -197,6 +202,7 @@ func receive_damage(
 			"grants_experience":false,
 			"drop":&"",
 			"projectiles_blocked":false,
+			"player_primary_projectiles_blocked":true,
 		}
 	return receipt
 
@@ -249,6 +255,7 @@ static func _snapshot_record(device: Dictionary) -> Dictionary:
 		"required_enemy_count":REQUIRED_ENEMY_COUNT,
 		"hit_flash_remaining":float(device.get("hit_flash_remaining", 0.0)),
 		"projectiles_blocked":false,
+		"player_primary_projectiles_blocked":true,
 	}
 
 
@@ -263,18 +270,26 @@ func is_position_clear(position: Vector2, actor_radius: float) -> bool:
 
 
 func first_intact_segment_hit(
-	_from: Vector2,
-	_to: Vector2,
-	_padding: float,
+	from: Vector2,
+	to: Vector2,
+	padding: float,
 	receipt: Dictionary
 ) -> bool:
-	# The device takes projectile damage through first_damageable_segment_hit(),
-	# but remains projectile-pass-through like the retired neutral facilities.
-	receipt.clear()
-	return false
+	# VehicleRun only asks this structure query for player-primary projectiles.
+	# Hostile projectiles remain pass-through so the device cannot become cover.
+	return _first_active_segment_hit(from, to, padding, receipt)
 
 
 func first_damageable_segment_hit(
+	from: Vector2,
+	to: Vector2,
+	padding: float,
+	receipt: Dictionary
+) -> bool:
+	return _first_active_segment_hit(from, to, padding, receipt)
+
+
+func _first_active_segment_hit(
 	from: Vector2,
 	to: Vector2,
 	padding: float,
@@ -286,14 +301,18 @@ func first_damageable_segment_hit(
 		return false
 	var device := devices[active_index]
 	var position := Vector2(device["position"])
-	if (
-		Geometry2D.get_closest_point_to_segment(position, from, to).distance_to(position)
-		> COLLISION_RADIUS + maxf(0.0, padding)
-	):
+	var hit_t := AttackContract.segment_circle_first_t(
+		from,
+		to,
+		position,
+		COLLISION_RADIUS + maxf(0.0, padding)
+	)
+	if is_inf(hit_t):
 		return false
 	receipt["device_id"] = StringName(device["id"])
 	receipt["device_index"] = active_index
-	receipt["position"] = position
+	receipt["position"] = from.lerp(to, hit_t)
+	receipt["t"] = hit_t
 	return true
 
 
