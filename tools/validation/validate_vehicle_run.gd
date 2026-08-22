@@ -939,8 +939,11 @@ func _check_boss_committed_recovery(run) -> void:
 	run.call("_clear_projectiles")
 	boss["pos"] = run.player_position + Vector2(-420.0, 0.0)
 	boss["phase"] = "boss_startup"
-	boss["phase_time"] = 0.8
 	boss["pattern"] = "current_fan"
+	boss["phase_time"] = AttackContract.warned_startup_seconds(
+		BossPatterns.startup_seconds("current_fan", run.current_stage_index),
+		BossPatterns.kind("current_fan")
+	)
 	boss["pattern_index"] = 1
 	boss["committed_dir"] = Vector2.UP
 	boss["committed_target"] = run.player_position + Vector2(0.0, -240.0)
@@ -1667,21 +1670,27 @@ func _check_hot_path_guards(run) -> void:
 	var device_rows: Array = run.mystery_device_runtime.snapshot()["devices"]
 	var published_devices := device_rows.filter(func(device): return bool(device["published"]))
 	var hidden_devices := device_rows.filter(func(device): return not bool(device["published"]))
-	_expect(
-		device_rows.size() == 6
-		and published_devices.size() == 1
-		and hidden_devices.size() == 5
-		and not bool(run.call(
+	var all_published_block := true
+	for device in published_devices:
+		all_published_block = all_published_block and not bool(run.call(
 			"_position_clear_of_stage_objects",
-			Vector2(published_devices[0]["position"]),
+			Vector2(device["position"]),
 			24.0
 		))
-		and bool(run.call(
+	var all_hidden_clear := true
+	for device in hidden_devices:
+		all_hidden_clear = all_hidden_clear and bool(run.call(
 			"_position_clear_of_stage_objects",
-			Vector2(hidden_devices[0]["position"]),
+			Vector2(device["position"]),
 			24.0
-		)),
-		"one enemy upgrade device participates in collision while five sockets stay pending"
+		))
+	_expect(
+		device_rows.size() == 6
+		and published_devices.size() == 4
+		and hidden_devices.size() == 2
+		and all_published_block
+		and all_hidden_clear,
+		"four enemy upgrade devices participate in collision while two sockets stay pending"
 	)
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")
