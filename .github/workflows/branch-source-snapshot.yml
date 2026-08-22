@@ -1,57 +1,62 @@
 name: Apply Boss Implementation
 
 on:
-  pull_request:
-    branches: [master]
+  push:
+    branches: [codex/boss-shared-pattern-defense-rules]
+    paths:
+      - ".agents/tmp/apply/**"
+      - ".github/workflows/branch-source-snapshot.yml"
 
 permissions:
   contents: write
 
 concurrency:
-  group: boss-implementation-${{ github.event.pull_request.number }}
+  group: apply-boss-implementation-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  apply-implementation:
-    if: github.head_ref == 'codex/boss-shared-pattern-defense-rules'
+  apply:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Check out pull-request branch
+      - name: Check out branch
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: codex/boss-shared-pattern-defense-rules
           fetch-depth: 0
 
-      - name: Decode and apply the bounded implementation patch
+      - name: Decode and apply bounded patch
         shell: bash
         run: |
           set -euo pipefail
-          patch_source='.agents/tmp/implementation.patch.gz.b64'
-          test -s "$patch_source"
-          base64 --decode "$patch_source" > "$RUNNER_TEMP/boss-implementation.patch.gz"
-          echo 'e94b8b56368fa287c0e293065591d5002070103fc9db94ac413c36a8d1edbbdf  '"$RUNNER_TEMP/boss-implementation.patch.gz" | sha256sum --check
-          gzip -dc "$RUNNER_TEMP/boss-implementation.patch.gz" > "$RUNNER_TEMP/boss-implementation.patch"
-          echo 'e825fd928a225a25ad0fe7e8b4a29c478eff944d298edf73af042b8e65652fa8  '"$RUNNER_TEMP/boss-implementation.patch" | sha256sum --check
-          git apply --check "$RUNNER_TEMP/boss-implementation.patch"
-          git apply "$RUNNER_TEMP/boss-implementation.patch"
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+          import gzip
 
-      - name: Remove temporary recovery surfaces
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf .agents/tmp/patch-recovery
+          parts = sorted(Path('.agents/tmp/apply').glob('part-*.txt'))
+          if not parts:
+              raise SystemExit('No bounded implementation patch parts found.')
+          encoded = ''.join(part.read_text().strip() for part in parts)
+          compressed = base64.b64decode(encoded, validate=True)
+          Path('/tmp/boss-implementation.patch').write_bytes(gzip.decompress(compressed))
+          PY
+          git apply --check /tmp/boss-implementation.patch
+          git apply /tmp/boss-implementation.patch
+          rm -rf .agents/tmp/apply
           rm -f .agents/tmp/implementation.patch.gz.b64
+          rm -rf .agents/tmp/patch-recovery
           rm -f .github/workflows/branch-source-snapshot.yml
           git diff --check
 
-      - name: Commit and push the implementation
+      - name: Commit implementation
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          test -n "$(git status --short)"
-          git commit -m 'feat(boss): unify shared patterns and segmented defenses'
-          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          git diff --cached --check
+          git commit -m "feat(boss): refine shared patterns and segmented defenses"
+          git push origin HEAD:codex/boss-shared-pattern-defense-rules
