@@ -1427,20 +1427,14 @@ func _sync_late_mechanic_overlay(
 			10.0
 		)
 	var resonance_module := (
-		enemy.mechanic_state in [&"resonance_base", &"resonance_cue", &"resonance_shifted"]
+		enemy.mechanic_state == &"resonance_range"
 		or enemy.archetype == &"ordinary_resonance_01"
 	)
 	if resonance_module:
-		var inner := enemy.mechanic_inner_radius
 		var outer := enemy.mechanic_outer_radius
-		if inner <= 0.0 or outer <= inner:
-			inner = radius + 42.0
-			outer = inner + 64.0
-		var middle := (inner + outer) * 0.5
-		_write_arc_segments(
-			position, middle, 0.0, TAU, Color(Art.SYSTEM, 0.12), 48, outer - inner
-		)
-		_write_ring(position, inner, Color(Art.SYSTEM, 0.58))
+		if outer <= 0.0:
+			outer = radius + 106.0
+		_write_disk(position, outer, Color(Art.SYSTEM, 0.08))
 		_write_ring(position, outer, Color(Art.SYSTEM, 0.58))
 	if (
 		enemy.mechanic_state == &"overload_active"

@@ -444,7 +444,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - runtime ordinary body asset은 Pursuer, Charger, Emitter, Defender, Coordinator의
   T1/T2/T3 base body와 각 family의 trait body 두 개를 포함한 PNG 45개를 사용한다.
   `family_trait`가 비어 있으면 base body를, 아니면 같은 family/tier의 trait body를
-  선택한다. 이 선택은 collision, movement, attack, active range의 truth를 바꾸지 않는다.
+  선택한다. Pack trait가 active여도 owning family가 아닌 같은 pack actor는 base body를
+  유지한다. 이 선택은 collision, movement, attack, active range의 truth를 바꾸지 않는다.
 - family trait는 기존 retained disk/ring/diamond/danger-ring batch 안에서 body footprint
   또는 실제 active range에 cue를 쓴다. Splitter는 paired diamond, Frenzy는 inner danger
   ring, Double은 paired dot, Self-Destruct는 base diamond와 fuse ring, Artillery는 rear
@@ -487,7 +488,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   바꾼다. Visual timing은 simulation receipt를 따르고 추가 predicted path를 만들지 않는다.
 - Stage 6 distance-growth projectile은 실제 성장한 projectile body와 radius 안의 bounded
   armed cue만 표시한다. Boss와 projectile 사이를 연결하는 beam/trail은 없으며 proximity
-  detonation은 실제 `150` radius 안에서만 기존 code-native impact를 사용한다.
+  detonation은 실제 `150` radius 안에서만 기존 code-native impact를 사용한다. 한 번의
+  실행은 `0.00/0.22/0.44/0.66/0.88s`에 `-180/+180` lateral offset의 독립 projectile
+  두 발씩을 표시한다. Projectile끼리 잇는 선, 미리 놓인 longitudinal chain, shared bar는 없다.
 - boss-owned Fixed Beam Pattern과 모든 hostile boss-emitted beam은 gameplay가 committed direction,
   endpoint, width와 active timing을 소유한다. 여기에는 단방향 `switch_sweep`,
   `switch_sweeps`, `radial_beam`, 보스 중심에서 네 방향으로 발사되는
@@ -564,8 +567,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   depth, gap, warning, or collision-matched presentation. It never uses a bright laser core. Stage 10 reflection
   is absent during the first 14 exposed seconds, uses a restrained half-alpha body-attached
   segmented cue during the final exposed second, and uses the three collision-owned segment
-  boundaries during its five active seconds. Stage 11 shows exactly one filled annulus and
-  its two boundaries, with no decorative repeated circles. Stage 12 overload preserves the
+  boundaries during its five active seconds. Stage 11 shows one restrained filled disk from
+  the boss to the collision-owned `760` threshold and exactly one outer boundary, with no inner,
+  shifting, or decorative repeated circle. Stage 12 overload preserves the
   authored silhouette and facing while the body becomes near-black with one coral hot edge.
 - Thermal Burst impact는 direct player-primary hit 위치와 gameplay radius
   `72/84/96`에 alpha `0.16`의 full thermal disk를 첫 frame부터 최종 크기로

@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_validate_role_signatures()
 	_validate_runtime_visibility_arming()
 	_validate_runtime_permissions()
+	_validate_pack_trait_runtime()
 	_validate_source_boundaries()
 	_finish()
 
@@ -270,6 +271,140 @@ func _validate_runtime_visibility_arming() -> void:
 		int(Dictionary(snapshot["phases"]).get(&"gather", 0)) == 1,
 		"visible dwell transitions only to Gather"
 	)
+
+
+func _validate_pack_trait_runtime() -> void:
+	for trait_spec in [
+		{&"family":&"defender", &"trait":&"bulwark", &"interval":8.0},
+		{&"family":&"defender", &"trait":&"reflector", &"interval":7.0},
+	]:
+		_lookup.clear()
+		var runtime := Runtime.new()
+		var members := _register_trait_pack(
+			runtime,
+			"%s_pack" % String(trait_spec[&"trait"]),
+			StringName(trait_spec[&"family"]),
+			StringName(trait_spec[&"trait"]),
+			&"shielded_column"
+		)
+		runtime.advance(
+			float(trait_spec[&"interval"]),
+			Vector2(800.0, 400.0),
+			Rect2(0.0, 0.0, 1200.0, 800.0),
+			Callable(self, "_find_enemy")
+		)
+		_expect(
+			_all_members_trait_phase(members, &"active", true),
+			"%s activates as shared pack state after its exact interval"
+			% String(trait_spec[&"trait"])
+		)
+
+	_lookup.clear()
+	var blink_runtime := Runtime.new()
+	var blink_members := _register_trait_pack(
+		blink_runtime, "blink_pack", &"coordinator", &"blink", &"shepherd_pack"
+	)
+	var blink_events := blink_runtime.advance(
+		9.0,
+		Vector2(800.0, 400.0),
+		Rect2(0.0, 0.0, 1200.0, 800.0),
+		Callable(self, "_find_enemy")
+	)
+	_expect(
+		_events_have_action(blink_events, &"warning"),
+		"Blink emits its shared warning event"
+	)
+	blink_events = blink_runtime.advance(
+		0.9,
+		Vector2(800.0, 400.0),
+		Rect2(0.0, 0.0, 1200.0, 800.0),
+		Callable(self, "_find_enemy")
+	)
+	_expect(
+		_events_have_action(blink_events, &"blink_request"),
+		"Blink emits a relocation request after the warning"
+	)
+	_expect(
+		_all_members_trait_phase(blink_members, &"idle", false),
+		"Blink returns the whole pack to idle after requesting relocation"
+	)
+
+	_lookup.clear()
+	var feed_runtime := Runtime.new()
+	var feed_members := _register_trait_pack(
+		feed_runtime,
+		"feed_pack",
+		&"coordinator",
+		&"pack_feed",
+		&"shepherd_pack"
+	)
+	var first_receipt := feed_runtime.record_member_defeat(feed_members[1])
+	_expect(
+		int(first_receipt.get("stacks", 0)) == 1
+			and is_equal_approx(float(first_receipt.get("heal_ratio", 0.0)), 0.10),
+		"Pack Feed grants one capped stack and its survivor heal receipt"
+	)
+	var leader_receipt := feed_runtime.record_member_defeat(feed_members[0])
+	_expect(
+		bool(leader_receipt.get("leader_lost", false)),
+		"Pack Feed recognizes the explicit Coordinator leader loss"
+	)
+	_expect(
+		feed_runtime.record_member_defeat(feed_members[2]).is_empty(),
+		"Pack Feed cannot gain stacks after the Coordinator leader is lost"
+	)
+
+
+func _register_trait_pack(
+	runtime: Runtime,
+	squad_id: String,
+	pack_family: StringName,
+	pack_trait: StringName,
+	tactic_id: StringName
+) -> Array[EnemyState]:
+	var members: Array[EnemyState] = []
+	for member_index in 4:
+		var enemy := _enemy(
+			"%s_member_%d" % [squad_id, member_index],
+			squad_id,
+			tactic_id,
+			member_index,
+			Vector2(360.0, 260.0 + float(member_index) * 24.0)
+		)
+		enemy.pack_family = pack_family
+		enemy.pack_trait = pack_trait
+		enemy.family = (
+			pack_family
+			if member_index == 0 else (&"emitter" if pack_family == &"defender" else &"pursuer")
+		)
+		enemy.family_trait = pack_trait if enemy.family == pack_family else &""
+		members.append(enemy)
+		_lookup[enemy.id] = enemy
+	# Registration order is intentionally reversed so only explicit metadata and
+	# the explicit leader flag can determine shared pack truth.
+	for member_index in range(members.size() - 1, -1, -1):
+		runtime.register_enemy(members[member_index])
+	return members
+
+
+func _all_members_trait_phase(
+	members: Array[EnemyState],
+	phase: StringName,
+	require_active: bool
+) -> bool:
+	for enemy in members:
+		if enemy.pack_trait_phase != phase:
+			return false
+		if require_active and not enemy.pack_trait_active:
+			return false
+	return true
+
+
+func _events_have_action(events: Array[Dictionary], action: StringName) -> bool:
+	for event in events:
+		if StringName(event.get("action", &"")) == action:
+			return true
+	return false
 
 
 func _validate_source_boundaries() -> void:

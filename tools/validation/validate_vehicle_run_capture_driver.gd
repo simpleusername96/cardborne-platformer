@@ -128,7 +128,7 @@ func _initialize() -> void:
 		"field capture filenames remove the registry prefix before manifest matching"
 	)
 	_expect(Driver.CORE_CAPTURE_FILES.size() == 43, "core manifest has 43 captures")
-	_expect(Driver.FULL_CAPTURE_FILES.size() == 160, "full manifest has 160 captures")
+	_expect(Driver.FULL_CAPTURE_FILES.size() == 163, "full manifest has 163 captures")
 	_expect(
 		Driver.BOSS_CORRECTION_CAPTURE_FILES.size() == 9
 			and _unique_count(Driver.BOSS_CORRECTION_CAPTURE_FILES) == 9,
@@ -189,6 +189,7 @@ func _initialize() -> void:
 		"09w-enemy-upgrade-device-ready-close.png",
 		"09x-enemy-upgrade-device-channel.png",
 		"09y-enemy-upgrade-device-hit.png",
+		"03g-family-traits-active.png",
 		"20-collision-08-stage-8-default.png",
 		"30-boss-01-stage-1-arc-area-startup.png",
 		"30-boss-05-radial-beam-startup.png",
@@ -196,6 +197,8 @@ func _initialize() -> void:
 		"30-boss-03-stage-3-shield-up-hit.png",
 		"30-boss-08-stage-8-startup.png",
 		"30-boss-08-stage-8-phase-two.png",
+		"30-boss-06-distance-growth-pairs.png",
+		"30-boss-11-resonance-range.png",
 	]:
 		_expect(required_capture in Driver.FULL_CAPTURE_FILES, "full manifest includes %s" % required_capture)
 	_expect(

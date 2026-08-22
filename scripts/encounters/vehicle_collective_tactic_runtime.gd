@@ -56,6 +56,14 @@ func register_enemy(enemy: EnemyState) -> void:
 		if recipe.is_empty():
 			enemy.collective_tactic_id = &""
 			return
+		var pack_family := (
+			enemy.pack_family
+			if not enemy.pack_family.is_empty() else enemy.family
+		)
+		var pack_trait := (
+			enemy.pack_trait
+			if not enemy.pack_trait.is_empty() else enemy.family_trait
+		)
 		_squads[squad_id] = {
 			"id": squad_id,
 			"tactic_id": enemy.collective_tactic_id,
@@ -70,11 +78,11 @@ func register_enemy(enemy: EnemyState) -> void:
 			"centroid": enemy.pos,
 			"cycle": 0,
 			"beat_kind": enemy.collective_beat_kind,
-			"family": enemy.family,
+			"family": pack_family,
 			"tier": enemy.tier,
-			"trait": enemy.family_trait,
+			"trait": pack_trait,
 			"trait_phase": &"idle",
-			"trait_timer": _trait_interval(enemy.family_trait),
+			"trait_timer": _trait_interval(pack_trait),
 			"trait_ratio": 0.0,
 			"feed_stacks": 0,
 			"feed_enabled": true,
@@ -86,7 +94,7 @@ func register_enemy(enemy: EnemyState) -> void:
 		member_ids.append(enemy.id)
 		member_ids.sort()
 	state["member_ids"] = member_ids
-	if enemy.squad_leader or String(state["leader_id"]).is_empty():
+	if enemy.squad_leader:
 		state["leader_id"] = enemy.id
 	_squads[squad_id] = state
 

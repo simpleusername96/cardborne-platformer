@@ -85,17 +85,31 @@ func _validate_wall_scales() -> void:
 
 func _validate_state_mechanics() -> void:
 	_expect(
-		is_equal_approx(LateMechanics.resonance_damage_multiplier(500.0, 0.0), 1.0)
-			and is_equal_approx(LateMechanics.resonance_damage_multiplier(300.0, 0.0), 0.2),
-		"base resonance band applies full and reduced damage"
+		is_equal_approx(LateMechanics.resonance_max_distance(), 760.0)
+			and is_equal_approx(LateMechanics.resonance_damage_multiplier(500.0, 0.0), 1.0)
+			and is_equal_approx(LateMechanics.resonance_damage_multiplier(760.0, 8.0), 1.0)
+			and is_equal_approx(LateMechanics.resonance_damage_multiplier(800.0, 0.0), 0.2)
+			and is_equal_approx(LateMechanics.resonance_damage_multiplier(800.0, 8.0), 0.2),
+		"resonance uses one fixed 760 maximum distance independent of elapsed time"
 	)
-	_expect(LateMechanics.resonance_band(8.0) == Vector2(520.0, 880.0), "resonance alternates to the shifted band")
 	_expect(
 		not LateMechanics.overload_active(11.99)
 			and LateMechanics.overload_active(12.0)
 			and not LateMechanics.overload_active(18.0)
 			and LateMechanics.overload_active(30.0),
 		"overload begins after 12 seconds and repeats every 18 seconds for six seconds"
+	)
+	var run_source := FileAccess.get_file_as_string("res://scripts/vehicle/vehicle_run.gd")
+	var renderer_source := FileAccess.get_file_as_string(
+		"res://scripts/presentation/vehicle_combat_renderer.gd"
+	)
+	_expect(
+		run_source.contains("mechanic_state = &\"resonance_range\"")
+			and not run_source.contains("resonance_band")
+			and not renderer_source.contains("resonance_shifted")
+			and renderer_source.contains("_write_disk(position, outer")
+			and not renderer_source.contains("_write_ring(position, inner"),
+		"Stage 11 presentation consumes one filled disk and one outer threshold only"
 	)
 
 
@@ -168,15 +182,15 @@ func _validate_world_execution() -> void:
 	var resonance_boss = stage.call("_make_enemy", {
 		"id":"resonance_boss", "role":&"boss_actor", "pos":Vector2.ZERO,
 	})
-	stage.player_position = Vector2(500.0, 0.0)
-	var in_band_damage := float(stage.call("_damage_enemy", resonance_boss, 100.0, "validation", &"kinetic", true))
-	resonance_boss.health = resonance_boss.max_health
 	stage.player_position = Vector2(300.0, 0.0)
-	var out_of_band_damage := float(stage.call("_damage_enemy", resonance_boss, 100.0, "validation", &"kinetic", true))
+	var close_damage := float(stage.call("_damage_enemy", resonance_boss, 100.0, "validation", &"kinetic", true))
+	resonance_boss.health = resonance_boss.max_health
+	stage.player_position = Vector2(900.0, 0.0)
+	var far_damage := float(stage.call("_damage_enemy", resonance_boss, 100.0, "validation", &"kinetic", true))
 	_expect(
-		is_equal_approx(in_band_damage, 100.0)
-			and is_equal_approx(out_of_band_damage, 20.0),
-		"Stage 11 resonance band changes actual received damage"
+		is_equal_approx(close_damage, 100.0)
+			and is_equal_approx(far_damage, 20.0),
+		"Stage 11 takes full nearby damage and reduced damage only beyond 760"
 	)
 
 	stage.current_stage_index = 11

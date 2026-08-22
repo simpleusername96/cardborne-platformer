@@ -6,6 +6,7 @@ const SpecialistRuntime = preload("res://scripts/enemies/vehicle_enemy_specialis
 const ContactRuntime = preload("res://scripts/enemies/vehicle_enemy_contact_runtime.gd")
 const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
+const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 
 var failures: Array[String] = []
 
@@ -17,6 +18,7 @@ func _initialize() -> void:
 	_validate_ordinary_sweep_01(run)
 	_validate_family_direct_attacks(run)
 	_validate_paired_defender_priority(run)
+	_validate_defender_trait_execution(run)
 	_validate_pursuit_collective_ownership(run)
 	_validate_boss_add_metadata(run)
 	_validate_growth_enemy(run)
@@ -163,6 +165,82 @@ func _validate_paired_defender_priority(run) -> void:
 	_expect(
 		pursuit_velocity.x > 0.0 and bool(run.call("_enemy_can_attack", defender)),
 		"defender pursues and gains bash permission only after its paired emitter is gone"
+	)
+	run.call("_clear_enemies")
+
+
+func _validate_defender_trait_execution(run) -> void:
+	run.call("_clear_enemies")
+	run.enemy_grid.configure(Rect2(0.0, 0.0, 2000.0, 1200.0))
+	var bulwark := _enemy(
+		"bulwark", &"ordinary_defender_t1", Vector2(400.0, 400.0)
+	)
+	bulwark.family = &"defender"
+	bulwark.family_trait = &"bulwark"
+	bulwark.pack_family = &"defender"
+	bulwark.pack_trait = &"bulwark"
+	bulwark.pack_trait_active = true
+	bulwark.squad_id = "bulwark_pack"
+	var ally := _enemy("bulwark_ally", &"ordinary_emitter_t1", Vector2(610.0, 400.0))
+	ally.family = &"emitter"
+	ally.squad_id = "bulwark_pack"
+	var outsider := _enemy("bulwark_outsider", &"ordinary_emitter_t1", Vector2(590.0, 400.0))
+	outsider.family = &"emitter"
+	outsider.squad_id = "other_pack"
+	var far_ally := _enemy("bulwark_far", &"ordinary_emitter_t1", Vector2(700.0, 400.0))
+	far_ally.family = &"emitter"
+	far_ally.squad_id = "bulwark_pack"
+	for enemy in [bulwark, ally, outsider, far_ally]:
+		_expect(run.call("_append_enemy", enemy), "%s enters the shield fixture" % enemy.id)
+	var schedule = run.get("_enemy_update_schedule")
+	schedule.rebuild(
+		run.enemies,
+		0.0,
+		run.player_position,
+		1.0e12,
+		0,
+		0,
+		0,
+		run.enemy_store.membership_revision
+	)
+	var assignments: Dictionary = run.call("_build_enemy_shield_assignments")
+	_expect(
+		StringName(assignments.get(bulwark.id, &"")) == &"bulwark"
+			and StringName(assignments.get(ally.id, &"")) == &"bulwark",
+		"active Bulwark protects itself and a living same-pack ally within 250"
+	)
+	_expect(
+		not assignments.has(outsider.id) and not assignments.has(far_ally.id),
+		"Bulwark does not protect another pack or a same-pack actor beyond 250"
+	)
+	run.call("_apply_enemy_shield", ally, assignments)
+	_expect(
+		ally.shielded and ally.shield_source == &"bulwark",
+		"the nearby ally consumes the shared Bulwark assignment"
+	)
+
+	var reflector := _enemy(
+		"reflector", &"ordinary_defender_t1", Vector2(800.0, 400.0)
+	)
+	reflector.family = &"defender"
+	reflector.family_trait = &"reflector"
+	reflector.pack_trait_active = true
+	reflector.presentation_facing = Vector2.LEFT
+	var projectile := ProjectileState.new()
+	projectile.configure({
+		"pos":Vector2(700.0, 400.0),
+		"velocity":Vector2.RIGHT * 600.0,
+		"radius":6.0,
+		"damage":40.0,
+		"structure_damage":40.0,
+		"life":2.0,
+		"owner":"player_primary",
+	}, &"player", 1)
+	var hostile_before: int = run.hostile_projectiles.size()
+	_expect(
+		run.call("_try_reflect_direct_projectile", reflector, projectile)
+			and run.hostile_projectiles.size() == hostile_before + 1,
+		"active Reflector returns a frontal player projectile as one hostile shot"
 	)
 	run.call("_clear_enemies")
 

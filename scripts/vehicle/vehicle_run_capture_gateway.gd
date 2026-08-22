@@ -113,6 +113,8 @@ func set_world_fixture(fixture: Dictionary) -> void:
 			await _capture_pressure_evidence()
 		&"collective_tactic":
 			await _capture_collective_tactic_evidence()
+		&"family_traits":
+			await _capture_family_trait_evidence()
 		&"movement_policy":
 			await _capture_movement_policy_evidence()
 		&"build_state":
@@ -539,6 +541,64 @@ func _capture_collective_tactic_evidence() -> void:
 		"gather_shield_source":"none",
 		"lock_shield_source":"collective_tactic",
 	}))
+
+
+func _capture_family_trait_evidence() -> void:
+	prepare_stage(4)
+	_run._clear_enemies()
+	var fixtures := [
+		{
+			"id":"capture_bulwark",
+			"active":true,
+			"role":&"ordinary_defender_t2",
+			"family":&"defender",
+			"family_trait":&"bulwark",
+			"pack_family":&"defender",
+			"pack_trait":&"bulwark",
+			"squad_id":"capture_bulwark_pack",
+			"pos":_run.player_position + Vector2(-360.0, -150.0),
+		},
+		{
+			"id":"capture_reflector",
+			"active":true,
+			"role":&"ordinary_defender_t2",
+			"family":&"defender",
+			"family_trait":&"reflector",
+			"pack_family":&"defender",
+			"pack_trait":&"reflector",
+			"squad_id":"capture_reflector_pack",
+			"pos":_run.player_position + Vector2(360.0, -150.0),
+		},
+		{
+			"id":"capture_blink_coordinator",
+			"active":true,
+			"role":&"ordinary_coordinator_t2",
+			"family":&"coordinator",
+			"family_trait":&"blink",
+			"pack_family":&"coordinator",
+			"pack_trait":&"blink",
+			"squad_id":"capture_blink_pack",
+			"squad_leader":true,
+			"pos":_run.player_position + Vector2(0.0, 210.0),
+		},
+	]
+	for fixture_variant in fixtures:
+		var fixture := Dictionary(fixture_variant)
+		var enemy: VehicleEnemyState = _run._make_enemy(fixture)
+		if enemy == null:
+			continue
+		enemy.pack_trait_active = StringName(fixture["family_trait"]) != &"blink"
+		enemy.pack_trait_phase = (
+			&"warning" if StringName(fixture["family_trait"]) == &"blink" else &"active"
+		)
+		enemy.pack_trait_ratio = 0.55
+		enemy.health_visible_timer = 99.0
+		enemy.presentation_facing = (_run.player_position - enemy.pos).normalized()
+		_run._append_enemy(enemy)
+	_run.capture_set_mode(&"paused")
+	await _settle_capture()
+	_refresh_combat_capture()
+	_save_capture("03g-family-traits-active.png")
 
 
 func _capture_movement_policy_evidence() -> void:
@@ -1789,6 +1849,17 @@ func _capture_all_boss_evidence() -> void:
 		_run._boss_update_active(boss, 0.05)
 		await _settle_capture()
 		_save_capture("30-boss-%02d-%s-active.png" % [boss_number, stage_slug])
+		if stage_index == 5:
+			_capture_stage_6_distance_growth_pairs(boss)
+			await _settle_capture()
+			_save_capture("30-boss-06-distance-growth-pairs.png")
+		elif stage_index == 10:
+			_run._refresh_late_boss_mechanic_state(boss)
+			_run._camera.position = boss.pos
+			_run._camera.zoom = Vector2.ONE * 0.42
+			await _settle_capture()
+			_save_capture("30-boss-11-resonance-range.png")
+			_run._camera.zoom = Rules.GAMEPLAY_CAMERA_ZOOM
 
 		_run._clear_projectiles()
 		_run.denied_zones.clear()
@@ -1932,6 +2003,23 @@ func prepare_boss(stage_index: int) -> EnemyState:
 	boss.pos = _run.player_position + Vector2(360.0, 0.0)
 	_run.player_aim_direction = (Vector2(boss.pos) - _run.player_position).normalized()
 	return boss
+
+
+func _capture_stage_6_distance_growth_pairs(boss: EnemyState) -> void:
+	_run._clear_projectiles()
+	_run.boss_runtime.clear_pending_attacks()
+	boss.pos = _run.player_position + Vector2(-360.0, 0.0)
+	_run._spawn_boss_long_banks({
+		"origin":boss.pos,
+		"target":boss.pos + Vector2.RIGHT * 600.0,
+		"damage":BossPatterns.damage("long_bank_barrage", 5),
+		"pattern":"long_bank_barrage",
+		"affinity":BossPatterns.affinity("long_bank_barrage"),
+	})
+	for _release in 2:
+		_run._update_projectiles(0.23)
+		_run.boss_runtime.advance_pending_attacks(0.23, _run)
+	_run.capture_set_mode(&"paused")
 
 
 func _fit_camera_to_stage(bounds: Rect2) -> void:

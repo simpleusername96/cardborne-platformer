@@ -14,6 +14,8 @@ const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages
 const LateBossMechanics = preload("res://scripts/bosses/vehicle_late_boss_mechanics.gd")
 
 const MAX_PENDING_RADIAL_VOLLEYS := 4
+const MAX_PENDING_DISTANCE_GROWTH_PAIRS := 5
+const DISTANCE_GROWTH_PAIR_INTERVAL := 0.22
 const COMMON_ATTACKS_BEFORE_SIGNATURE := 2
 const SQUAD_INTERVAL_SECONDS := 10.0
 const ACTION_NONE: StringName = &""
@@ -52,6 +54,7 @@ var squad_timer := SQUAD_INTERVAL_SECONDS
 var squad_serial := 0
 var finite_summons_remaining := 6
 var _pending_radial_volleys: Array[Dictionary] = []
+var _pending_distance_growth_pairs: Array[Dictionary] = []
 
 
 func configure(next_stage_id: StringName) -> void:
@@ -74,6 +77,7 @@ func configure(next_stage_id: StringName) -> void:
 	squad_serial = 0
 	finite_summons_remaining = 6
 	_pending_radial_volleys.clear()
+	_pending_distance_growth_pairs.clear()
 
 
 func schedule_radial_volley(event: Dictionary) -> bool:
@@ -93,6 +97,21 @@ func schedule_radial_volley(event: Dictionary) -> bool:
 	return true
 
 
+func schedule_distance_growth_pairs(event: Dictionary) -> bool:
+	if not _pending_distance_growth_pairs.is_empty():
+		return false
+	for pair_index in MAX_PENDING_DISTANCE_GROWTH_PAIRS:
+		_pending_distance_growth_pairs.append({
+			"remaining":float(pair_index) * DISTANCE_GROWTH_PAIR_INTERVAL,
+			"origin":Vector2(event["origin"]),
+			"axis":Vector2(event["axis"]),
+			"damage":float(event["damage"]),
+			"pattern":String(event["pattern"]),
+			"affinity":StringName(event["affinity"]),
+		})
+	return true
+
+
 func advance_pending_attacks(delta: float, services: Variant) -> void:
 	for index in range(_pending_radial_volleys.size() - 1, -1, -1):
 		var volley := _pending_radial_volleys[index]
@@ -101,14 +120,26 @@ func advance_pending_attacks(delta: float, services: Variant) -> void:
 			continue
 		services.call("_fire_boss_radial_volley", volley)
 		_pending_radial_volleys.remove_at(index)
+	for index in range(_pending_distance_growth_pairs.size() - 1, -1, -1):
+		var pair := _pending_distance_growth_pairs[index]
+		pair["remaining"] = float(pair["remaining"]) - maxf(0.0, delta)
+		if float(pair["remaining"]) > 0.00001:
+			continue
+		services.call("_fire_distance_growth_pair", pair)
+		_pending_distance_growth_pairs.remove_at(index)
 
 
 func clear_pending_attacks() -> void:
 	_pending_radial_volleys.clear()
+	_pending_distance_growth_pairs.clear()
 
 
 func pending_radial_volley_count() -> int:
 	return _pending_radial_volleys.size()
+
+
+func pending_distance_growth_pair_count() -> int:
+	return _pending_distance_growth_pairs.size()
 
 
 func read_gap(phase: int) -> float:

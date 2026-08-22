@@ -20,7 +20,8 @@ class BossServiceStub:
 	var identity_activation_calls := 0
 	var radial_projectiles_fired := 0
 	var radial_projectile_damage := 0.0
-	var long_bank_projectiles_fired := 0
+	var long_bank_schedule_calls := 0
+	var distance_growth_projectiles_fired := 0
 
 
 	func _boss_fire_aimed_burst(
@@ -58,7 +59,11 @@ class BossServiceStub:
 
 
 	func _spawn_boss_long_banks(_event: Dictionary) -> void:
-		long_bank_projectiles_fired += 10
+		long_bank_schedule_calls += 1
+
+
+	func _fire_distance_growth_pair(_pair: Dictionary) -> void:
+		distance_growth_projectiles_fired += 2
 
 
 	func _player_sweep_distance_to_point(point: Vector2) -> float:
@@ -102,6 +107,7 @@ func _init() -> void:
 	_validate_broad_barrage_geometry()
 	_validate_direct_identity_activation(runtime)
 	_validate_radial_volley_schedule(runtime)
+	_validate_distance_growth_schedule(runtime)
 	_validate_direct_recovery_scale(runtime)
 	_validate_direct_long_banks(runtime)
 	_validate_phase_receipts(runtime)
@@ -325,11 +331,11 @@ func _validate_direct_long_banks(runtime: BossRuntime) -> void:
 	boss.committed_target = Vector2(900.0, 0.0)
 	runtime.begin_active(boss, services)
 	_expect(
-		services.long_bank_projectiles_fired == 10 and boss.pattern_volleys == 1,
-		"Stage 6 direct long-bank selection emits ten growth projectiles once"
+		services.long_bank_schedule_calls == 1 and boss.pattern_volleys == 1,
+		"Stage 6 direct long-bank selection requests its bounded pair schedule once"
 	)
 	runtime.update_active(boss, 0.01, services)
-	_expect(services.long_bank_projectiles_fired == 10, "direct long banks cannot emit twice")
+	_expect(services.long_bank_schedule_calls == 1, "direct long banks cannot schedule twice")
 
 
 func _validate_direct_identity_activation(runtime: BossRuntime) -> void:
@@ -399,6 +405,45 @@ func _validate_radial_volley_schedule(runtime: BossRuntime) -> void:
 	_expect(runtime.schedule_radial_volley(event), "radial-volley queue accepts work after retirement")
 	runtime.clear_pending_attacks()
 	_expect(runtime.pending_radial_volley_count() == 0, "boss cleanup clears delayed radial volleys")
+
+
+func _validate_distance_growth_schedule(runtime: BossRuntime) -> void:
+	runtime.configure(&"stage_6")
+	var event := {
+		"origin":Vector2(400.0, 300.0),
+		"axis":Vector2.RIGHT,
+		"damage":BossPatterns.damage("long_bank_barrage", 5),
+		"pattern":"long_bank_barrage",
+		"affinity":BossPatterns.affinity("long_bank_barrage"),
+	}
+	_expect(
+		runtime.schedule_distance_growth_pairs(event)
+			and not runtime.schedule_distance_growth_pairs(event),
+		"distance-growth scheduler accepts one fixed five-pair execution and rejects overlap"
+	)
+	var services := BossServiceStub.new()
+	runtime.advance_pending_attacks(0.0, services)
+	_expect(
+		services.distance_growth_projectiles_fired == 2
+			and runtime.pending_distance_growth_pair_count() == 4,
+		"distance-growth scheduler releases the immediate pair only"
+	)
+	for expected_count in [4, 6, 8, 10]:
+		runtime.advance_pending_attacks(BossRuntime.DISTANCE_GROWTH_PAIR_INTERVAL, services)
+		_expect(
+			services.distance_growth_projectiles_fired == expected_count,
+			"distance-growth scheduler releases one pair per fixed interval"
+		)
+	_expect(
+		runtime.pending_distance_growth_pair_count() == 0,
+		"distance-growth scheduler retires all five fixed receipts"
+	)
+	_expect(runtime.schedule_distance_growth_pairs(event), "distance-growth queue accepts the next completed execution")
+	runtime.clear_pending_attacks()
+	_expect(
+		runtime.pending_distance_growth_pair_count() == 0,
+		"boss cleanup clears delayed distance-growth pairs"
+	)
 
 
 func _validate_direct_beam_growth(runtime: BossRuntime) -> void:

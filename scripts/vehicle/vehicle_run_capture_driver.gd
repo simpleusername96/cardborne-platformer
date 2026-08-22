@@ -85,6 +85,7 @@ const FULL_CAPTURE_FILES := [
 	"03aa-collective-gather.png",
 	"03b-collective-lock.png",
 	"03c-collective-break.png",
+	"03g-family-traits-active.png",
 	"03d-movement-cover-approach.png",
 	"03e-movement-cover-turn.png",
 	"03f-movement-cover-standoff.png",
@@ -192,6 +193,7 @@ const FULL_CAPTURE_FILES := [
 	"30-boss-06-stage-6-recovery.png",
 	"30-boss-06-stage-6-startup-imminent.png",
 	"30-boss-06-stage-6-startup.png",
+	"30-boss-06-distance-growth-pairs.png",
 	"30-boss-07-stage-7-active.png",
 	"30-boss-07-stage-7-phase-two.png",
 	"30-boss-07-stage-7-recovery.png",
@@ -217,6 +219,7 @@ const FULL_CAPTURE_FILES := [
 	"30-boss-11-stage-11-recovery.png",
 	"30-boss-11-stage-11-startup-imminent.png",
 	"30-boss-11-stage-11-startup.png",
+	"30-boss-11-resonance-range.png",
 	"30-boss-12-stage-12-active.png",
 	"30-boss-12-stage-12-phase-two.png",
 	"30-boss-12-stage-12-recovery.png",
@@ -370,6 +373,7 @@ func run(gateway: RefCounted) -> void:
 	if is_full_evidence(gateway.snapshot(&"viewport")):
 		for fixture_kind in [
 			&"movement_policy",
+			&"family_traits",
 			&"visual_events",
 			&"ordinary_projectile",
 			&"arc_area_telegraphs",

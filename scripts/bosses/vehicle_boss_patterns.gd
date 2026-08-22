@@ -116,7 +116,7 @@ const COMMON_FAMILY_IDS: Array[StringName] = [
 ]
 const COMMON_DAMAGE_SCALES := [
 	1.00, 1.06, 1.12, 1.18, 1.24, 1.31,
-	1.38, 1.46, 1.54, 1.62, 1.70, 1.78,
+	1.38, 1.46, 1.54, 1.62, 1.66, 1.78,
 ]
 const TUTORIAL_COMMON_UNLOCKS := {
 	&"stage_1": 3,

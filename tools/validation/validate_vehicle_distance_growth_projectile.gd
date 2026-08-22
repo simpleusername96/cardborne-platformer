@@ -2,6 +2,7 @@ extends SceneTree
 
 const ProjectileState = preload("res://scripts/combat/vehicle_projectile_state.gd")
 const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
+const Run = preload("res://scripts/vehicle/vehicle_run.gd")
 
 var failures: Array[String] = []
 
@@ -84,6 +85,7 @@ func _initialize() -> void:
 			and not store.hostile_live[0].distance_growth_proximity_armed,
 		"store reuse cannot leak Stage 6 proximity behavior"
 	)
+	_validate_staggered_pair_emission()
 	var run_source := FileAccess.get_file_as_string("res://scripts/vehicle/vehicle_run.gd")
 	var renderer_source := FileAccess.get_file_as_string("res://scripts/presentation/vehicle_combat_renderer.gd")
 	_expect(
@@ -95,10 +97,51 @@ func _initialize() -> void:
 	)
 	_expect(
 		not renderer_source.contains("trail_length")
-			and renderer_source.contains("distance_growth_proximity_armed"),
+			and renderer_source.contains("distance_growth_proximity_armed")
+			and not run_source.contains("(float(shot_index) - 2.0) * 48.0"),
 		"Stage 6 projectiles use an armed-state ring without the false beam-like trail"
 	)
 	_finish()
+
+
+func _validate_staggered_pair_emission() -> void:
+	var run := Run.new()
+	run.call("_spawn_boss_long_banks", {
+		"origin":Vector2(1000.0, 800.0),
+		"target":Vector2(1400.0, 800.0),
+		"damage":18.0,
+		"pattern":"long_bank_barrage",
+		"affinity":&"kinetic",
+	})
+	_expect(
+		run.hostile_projectiles.size() == 2
+			and run.boss_runtime.pending_distance_growth_pair_count() == 4,
+		"Stage 6 releases one lateral pair immediately and keeps four bounded receipts"
+	)
+	if run.hostile_projectiles.size() == 2:
+		var first := run.hostile_projectiles[0]
+		var second := run.hostile_projectiles[1]
+		_expect(
+			is_equal_approx(first.pos.x, second.pos.x)
+				and is_equal_approx(absf(first.pos.y - second.pos.y), 360.0),
+			"the first release has only the two authored lateral offsets"
+		)
+	run.boss_runtime.advance_pending_attacks(0.219, run)
+	_expect(run.hostile_projectiles.size() == 2, "the second pair cannot release before 0.22 seconds")
+	run.boss_runtime.advance_pending_attacks(0.002, run)
+	_expect(run.hostile_projectiles.size() == 4, "the second pair releases at the first 0.22-second boundary")
+	for expected_count in [6, 8, 10]:
+		run.boss_runtime.advance_pending_attacks(0.22, run)
+		_expect(
+			run.hostile_projectiles.size() == expected_count,
+			"Stage 6 releases exactly one more independent pair per interval"
+		)
+	_expect(
+		run.boss_runtime.pending_distance_growth_pair_count() == 0,
+		"the fixed Stage 6 queue retires after five releases"
+	)
+	run.boss_runtime.advance_pending_attacks(9.0, run)
+	_expect(run.hostile_projectiles.size() == 10, "a completed Stage 6 queue cannot fire twice")
 
 
 func _spec(kind: StringName) -> Dictionary:

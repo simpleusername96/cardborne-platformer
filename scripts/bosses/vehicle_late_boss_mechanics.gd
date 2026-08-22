@@ -11,12 +11,7 @@ const REFLECT_CUE_SECONDS := 1.0
 const REFLECT_DAMAGE_SCALE := 0.35
 const REFLECT_DAMAGE_CAP := 24.0
 
-const RESONANCE_INNER := 420.0
-const RESONANCE_OUTER := 760.0
-const RESONANCE_SHIFTED_INNER := 520.0
-const RESONANCE_SHIFTED_OUTER := 880.0
-const RESONANCE_INTERVAL_SECONDS := 8.0
-const RESONANCE_CUE_SECONDS := 1.0
+const RESONANCE_MAX_DISTANCE := 760.0
 const RESONANCE_OUTSIDE_DAMAGE_SCALE := 0.20
 
 const OVERLOAD_FIRST_DELAY := 12.0
@@ -80,6 +75,13 @@ static func hits_reflection_plate(
 ) -> bool:
 	if not reflection_active(elapsed_seconds):
 		return false
+	return hits_reflection_arc(facing, incoming_velocity)
+
+
+static func hits_reflection_arc(
+	facing: Vector2,
+	incoming_velocity: Vector2
+) -> bool:
 	var forward := facing.normalized()
 	var toward_source := -incoming_velocity.normalized()
 	if forward.is_zero_approx() or toward_source.is_zero_approx():
@@ -91,27 +93,15 @@ static func reflected_damage(original_damage: float) -> float:
 	return minf(REFLECT_DAMAGE_CAP, maxf(0.0, original_damage) * REFLECT_DAMAGE_SCALE)
 
 
-static func resonance_shifted(elapsed_seconds: float) -> bool:
-	var cycle := floori(maxf(0.0, elapsed_seconds) / RESONANCE_INTERVAL_SECONDS)
-	return cycle % 2 == 1
+static func resonance_max_distance() -> float:
+	return RESONANCE_MAX_DISTANCE
 
 
-static func resonance_cue_active(elapsed_seconds: float) -> bool:
-	var cycle_time := fposmod(maxf(0.0, elapsed_seconds), RESONANCE_INTERVAL_SECONDS)
-	return cycle_time >= RESONANCE_INTERVAL_SECONDS - RESONANCE_CUE_SECONDS
-
-
-static func resonance_band(elapsed_seconds: float) -> Vector2:
-	return (
-		Vector2(RESONANCE_SHIFTED_INNER, RESONANCE_SHIFTED_OUTER)
-		if resonance_shifted(elapsed_seconds)
-		else Vector2(RESONANCE_INNER, RESONANCE_OUTER)
-	)
-
-
-static func resonance_damage_multiplier(distance: float, elapsed_seconds: float) -> float:
-	var band := resonance_band(elapsed_seconds)
-	return 1.0 if distance >= band.x and distance <= band.y else RESONANCE_OUTSIDE_DAMAGE_SCALE
+static func resonance_damage_multiplier(
+	distance: float,
+	_elapsed_seconds: float = 0.0
+) -> float:
+	return 1.0 if distance <= RESONANCE_MAX_DISTANCE else RESONANCE_OUTSIDE_DAMAGE_SCALE
 
 
 static func overload_active(elapsed_seconds: float) -> bool:

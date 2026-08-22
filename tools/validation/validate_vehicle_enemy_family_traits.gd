@@ -27,26 +27,34 @@ func _initialize() -> void:
 			for pack_variant in Array(Dictionary(packet_variant).get("packs", [])):
 				var pack := Dictionary(pack_variant)
 				_expect(FamilyTraits.trait_belongs_to_family(StringName(pack["family"]), StringName(pack["trait"])), "authored trait belongs to its family")
-	for family in FamilyTraits.FAMILIES:
-		var weighted_counts := {&"base":0, &"trait_1":0, &"trait_2":0}
-		var family_traits := FamilyTraits.traits(family)
-		for pack_ordinal in 100:
-			var trait_id := FamilyTraits.trait_for_pack(family, 0, pack_ordinal)
-			if trait_id.is_empty():
-				weighted_counts[&"base"] += 1
-			elif trait_id == family_traits[0]:
-				weighted_counts[&"trait_1"] += 1
-			elif trait_id == family_traits[1]:
-				weighted_counts[&"trait_2"] += 1
-		_expect(
-			int(weighted_counts[&"base"]) >= 30
-				and int(weighted_counts[&"base"]) <= 50
-				and int(weighted_counts[&"trait_1"]) >= 20
-				and int(weighted_counts[&"trait_1"]) <= 40
-				and int(weighted_counts[&"trait_2"]) >= 20
-				and int(weighted_counts[&"trait_2"]) <= 40,
-			"%s applies the base/trait1/trait2 4/3/3 weighted rollout" % family
-		)
+	var reached_families := {}
+	var reached_traits := {}
+	for stage_index in CombatStages.STAGE_IDS.size():
+		var definition := CombatStages.definition(CombatStages.STAGE_IDS[stage_index])
+		for packet_variant in Array(definition.get("packets", [])):
+			for pack_variant in Array(Dictionary(packet_variant).get("packs", [])):
+				var pack := Dictionary(pack_variant)
+				if StringName(pack.get("composition_kind", &"")) != &"normal":
+					continue
+				var family := StringName(pack["family"])
+				var trait_id := StringName(pack["trait"])
+				reached_families[family] = true
+				if stage_index == 0:
+					_expect(trait_id.is_empty(), "cycle 1 normal packs remain base-only")
+				elif not trait_id.is_empty():
+					reached_traits[trait_id] = true
+				for member_variant in Array(pack["members"]):
+					var member := Dictionary(member_variant)
+					var expected_trait := (
+						trait_id
+						if StringName(member["family"]) == family else &""
+					)
+					_expect(
+						StringName(member["trait"]) == expected_trait,
+						"only owning-family actors carry the pack trait body"
+					)
+	_expect(reached_families.size() == 5, "all five primary pack families are authored")
+	_expect(reached_traits.size() == 10, "all ten family traits are reachable in authored later cycles")
 	_finish()
 
 

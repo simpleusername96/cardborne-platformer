@@ -71,7 +71,7 @@ func _run() -> void:
 	var health_pressure := [1.00, 1.00, 1.00, 1.06, 1.12, 1.19, 1.25, 1.31, 1.38, 1.44, 1.47, 1.50]
 	_expect(
 		BossProfiles.PROFILES.map(func(profile): return float(profile["move_speed"]))
-			== [405.0, 420.0, 435.0, 450.0, 465.0, 480.0, 500.0, 515.0, 525.0, 535.0, 545.0, 555.0],
+			== [405.0, 420.0, 435.0, 450.0, 465.0, 480.0, 500.0, 515.0, 525.0, 535.0, 540.0, 555.0],
 		"boss movement uses twelve independently authored speeds"
 	)
 	_expect(StageDifficulty.HEALTH == health_curve, "ordinary base health stays near baseline early and reaches exactly 2.00x")

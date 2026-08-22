@@ -233,6 +233,8 @@ var boss_death_runtime := BossDeathRuntime.new()
 var _dying_boss_id := ""
 # The common barrage schedules exactly three rows and never allocates beyond it.
 var _pending_boss_barrage_rows: Array[Dictionary] = []
+const DISTANCE_GROWTH_LATERAL_OFFSET := 180.0
+const DISTANCE_GROWTH_FORWARD_OFFSET := 72.0
 var _boss_barrage_hit_lock_remaining := 0.0
 var _runtime_blockers: Array[Rect2] = []
 var _runtime_structural_walls: Array[Rect2] = []
@@ -1355,8 +1357,10 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	var family := StringName(spec.get(
 		"family", spec.get("pack_family", definition.get("family", &""))
 	))
+	var pack_family := StringName(spec.get("pack_family", family))
+	var pack_trait := StringName(spec.get("pack_trait", &""))
 	var family_trait := StringName(spec.get(
-		"family_trait", spec.get("pack_trait", &"")
+		"family_trait", pack_trait if family == pack_family else &""
 	))
 	var role := StringName(definition["behavior"])
 	if family == &"emitter" and family_trait == &"artillery":
@@ -1390,6 +1394,8 @@ func _make_enemy(spec: Dictionary) -> EnemyState:
 	enemy.tier = int(spec.get("tier", spec.get("pack_tier", definition.get("tier", 0))))
 	enemy.size_percent = int(definition.get("size_percent", 100))
 	enemy.family_trait = family_trait
+	enemy.pack_family = pack_family
+	enemy.pack_trait = pack_trait
 	enemy.movement_family = EnemyMovementPolicy.family(archetype, role)
 	enemy.name = String(spec.get("name_key", definition["name_key"]))
 	enemy.pos = position
@@ -3216,6 +3222,12 @@ func _build_enemy_shield_assignments() -> Dictionary:
 func _refresh_enemy_shield_supports() -> void:
 	_shield_supports.clear()
 	_shield_supports.assign(_enemy_update_schedule.supports)
+	for enemy in _enemy_update_schedule.active:
+		if (
+			enemy.family_trait == &"bulwark"
+			and enemy.pack_trait_active
+		):
+			_shield_supports.append(enemy)
 
 
 func _append_enemy_shield_assignments(
@@ -3231,10 +3243,18 @@ func _append_enemy_shield_assignments(
 		) != support_bucket:
 			continue
 		var support_position := support.pos
+		var is_bulwark := (
+			support.family_trait == &"bulwark"
+			and support.pack_trait_active
+		)
 		var support_radius := (
-			SpecialistRuntime.FIXED_SUPPORT_RANGE
-			if support.role == &"ordinary_fixed_support_01"
-			else SpecialistRuntime.SHIELD_SUPPORT_RANGE
+			FamilyTraits.BULWARK_RADIUS
+			if is_bulwark
+			else (
+				SpecialistRuntime.FIXED_SUPPORT_RANGE
+				if support.role == &"ordinary_fixed_support_01"
+				else SpecialistRuntime.SHIELD_SUPPORT_RANGE
+			)
 		)
 		enemy_grid.query_radius_into(
 			support_position,
@@ -3242,6 +3262,20 @@ func _append_enemy_shield_assignments(
 			enemies,
 			_support_query_buffer
 		)
+		if is_bulwark:
+			var radius_squared := (
+				FamilyTraits.BULWARK_RADIUS * FamilyTraits.BULWARK_RADIUS
+			)
+			for candidate in _support_query_buffer:
+				if (
+					candidate.alive
+					and candidate.active
+					and candidate.squad_id == support.squad_id
+					and support_position.distance_squared_to(candidate.pos)
+						<= radius_squared
+				):
+					shielded_ids[candidate.id] = &"bulwark"
+			continue
 		if support.role == &"ordinary_fixed_support_01":
 			for candidate in _support_query_buffer:
 				var candidate_role := candidate.role
@@ -5007,10 +5041,9 @@ func _try_reflect_direct_projectile(
 	var reflected := (
 		boss_shield_runtime.reflects_projectile(projectile.velocity)
 		if is_reflect_boss
-		else LateBossMechanics.hits_reflection_plate(
+		else LateBossMechanics.hits_reflection_arc(
 			enemy.presentation_facing,
-			projectile.velocity,
-			0.0
+			projectile.velocity
 		)
 	)
 	if not reflected:
@@ -6988,16 +7021,39 @@ func _spawn_boss_long_banks(event: Dictionary) -> void:
 	var axis := (Vector2(event["target"]) - origin).normalized()
 	if axis.is_zero_approx():
 		axis = Vector2.RIGHT
+	if not boss_runtime.schedule_distance_growth_pairs({
+		"origin":origin,
+		"axis":axis,
+		"damage":float(event["damage"]),
+		"pattern":String(event["pattern"]),
+		"affinity":StringName(event["affinity"]),
+	}):
+		push_error("Stage 6 distance-growth pair queue was still occupied")
+		return
+	boss_runtime.advance_pending_attacks(0.0, self)
+
+
+func _fire_distance_growth_pair(pair: Dictionary) -> void:
+	var axis := Vector2(pair.get("axis", Vector2.RIGHT)).normalized()
+	if axis.is_zero_approx():
+		axis = Vector2.RIGHT
 	var tangent := axis.rotated(PI * 0.5)
-	for bank in [-1.0, 1.0]:
-		for shot_index in 5:
-			var position: Vector2 = origin + tangent * float(bank) * 180.0 + axis * (float(shot_index) - 2.0) * 48.0
-			_spawn_hostile_projectile(
-				position, axis, float(event["damage"]), 520.0,
-				String(event["pattern"]), StringName(event["affinity"]), true, false,
-				AttackContract.THREAT_BOSS,
-				ProjectileState.DISTANCE_GROWTH_GROWTH_KIND
-			)
+	var origin := Vector2(pair.get("origin", Vector2.ZERO))
+	for side in [-1.0, 1.0]:
+		_spawn_hostile_projectile(
+			origin
+				+ tangent * float(side) * DISTANCE_GROWTH_LATERAL_OFFSET
+				+ axis * DISTANCE_GROWTH_FORWARD_OFFSET,
+			axis,
+			float(pair.get("damage", 18.0)),
+			520.0,
+			String(pair.get("pattern", "long_bank_barrage")),
+			StringName(pair.get("affinity", &"kinetic")),
+			true,
+			false,
+			AttackContract.THREAT_BOSS,
+			ProjectileState.DISTANCE_GROWTH_GROWTH_KIND
+		)
 
 
 func _append_boss_crossing_weave(event: Dictionary) -> void:
@@ -7222,11 +7278,8 @@ func _refresh_late_boss_mechanic_state(boss: EnemyState) -> void:
 			# are published by VehicleBossShieldRuntime instead of this overlay.
 			boss.mechanic_state = &""
 		10:
-			var band := LateBossMechanics.resonance_band(boss.pattern_timer)
-			boss.mechanic_state = &"resonance_shifted" if LateBossMechanics.resonance_shifted(boss.pattern_timer) else &"resonance_base"
-			boss.mechanic_cue_active = LateBossMechanics.resonance_cue_active(boss.pattern_timer)
-			boss.mechanic_inner_radius = band.x
-			boss.mechanic_outer_radius = band.y
+			boss.mechanic_state = &"resonance_range"
+			boss.mechanic_outer_radius = LateBossMechanics.resonance_max_distance()
 		11:
 			boss.mechanic_state = &"overload_active" if LateBossMechanics.overload_active(boss.pattern_timer) else &"overload_cooldown"
 		_:
@@ -7267,6 +7320,18 @@ func _spawn_boss_phase_adds(
 		else "boss_wave_p%d" % boss.boss_phase
 	)
 	var emitter_indices: Array[int] = []
+	var pack_family: StringName = &"pursuer"
+	if spawn_count > 0:
+		pack_family = StringName(
+			EnemyArchetypes.definition(StringName(roles[0])).get(
+				"family", &"pursuer"
+			)
+		)
+	var pack_trait := FamilyTraits.trait_for_pack(
+		pack_family,
+		current_stage_index,
+		boss.boss_phase * BossPhaseCatalog.MAX_LIVE_ADDS
+	)
 	for role_index in spawn_count:
 		var role_definition := EnemyArchetypes.definition(StringName(roles[role_index]))
 		if StringName(role_definition.get("family", &"")) == &"emitter":
@@ -7288,11 +7353,7 @@ func _spawn_boss_phase_adds(
 		var role_definition := EnemyArchetypes.definition(role_id)
 		var member_family := StringName(role_definition.get("family", &""))
 		var member_tier := int(role_definition.get("tier", 0))
-		var member_trait := FamilyTraits.trait_for_pack(
-			member_family,
-			current_stage_index,
-			boss.boss_phase * BossPhaseCatalog.MAX_LIVE_ADDS + index
-		)
+		var member_trait := pack_trait if member_family == pack_family else &""
 		var direction := Vector2.RIGHT.rotated(
 			TAU * float(index) / float(maxi(1, spawn_count))
 			+ float(current_stage_index) * 0.31
@@ -7318,6 +7379,8 @@ func _spawn_boss_phase_adds(
 			"family":member_family,
 			"tier":member_tier,
 			"family_trait":member_trait,
+			"pack_family":pack_family,
+			"pack_trait":pack_trait,
 			"escort_target_id":String(defender_escort_ids.get(index, "")),
 			"collective_tactic_id":tactic_id,
 			"collective_beat_kind":&"power_test",

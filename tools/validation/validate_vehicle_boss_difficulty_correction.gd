@@ -31,6 +31,22 @@ func _initialize() -> void:
 	)
 	_expect(is_equal_approx(BossPatterns.active_seconds("focused_beam", 7), 0.688), "stage 8 attack duration is absolute")
 	_expect(is_equal_approx(BossPatterns.recovery_seconds("resonance_break", 10), 0.36), "stage 11 recovery is absolute")
+	_expect(
+		Array(BossProfiles.profile(0)["read_gaps"]) == [0.2412, 0.1809, 0.14472]
+			and Array(BossProfiles.profile(1)["read_gaps"]) == [0.234, 0.1755, 0.1404]
+			and Array(BossProfiles.profile(2)["read_gaps"]) == [0.2268, 0.1701, 0.13608],
+		"bosses 1-3 use only the exact ten-percent read-gap reduction"
+	)
+	var stage_11 := BossProfiles.profile(10)
+	_expect(
+		is_equal_approx(float(stage_11["health"]), 122300.0)
+			and is_equal_approx(float(stage_11["move_speed"]), 540.0)
+			and is_equal_approx(float(stage_11["attack_move_speed"]), 432.0)
+			and is_equal_approx(float(stage_11["initial_autonomous_delay"]), 2.0)
+			and Array(stage_11["autonomous_intervals"]) == [2.75, 2.30, 1.95]
+			and is_equal_approx(float(BossPatterns.COMMON_DAMAGE_SCALES[10]), 1.66),
+		"stage 11 keeps health while using the calmer exact pressure profile"
+	)
 	_expect(is_equal_approx(BossProfiles.attack_move_speed(11), 455.1), "stage 12 active movement is absolute")
 
 	var role: StringName = &"ordinary_melee_01"

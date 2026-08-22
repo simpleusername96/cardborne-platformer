@@ -980,6 +980,7 @@ func _admit_due_window(
 				pack, unit_index, StringName(roles[unit_index])
 			)
 			var escort_member_index := int(member.get("escort_member_index", -1))
+			var leader_member_index := int(pack.get("leader_member_index", 0))
 			var collective_tactic := Dictionary(packet.get("collective_tactic", {}))
 			var spec := {
 				"id":"%s_u%02d" % [squad_id, unit_index + 1],
@@ -994,7 +995,7 @@ func _admit_due_window(
 				"zone":String(packet.get("zone", "")),
 				"group_id":squad_id,
 				"squad_id":squad_id,
-				"squad_leader":unit_index == 0,
+				"squad_leader":unit_index == leader_member_index,
 				"formation_slot":unit_index,
 				"formation_size":roles.size(),
 				"escort_target_id":(
@@ -1054,6 +1055,7 @@ func _pack_metadata(packet: Dictionary, squad_index: int, roles: Array) -> Dicti
 		"family":family,
 		"tier":tier,
 		"trait":&"",
+		"leader_member_index":0,
 		"tactic_id":FamilyTraits.tactic_for_family(family),
 		"roles":roles.duplicate(),
 		"members":members,
@@ -1077,6 +1079,10 @@ func _record_emitted_pack(squad_id: String, pack: Dictionary) -> void:
 		"squad_id":squad_id,
 		"composition_kind":StringName(pack.get("composition_kind", &"unknown")),
 		"composition_ordinal":int(pack.get("composition_ordinal", -1)),
+		"family":StringName(pack.get("family", &"")),
+		"trait":StringName(pack.get("trait", &"")),
+		"tactic_id":StringName(pack.get("tactic_id", &"")),
+		"leader_member_index":int(pack.get("leader_member_index", -1)),
 		"identities":identities,
 		"roles":Array(pack.get("roles", [])).duplicate(),
 		"time":elapsed,

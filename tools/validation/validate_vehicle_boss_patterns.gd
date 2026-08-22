@@ -211,6 +211,10 @@ func _validate_absolute_profiles() -> void:
 		"later bosses strengthen newly shared common attacks without a global boss-stat rewrite"
 	)
 	_expect(
+		is_equal_approx(float(Patterns.COMMON_DAMAGE_SCALES[10]), 1.66),
+		"Stage 11 common damage uses the corrected absolute 1.66 scale"
+	)
+	_expect(
 		is_equal_approx(EncounterDirector.effective_hostile_projectile_speed(500.0), 410.0),
 		"boss prediction and projectile motion retain the hostile speed contract"
 	)

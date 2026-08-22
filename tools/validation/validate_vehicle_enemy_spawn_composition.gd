@@ -16,7 +16,7 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	_validate_onboarding_authoring()
 	_validate_normal_bags()
-	_validate_trait_bags()
+	_validate_pack_trait_rollout()
 	_validate_runtime_gates()
 	_finish()
 
@@ -48,6 +48,15 @@ func _validate_onboarding_authoring() -> void:
 				)
 	_expect(actual_kinds == expected_kinds, "onboarding emits four three-squad lessons and one bridge")
 	_expect(onboarding_units == 65, "onboarding replaces exactly 65 authored slots")
+	var bridge_pack := Dictionary(Array(Dictionary(packets[4])["packs"])[0])
+	_expect(
+		StringName(bridge_pack["family"]) == &"coordinator"
+			and int(bridge_pack["leader_member_index"]) == 0
+			and StringName(Dictionary(Array(bridge_pack["members"])[0])["family"])
+				== &"coordinator"
+			and StringName(bridge_pack["tactic_id"]) == &"shepherd_pack",
+		"the onboarding bridge is explicitly Coordinator-led"
+	)
 	var expected_triggers := [0, 15, 30, 45, 60]
 	for packet_index in 5:
 		var trigger := Dictionary(Dictionary(packets[packet_index])["trigger"])
@@ -79,6 +88,10 @@ func _validate_normal_bags() -> void:
 			}], stage_index, seed)
 			var packs: Array = Dictionary(packets[0])["packs"]
 			var pack_counts := {&"pursuer":0, &"charger":0, Composition.PAIRED:0}
+			var primary_counts := {
+				&"pursuer":0, &"charger":0, &"emitter":0,
+				&"defender":0, &"coordinator":0,
+			}
 			var family_counts := {}
 			var coordinator_packs := 0
 			for pack_index in packs.size():
@@ -99,6 +112,15 @@ func _validate_normal_bags() -> void:
 				pack_counts[pack_kind] = int(pack_counts[pack_kind]) + 1
 				if int(counts.get(&"coordinator", 0)) == 1:
 					coordinator_packs += 1
+				var primary_family := StringName(pack["family"])
+				primary_counts[primary_family] = int(primary_counts[primary_family]) + 1
+				var leader_index := int(pack["leader_member_index"])
+				_expect(
+					StringName(Dictionary(Array(pack["members"])[leader_index])["family"])
+						== primary_family,
+					"seed %d stage %d pack %d leader belongs to the primary family"
+					% [seed, stage_index, pack_index]
+				)
 				for family in counts:
 					family_counts[family] = int(family_counts.get(family, 0)) + int(counts[family])
 			_expect(
@@ -106,6 +128,26 @@ func _validate_normal_bags() -> void:
 				"seed %d stage %d has an exact 4:3:3 normal pack bag" % [seed, stage_index]
 			)
 			_expect(coordinator_packs == 1, "each normal bag has exactly one coordinator overlay")
+			_expect(
+				int(primary_counts[&"emitter"]) == 2
+					and int(primary_counts[&"defender"]) == 1
+					and int(primary_counts[&"coordinator"]) == 1
+					and int(primary_counts[&"pursuer"])
+						+ int(primary_counts[&"charger"]) == 6,
+				"each bag exposes two Emitter, one Defender, one Coordinator, and six close-range primary owners"
+			)
+			var coordinator_pack: Dictionary = {}
+			for pack_variant in packs:
+				if StringName(Dictionary(pack_variant)["family"]) == &"coordinator":
+					coordinator_pack = Dictionary(pack_variant)
+					break
+			_expect(
+				not coordinator_pack.is_empty()
+					and int(coordinator_pack["leader_member_index"]) == 0
+					and StringName(coordinator_pack["tactic_id"])
+						== &"shepherd_pack",
+				"the Coordinator overlay owns pack leadership and its shepherd tactic"
+			)
 			_expect(
 				int(family_counts.get(&"emitter", 0)) == 9
 					and int(family_counts.get(&"defender", 0)) == 9,
@@ -119,20 +161,29 @@ func _validate_normal_bags() -> void:
 			)
 
 
-func _validate_trait_bags() -> void:
-	for seed in SEEDS:
-		for family in FamilyTraits.FAMILIES:
-			var traits := FamilyTraits.traits(family)
-			var counts := {&"":0, traits[0]:0, traits[1]:0}
-			for occurrence in 10:
-				var selected_trait := Composition.trait_for_occurrence(
-					family, occurrence, seed, 4
-				)
-				counts[selected_trait] = int(counts.get(selected_trait, 0)) + 1
+func _validate_pack_trait_rollout() -> void:
+	for family in FamilyTraits.FAMILIES:
+		for ordinal in 12:
 			_expect(
-				counts[&""] == 4 and counts[traits[0]] == 3 and counts[traits[1]] == 3,
-				"%s trait bag is exactly base/trait-a/trait-b 4:3:3" % family
+				FamilyTraits.trait_for_pack(family, 0, ordinal).is_empty(),
+				"cycle 1 keeps every %s pack base-only" % family
 			)
+		var seen := {}
+		for group_index in 4:
+			var trait_count := 0
+			for ordinal in range(group_index * 3, group_index * 3 + 3):
+				var trait_id := FamilyTraits.trait_for_pack(family, 4, ordinal)
+				trait_count += 0 if trait_id.is_empty() else 1
+				if not trait_id.is_empty():
+					seen[trait_id] = true
+			_expect(
+				trait_count == 1,
+				"later-cycle %s packs apply one trait per three-pack window" % family
+			)
+		_expect(
+			seen.size() == 2,
+			"later-cycle %s pack windows alternate both family traits" % family
+		)
 
 
 func _validate_runtime_gates() -> void:
@@ -187,6 +238,14 @@ func _validate_runtime_gates() -> void:
 				StringName(spec.get("family_trait", &""))
 			),
 			"spawn specs keep per-enemy trait metadata"
+		)
+		_expect(
+			not StringName(spec.get("pack_family", &"")).is_empty()
+				and FamilyTraits.trait_belongs_to_family(
+					StringName(spec.get("pack_family", &"")),
+					StringName(spec.get("pack_trait", &""))
+				),
+			"spawn specs carry explicit pack family and trait truth"
 		)
 
 

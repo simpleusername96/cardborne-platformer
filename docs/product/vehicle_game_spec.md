@@ -302,11 +302,15 @@ second global elite-stat layer.
    enemy upgrade devices, and boss-cleanup retirement do not. Living ordinary enemies never block
    the quota-triggered boss. Every authored ordinary squad is one persistent semantic pack
    of four to eight actors with one primary family, one tier, and at most one family trait.
-   A Emitter pack contains at least one Defender; packs with more than four Emitters contain
-   two. The required Defender replaces a filler and never raises population or capacity.
-   Cycle 1 establishes base silhouettes. Later cycles apply a family trait to one third of
-   packs. A cycle change affects future admissions only and never deletes already-living
-   ordinary enemies.
+   Each deterministic ten-pack normal bag contains four Pursuer rosters, three Charger
+   rosters, and three equal Emitter-Defender paired rosters. Two paired rosters are
+   Emitter-primary and one is Defender-primary. Exactly one eligible Pursuer or Charger
+   roster replaces its first member with a Coordinator, making that Coordinator the primary
+   family, explicit leader, and `shepherd_pack` tactic owner without changing pack count or
+   size. Cycle 1 establishes base silhouettes. Later cycles apply exactly one primary-family
+   trait in each consecutive three-pack ordinal window. Only actors of the owning family use
+   the matching trait body and direct behavior; every member consumes shared pack state. A
+   cycle change affects future admissions only and never deletes already-living ordinary enemies.
 5. Quota completion starts a 1.5-second boss warning. Twelve bosses appear in stage order
    under generic labels from Stage 1 Boss through Stage 12 Boss.
 6. The common direct attack pool is exactly committed charge, broad barrage, radial
@@ -332,7 +336,7 @@ second global elite-stat layer.
    attack exists.
 9. Every boss owns an independent absolute profile. Maximum health is
    `16900/21300/28300/36800/46700/57500/69200/81600/94600/108200/122300/136890` and move speed is
-   `405/420/435/450/465/480/500/515/525/535/545/555`. Each profile also directly records
+   `405/420/435/450/465/480/500/515/525/535/540/555`. Each profile also directly records
    attack-movement speed, phase read gaps, initial autonomous delay, autonomous intervals,
    default footprint, lane spacing, and fan angles. Each selected pattern directly records
    its damage, startup, active, recovery, radius, and width for that boss. Boss values are
@@ -343,6 +347,11 @@ second global elite-stat layer.
    Temporary encounter states such as shield countercharge and Stage 12 overload may apply
    their explicit state modifiers; these are mechanics, not stage scaling. Boss projectile
    speed, beam reach, and committed charge speed remain attack-family constants.
+   Bosses 1-3 use direct read gaps `0.2412/0.1809/0.14472`,
+   `0.234/0.1755/0.1404`, and `0.2268/0.1701/0.13608`; this is the only early-boss cadence
+   adjustment. Stage 11 keeps health `122300` and uses move speed `540`, attack-movement
+   speed `432`, initial autonomous delay `2.00`, autonomous intervals
+   `2.75/2.30/1.95`, and common-damage scale `1.66`.
    Every hostile boss-emitted beam uses a `0.45 s` source-only charge followed by `0.20 s`
    collision-matched growth. Stage 4 `switch_sweep` releases three forward headings at
    `0.00/0.18/0.36 s` within its active window.
@@ -350,7 +359,9 @@ second global elite-stat layer.
    uses ammunition that begins at `1.0x` speed/radius/damage, starts growth at 360 travelled
    units, and caps at 880, interpolating to `1.35x/1.5x/1.6x`. At 720 travelled units it
    arms a `96`-unit proximity trigger and retires through one direct-contact/proximity path
-   that produces one `150`-radius detonation.
+   that produces one `150`-radius detonation. One execution releases five independent
+   lateral pairs at `0.00/0.22/0.44/0.66/0.88 s`; each pair starts at offsets `-180/+180`
+   and has no pre-laid longitudinal chain, beam, or projectile-to-projectile connection.
    Stage 7 Boss commits paired translating walls with one collision-true opening at `0.70x`
    its prior wall speed and damage, then
    crosses the field with a delayed orthogonal pass whose opening moves to a different
@@ -367,9 +378,9 @@ second global elite-stat layer.
    not boss facing. It reflects only direct player projectiles while active,
    preserving speed and life;
    reflected damage is 35% capped at 24, cannot reflect again, and a full hostile store
-   absorbs the shot without boss damage. Stage 11 takes full damage only at radius 420-760
-   and 20% inside or outside; every eight seconds a one-second module cue shifts the band
-   to 520-880 for the next interval, then back. Stage 12 first overloads 12 seconds after
+   absorbs the shot without boss damage. Stage 11 takes full player-owned damage at distance
+   `760` or less and `20%` beyond `760`; the threshold has no inner boundary, shift interval,
+   or boundary-change cue. Stage 12 first overloads 12 seconds after
    arrival and then every 18 seconds for six seconds: movement `1.35x`, cadence `0.75x`,
    dealt damage `1.30x`, and received damage `1.50x`. Their ordinary teaching families are
    Emitter T3, Defender T3, Coordinator T3, and Pursuer T3, respectively.
@@ -414,6 +425,9 @@ second global elite-stat layer.
 - Tiers own family stats and presentation scale. They do not create a new behavior family.
   All actors in one pack share the authored tier. Pack admission is atomic: a failed
   four-to-eight-member placement delays the complete pack and never creates an orphan.
+- The pack explicitly owns primary family, leader, tactic, and optional trait. Registration
+  order cannot change those fields. A paired Defender-primary pack therefore remains
+  Defender-led even when an Emitter occupies its first physical roster slot.
 - Pursuer owns Splitter and Frenzy. Splitter creates bounded traitless T1 children;
   Frenzy increases speed to `1.15x` and attack cadence to `0.85x` of the base interval.
 - Charger owns Double and Self-Destruct. Double performs one additional warned charge;
