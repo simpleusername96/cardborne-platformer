@@ -1,6 +1,6 @@
 ---
 type: plan
-status: active
+status: done
 created: 2026-08-22
 updated: 2026-08-22
 ---
@@ -118,9 +118,8 @@ Locked decisions:
 ## Progress and Next Steps
 
 - Canonical progress: the continuation task checkboxes above.
-- Current phase: follow-up integration and validation.
-- Next task: validate the selected production visual, projectile contact, objective
-  routing, and restored tutorial gates.
+- Current phase: complete.
+- Next task: optional manual feel check of the three-enemy device approach in a live run.
 - Completed gates: device, encounter pacing, spawn composition, guidebook,
   bilingual localization, active-run clock, full Run, and visual-authority validators;
   Godot import; four-file production Web export; `git diff --check`; and the bounded
@@ -132,10 +131,11 @@ Locked decisions:
   unrelated seeker-impact reuse, device bobbing, incomplete diagnostic snapshots,
   and stale general-run/pressure-harness assumptions. No further task-owned
   responsibility or failure-path issue remains.
-- The broad visual-replacement-workbench validator still reports 30 pre-existing
-  unassigned trait-family production PNGs. `replacement-workbench.json` is unchanged
-  from `master`, and none of the three review-only device candidates appears in that
-  failure. This is unrelated baseline inventory debt and was not expanded into this task.
+- The broad visual-replacement-workbench builder still stops on 30 pre-existing
+  unassigned trait-family production PNGs. A formal new switch unit cannot be generated
+  without expanding into that unrelated inventory debt, so `replacement-workbench.json`
+  remains unchanged and this plan retains the exact approval record for the promoted
+  device. The production asset, manifest, runtime, and focused visual gates are complete.
 - Update rule: record each checkpoint result here before moving to the next task.
 
 ## Review-only Candidate Evidence
@@ -173,4 +173,11 @@ Locked decisions:
 - [x] Give assigned enemies a shared wall-aware route to the active device and exempt
   their objective motion from player-pursuit correction.
 - [x] Promote the exact user-selected Triad Forge PNG to runtime and Guidebook use.
-- [ ] Run focused gameplay, presentation, asset, and visual-authority validation.
+- [x] Run focused gameplay, presentation, asset, and visual-authority validation.
+
+Implementation commit: `47fd77362a01ec41cc24bda7215098bf879e6cfb`.
+
+Follow-up validation passed: Godot import; enemy upgrade-device runtime; Stage 1 spawn
+composition; encounter pacing; semantic asset provider; world visuals; semantic visual
+separation; visual asset coverage; visual replacement coverage; combat renderer;
+Guidebook; full VehicleRun; canonical visual authority; and the four-file Web export.
