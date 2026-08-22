@@ -1,0 +1,82 @@
+name: Finalize Boss Shared Pattern Plan
+
+on:
+  push:
+    branches:
+      - codex/boss-shared-pattern-defense-rules
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-boss-shared-pattern-plan
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out branch head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: codex/boss-shared-pattern-defense-rules
+          fetch-depth: 0
+
+      - name: Require completed full validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .agents/tmp/boss-shared-pattern-full-validation-ok.txt
+          grep -q 'validators=all-production' .agents/tmp/boss-shared-pattern-full-validation-ok.txt
+          grep -q 'native_capture=passed' .agents/tmp/boss-shared-pattern-full-validation-ok.txt
+          grep -q 'web_export=passed' .agents/tmp/boss-shared-pattern-full-validation-ok.txt
+          grep -q 'web_boot=passed' .agents/tmp/boss-shared-pattern-full-validation-ok.txt
+
+      - name: Close and archive ExecPlan
+        shell: python
+        run: |
+          from pathlib import Path
+
+          source = Path('.agents/execplans/2026-08-22-boss-shared-pattern-defense-rules.md')
+          target = Path('.agents/completed-plans/2026-08-22-boss-shared-pattern-defense-rules.md')
+          receipt = Path('.agents/tmp/boss-shared-pattern-full-validation-ok.txt').read_text(encoding='utf-8').strip()
+          text = source.read_text(encoding='utf-8')
+          text = text.replace('status: active', 'status: done', 1)
+          text = text.replace('- [ ]', '- [x]')
+          text = text.replace(
+              '- Current phase: Phase 0.\n- Next task: 0.1, add the authority preflight validator and obtain the fresh visual receipt before material presentation changes.\n- Last completed gate: branch created from `8d762af1c233471632f1f3ffc9ae9da13e55caf7`; repository instructions and plan rules read; implementation contract committed.',
+              '- Current phase: Complete.\n- Next task: none; implementation and verification are complete.\n- Last completed gate: full Godot import, every production validator, native rendered capture, Web export, and built-Web browser boot passed on the implementation branch.'
+          )
+          text += '\n\n## Final Validation Receipt\n\n```text\n' + receipt + '\n```\n\n- Pull request: `#5`\n- Implementation branch: `codex/boss-shared-pattern-defense-rules`\n- The final cleanup commit removes all one-shot migration and temporary workflow owners.\n'
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(text, encoding='utf-8', newline='\n')
+          source.unlink()
+
+      - name: Remove one-shot migration machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f \
+            .github/workflows/apply-boss-shared-pattern-plan.yml \
+            .github/workflows/verify-boss-shared-pattern-plan.yml \
+            .github/workflows/branch-source-snapshot.yml \
+            .github/workflows/finalize-boss-shared-pattern-plan.yml \
+            tools/migrations/apply_boss_shared_pattern_plan.py \
+            .agents/tmp/boss-shared-pattern-ci-trigger.txt \
+            .agents/tmp/boss-shared-pattern-full-validation-ok.txt
+          rmdir .agents/tmp 2>/dev/null || true
+          rmdir tools/migrations 2>/dev/null || true
+          git diff --check
+
+      - name: Commit finalized branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'chore(plan): archive verified boss implementation'
+          git pull --rebase origin codex/boss-shared-pattern-defense-rules
+          git push origin HEAD:codex/boss-shared-pattern-defense-rules
