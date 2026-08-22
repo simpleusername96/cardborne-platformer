@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cardborne 현재 구현 간극 점검 — 적 팩·트레잇·보스</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #081019;
+      --panel: #101b27;
+      --panel-2: #142333;
+      --line: #294057;
+      --text: #edf4f8;
+      --muted: #a8bac8;
+      --cyan: #58d7df;
+      --blue: #79aef8;
+      --amber: #f2bf69;
+      --red: #ff7e7e;
+      --green: #76d69b;
+      --violet: #bea4ff;
+      --code: #071018;
+      --shadow: 0 18px 55px rgba(0, 0, 0, .28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      max-width: 100%;
+      overflow-x: clip;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(88, 215, 223, .10), transparent 32rem),
+        radial-gradient(circle at 88% 8%, rgba(190, 164, 255, .08), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Pretendard, "Noto Sans KR", "Segoe UI", sans-serif;
+      line-height: 1.68;
+      max-width: 100%;
+      overflow-x: clip;
+      word-break: keep-all;
+    }
+
+    a { color: var(--cyan); text-underline-offset: .2em; }
+    a:hover { color: #a6f8fb; }
+
+    code {
+      padding: .12rem .38rem;
+      border: 1px solid rgba(121, 174, 248, .18);
+      border-radius: .35rem;
+      background: var(--code);
+      color: #cde2ff;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: .92em;
+      word-break: break-word;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 38px 0 90px;
+    }
+
+    .hero {
+      overflow: hidden;
+      position: relative;
+      padding: clamp(28px, 6vw, 64px);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(20, 35, 51, .96), rgba(9, 19, 29, .98));
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      bottom: -130px;
+      width: 420px;
+      height: 420px;
+      border: 1px solid rgba(88, 215, 223, .15);
+      border-radius: 50%;
+      box-shadow: 0 0 0 48px rgba(88, 215, 223, .025), 0 0 0 96px rgba(88, 215, 223, .018);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--cyan);
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 { line-height: 1.24; }
+
+    h1 {
+      max-width: 880px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4rem);
+      letter-spacing: -.045em;
+    }
+
+    .hero .lede {
+      max-width: 900px;
+      margin: 22px 0 0;
+      color: #d3e1e9;
+      font-size: clamp(1.04rem, 2vw, 1.24rem);
+    }
+
+    .meta, .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 22px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(7, 16, 24, .72);
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    .chip.bad { border-color: rgba(255, 126, 126, .5); color: #ffb2b2; }
+    .chip.warn { border-color: rgba(242, 191, 105, .5); color: #ffd89a; }
+    .chip.good { border-color: rgba(118, 214, 155, .45); color: #aef0c5; }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0 0;
+    }
+
+    .toc a {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(16, 27, 39, .82);
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .toc a:hover { border-color: var(--cyan); color: var(--text); }
+
+    section {
+      scroll-margin-top: 24px;
+      margin-top: 56px;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(1.55rem, 3vw, 2.35rem);
+      letter-spacing: -.035em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 10px 0 0; padding-left: 1.25rem; }
+    li + li { margin-top: 7px; }
+
+    .summary-grid, .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .summary-card, .card, .callout {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(160deg, rgba(20, 35, 51, .94), rgba(12, 23, 34, .96));
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .14);
+    }
+
+    .summary-card, .card { padding: 20px; }
+
+    .summary-card .label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .verdict {
+      display: inline-flex;
+      margin-bottom: 12px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: .76rem;
+      font-weight: 900;
+    }
+
+    .verdict.bad { background: rgba(255, 126, 126, .13); color: #ffaaaa; }
+    .verdict.warn { background: rgba(242, 191, 105, .13); color: #ffd38b; }
+    .verdict.good { background: rgba(118, 214, 155, .13); color: #a8ebbf; }
+
+    .callout {
+      margin: 18px 0;
+      padding: 18px 20px;
+      border-left: 4px solid var(--amber);
+    }
+
+    .callout.bad { border-left-color: var(--red); }
+    .callout.good { border-left-color: var(--green); }
+    .callout.info { border-left-color: var(--cyan); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(10, 20, 30, .88);
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 13px 14px;
+      border-bottom: 1px solid rgba(41, 64, 87, .72);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #142333;
+      color: #dceaf1;
+      font-size: .78rem;
+      letter-spacing: .04em;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+    td { color: #cddbe4; font-size: .92rem; }
+
+    .status-bad { color: #ffaaaa; font-weight: 800; }
+    .status-warn { color: #ffd38b; font-weight: 800; }
+    .status-good { color: #a8ebbf; font-weight: 800; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .flow div {
+      position: relative;
+      min-height: 112px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel);
+    }
+
+    .flow div:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -18px;
+      top: 38px;
+      z-index: 2;
+      color: var(--cyan);
+      font-weight: 900;
+    }
+
+    .flow b { display: block; margin-bottom: 5px; color: var(--text); }
+    .flow span { color: var(--muted); font-size: .88rem; }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel);
+    }
+
+    .metric small { display: block; color: var(--muted); }
+    .metric strong { display: block; margin-top: 3px; font-size: 1.32rem; color: var(--cyan); }
+
+    .evidence-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .evidence {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(7, 16, 24, .64);
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .evidence b { color: var(--text); }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    @media (max-width: 900px) {
+      .toc, .flow, .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow div::after { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .page { width: calc(100% - 20px); padding-top: 10px; }
+      .hero { border-radius: 16px; }
+      h1 { font-size: clamp(1.72rem, 9vw, 2.35rem); }
+      .summary-grid, .card-grid, .toc, .flow, .metric-grid { grid-template-columns: 1fr; }
+      section { margin-top: 42px; }
+      th, td { padding: 11px; }
+      body, h1, h2, h3, p, li, a { overflow-wrap: anywhere; }
+      body { word-break: normal; }
+    }
+  </style>
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">Current implementation gap audit · 2026-08-22</p>
+    <h1>적 팩·트레잇·보스 구현은 “데이터는 있음”과 “게임에서 작동함”이 갈라져 있다</h1>
+    <p class="lede">
+      결론부터 말하면 사용자의 체감이 맞다. Enemy Upgrade Device는 삭제된 것이 아니지만 1사이클에는 의도적으로 0개이며,
+      Defender와 Coordinator의 핵심 trait는 현재 일반 스폰 구조에서 사실상 활성화될 수 없다. 11번 보스는 수치와 동시 공격층이
+      모두 가파르고, 6번 보스의 가속 탄환은 꼬리 선을 제거했어도 배치 자체가 여전히 한 줄처럼 겹친다.
+    </p>
+    <div class="meta">
+      <span class="chip">기준 HEAD: e2993775</span>
+      <span class="chip">Godot 4.7.1 stable</span>
+      <span class="chip good">표적형 headless 검증 완료</span>
+      <span class="chip warn">렌더·플레이 체감 미검증</span>
+      <span class="chip bad">gameplay 수정 없음</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="보고서 목차">
+    <a href="#answers">핵심 답변</a>
+    <a href="#devices">Upgrade Device</a>
+    <a href="#traits">Family Traits</a>
+    <a href="#packs">Pack / Squad 목록</a>
+    <a href="#coordinator">Coordinator</a>
+    <a href="#boss11">11번 보스</a>
+    <a href="#projectiles">가속 탄환</a>
+    <a href="#early-bosses">초반 보스 빈도</a>
+  </nav>
+
+  <section id="answers">
+    <p class="eyebrow">Executive answers</p>
+    <h2>질문에 대한 직접 답변</h2>
+    <div class="summary-grid">
+      <article class="summary-card">
+        <span class="label">Enemy Upgrade Devices</span>
+        <span class="verdict warn">삭제 아님 · 노출 규칙 주의</span>
+        <p>기본 씬에 연결되어 있다. 다만 1사이클에는 0개이고, 2~12사이클 시작 때만 4개가 게시된다. 활성화·파괴된 장치는 즉시 사라지고 같은 사이클에는 다시 나오지 않는다.</p>
+      </article>
+      <article class="summary-card">
+        <span class="label">Family Traits</span>
+        <span class="verdict bad">통합 불완전</span>
+        <p>Pursuer·Charger·Emitter trait는 직접 행동 경로가 있다. Defender·Coordinator trait는 ID와 자산은 있어도 현재 일반 팩 구성에서는 팩 타이머 소유자가 될 수 없어 핵심 행동이 사실상 도달 불가다.</p>
+      </article>
+      <article class="summary-card">
+        <span class="label">Coordinator</span>
+        <span class="verdict bad">존재하지만 역할 상실</span>
+        <p>Coordinator는 1번 스테이지 60킬 이후의 bridge와 일반 10팩당 1기에 들어간다. 그러나 항상 마지막 멤버이며 리더도, Coordinator tactic 소유자도 아니어서 평범한 pulse 적처럼 보이기 쉽다.</p>
+      </article>
+      <article class="summary-card">
+        <span class="label">Pack / Squad Spawning</span>
+        <span class="verdict warn">컨테이너만 팩 기준</span>
+        <p>4~8기 squad의 원자적 입장 구조는 있다. 그러나 trait 추첨은 팩 단위가 아니라 멤버 단위이고, 팩 전체 런타임은 첫 멤버 trait만 채택한다. 따라서 의미상 팩 계약은 깨져 있다.</p>
+      </article>
+      <article class="summary-card">
+        <span class="label">Stage 11 Boss</span>
+        <span class="verdict bad">과압력 근거 있음</span>
+        <p>이동 545, 공격 이동 441.45, 공통 공격 피해 배율 1.70, 별도 자율 공격 1.55~2.40초 주기가 겹친다. 420~760 / 520~880 양방향 거리 밴드도 실제 구현되어 있다.</p>
+      </article>
+      <article class="summary-card">
+        <span class="label">Stage 6 Growth Projectiles</span>
+        <span class="verdict bad">시각 결과 미해결</span>
+        <p>명시적 trail은 제거되었다. 하지만 두 줄 × 다섯 발을 진행축 48 간격으로 동시에 놓고, 큰 시각 외피가 서로 겹치므로 여전히 연결된 선처럼 보인다.</p>
+      </article>
+    </div>
+
+    <div class="callout bad">
+      <strong>가장 중요한 한 문장:</strong>
+      현재 검증기는 “trait 목록이 존재하고 비율이 맞는가”는 통과시키지만, “실제 생성된 Defender·Coordinator 팩에서 그 trait가 활성화되는가”는 검사하지 않는다.
+      따라서 녹색 검증 결과와 플레이 체감이 동시에 참일 수 있다.
+    </div>
+  </section>
+
+  <section id="devices">
+    <p class="eyebrow">01 · Enemy upgrade devices</p>
+    <h2>장치는 없어지지 않았다. 다만 첫 사이클과 해결 후에는 실제로 보이지 않는다</h2>
+
+    <div class="flow" aria-label="Enemy Upgrade Device 생명주기">
+      <div><b>1사이클</b><span>소켓 6개는 필드에 보존되지만 게시되는 장치는 0개다.</span></div>
+      <div><b>2~12사이클 시작</b><span>플레이어와 서로 멀리 떨어진 소켓 4개를 선택해 게시한다.</span></div>
+      <div><b>경쟁</b><span>반경 720 안의 일반 적 최대 3기가 이동하고, 반경 180에서 5초 채널링한다.</span></div>
+      <div><b>해결</b><span>활성화 또는 파괴 즉시 <code>published=false</code>. 같은 사이클에는 재게시하지 않는다.</span></div>
+    </div>
+
+    <div class="card-grid">
+      <article class="card">
+        <h3>현재 연결 상태</h3>
+        <ul>
+          <li><code>VehicleRun.tscn</code>은 적 강화 장치 기능 레이어를 기본 스크립트로 사용한다.</li>
+          <li>런타임은 필드의 장치 후보 6개를 받고, 사이클 2부터 4개를 게시한다.</li>
+          <li>월드 렌더 스냅샷과 미니맵 마커 경로도 살아 있다.</li>
+          <li>표적형 headless 검증에서 기본 씬 연결, 1사이클 0개, 2~12사이클 4개, 미니맵 4개 계약이 통과했다.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>왜 “싹 다 없어졌다”고 느낄 수 있는가</h3>
+        <ol>
+          <li>새 런의 1사이클만 확인했다면 현재 규칙상 원래 하나도 없다.</li>
+          <li>장치가 적에게 활성화되거나 플레이어에게 파괴되면 즉시 월드에서 사라진다.</li>
+          <li>해결된 장치는 같은 사이클에 복귀하지 않는다. 네 개가 모두 해결되면 남은 사이클 동안 0개다.</li>
+        </ol>
+      </article>
+    </div>
+
+    <div class="callout info">
+      <strong>이 부분의 판정:</strong> “기능이 코드에서 삭제되었다”는 것은 아니다. 2026-08-22의 이전 사용자 지시도 “최초 튜토리얼 사이클 제외, 사이클마다 4개”였고 현재 구현은 그 지시를 따른다.
+      단, 사용자가 2사이클 시작 직후에도 월드와 미니맵에서 0개를 본 것이라면 이번 정적·headless 조사로 재현되지 않은 별도 표시 회귀다. 실제 플레이 렌더는 이번 요청 범위에서 실행하지 않았다.
+    </div>
+
+    <div class="evidence-list">
+      <div class="evidence"><b>구현:</b> <a href="../../scenes/run/VehicleRun.tscn">scenes/run/VehicleRun.tscn</a>:3, <a href="../../scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd">vehicle_enemy_upgrade_device_runtime.gd</a>:66–117, 501–575</div>
+      <div class="evidence"><b>사양:</b> <a href="../product/vehicle_game_spec.md">vehicle_game_spec.md</a>:250–278</div>
+      <div class="evidence"><b>실행 검증:</b> <a href="../../tools/validation/validate_vehicle_enemy_upgrade_devices.gd">validate_vehicle_enemy_upgrade_devices.gd</a> — <code>vehicle enemy upgrade device validation passed</code></div>
+    </div>
+  </section>
+
+  <section id="traits">
+    <p class="eyebrow">02 · Five families and ten traits</p>
+    <h2>trait 데이터는 완성되어 있지만, 모든 trait가 실제 전투 행동까지 이어지지는 않는다</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Family</th><th>Trait</th><th>현재 도달성</th><th>실제 연결 경로</th><th>판정</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pursuer</td><td>Splitter</td><td class="status-good">도달 가능</td><td>사망 시 traitless T1 자식 생성</td><td>개별 적의 <code>family_trait</code>를 직접 검사한다.</td></tr>
+          <tr><td>Pursuer</td><td>Frenzy</td><td class="status-good">도달 가능</td><td>속도 1.15배, 회복 간격 0.85배</td><td>생성·회복 계산이 개별 적 trait를 직접 읽는다.</td></tr>
+          <tr><td>Charger</td><td>Double</td><td class="status-good">도달 가능</td><td>첫 돌진 뒤 0.45초 예고 추가 돌진</td><td>돌진 종료 경로가 개별 trait를 직접 읽는다.</td></tr>
+          <tr><td>Charger</td><td>Self-Destruct</td><td class="status-good">도달 가능</td><td>돌진 뒤 1초 fuse 상태</td><td>돌진 종료 경로가 개별 trait를 직접 읽는다.</td></tr>
+          <tr><td>Emitter</td><td>Artillery</td><td class="status-good">도달 가능</td><td>기본 역할을 marked-impact 역할로 교체</td><td>생성 시 개별 trait로 행동 role을 바꾼다.</td></tr>
+          <tr><td>Emitter</td><td>Slow</td><td class="status-good">도달 가능</td><td>발사체가 1.5초 이동 둔화 적용</td><td>발사 시 개별 trait를 직접 읽는다.</td></tr>
+          <tr><td>Defender</td><td>Bulwark</td><td class="status-bad">사실상 도달 불가</td><td>8초마다 2.5초 활성, 135% 확대, 팩 보호</td><td>활성 타이머는 팩 첫 멤버 trait로만 생성된다. Defender는 혼성 팩 후순위다.</td></tr>
+          <tr><td>Defender</td><td>Reflector</td><td class="status-bad">반사는 도달 불가</td><td>7초마다 2초 반사 창</td><td>기본 방패 표시는 가능하지만 <code>pack_trait_active</code>가 켜지지 않아 반사 창이 열리지 않는다.</td></tr>
+          <tr><td>Coordinator</td><td>Blink</td><td class="status-bad">사실상 도달 불가</td><td>9초마다 0.9초 예고 후 팩 재배치</td><td>Coordinator는 팩 마지막 멤버라 팩 trait 소유자가 될 수 없다.</td></tr>
+          <tr><td>Coordinator</td><td>Pack Feed</td><td class="status-bad">사실상 도달 불가</td><td>팩 사망을 회복·공격·속도 스택으로 전환</td><td>팩 상태의 trait가 <code>pack_feed</code>일 때만 receipt가 나오지만 그 상태가 생성되지 않는다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:24px">정확한 고장 지점</h3>
+    <div class="flow" aria-label="Family trait 단절 흐름">
+      <div><b>멤버별 추첨</b><span>구성기는 각 family 멤버 occurrence마다 4:3:3으로 base/trait A/trait B를 뽑는다.</span></div>
+      <div><b>첫 멤버 등록</b><span>팩 런타임은 처음 등록된 멤버의 <code>family_trait</code> 하나를 상태에 저장한다.</span></div>
+      <div><b>후순위 무시</b><span>나중에 등록된 Defender·Coordinator의 서로 다른 trait는 팩 상태를 갱신하지 않는다.</span></div>
+      <div><b>행동 미발동</b><span>Bulwark·Reflector·Blink·Pack Feed는 팩 타이머 또는 팩 receipt가 없어 실행되지 않는다.</span></div>
+    </div>
+
+    <div class="callout bad">
+      <strong>사양과도 충돌한다.</strong> 사양은 “한 팩은 하나의 primary family, 하나의 tier, 최대 하나의 family trait”이라고 정의하고 이후 사이클에서 팩의 1/3에 trait를 적용한다.
+      현재 코드는 같은 팩 안에서 멤버별로 base·trait A·trait B를 섞을 수 있고, 1사이클의 일반 팩에도 trait를 허용한다. 즉, 확률 수치 4:3:3은 맞지만 적용 단위가 틀렸다.
+    </div>
+
+    <div class="callout info">
+      <strong>왜 검증이 통과했는가:</strong> <code>validate_vehicle_enemy_family_traits.gd</code>는 15개 family-tier ID, 10개 trait 소속, 크기, 4:3:3 분포를 검사한다.
+      <code>validate_vehicle_enemy_spawn_composition.gd</code>는 각 멤버 trait가 자기 family에 속하는지 검사한다. 실제 생성 팩에서 Defender 또는 Coordinator trait가 공유 런타임의 owner가 되는지는 어느 쪽도 검사하지 않는다.
+    </div>
+
+    <div class="evidence-list">
+      <div class="evidence"><b>카탈로그:</b> <a href="../../scripts/enemies/vehicle_enemy_family_trait_catalog.gd">vehicle_enemy_family_trait_catalog.gd</a>:5–70</div>
+      <div class="evidence"><b>멤버별 추첨:</b> <a href="../../scripts/encounters/vehicle_enemy_spawn_composition.gd">vehicle_enemy_spawn_composition.gd</a>:112–137, 231–273</div>
+      <div class="evidence"><b>첫 멤버 trait 소유:</b> <a href="../../scripts/encounters/vehicle_collective_tactic_runtime.gd">vehicle_collective_tactic_runtime.gd</a>:43–91, 348–469</div>
+      <div class="evidence"><b>전투 소비:</b> <a href="../../scripts/vehicle/vehicle_run.gd">vehicle_run.gd</a>:1350–1424, 3271–3284, 4995–5011, 5627–5640</div>
+    </div>
+  </section>
+
+  <section id="packs">
+    <p class="eyebrow">03 · Spawn composition inventory</p>
+    <h2>현재 생성 가능 목록은 아래가 전부다</h2>
+    <p>여기서 pack과 squad는 같은 roster를 가리킨다. pack은 의미·trait·tactic 메타데이터이고, squad는 스폰 배치·도착 창에서 쓰는 이름이다.</p>
+
+    <h3 style="margin-top:24px">1사이클 고정 온보딩 roster</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>해금 조건</th><th>한 squad 구성</th><th>반복</th><th>trait</th><th>메모</th></tr></thead>
+        <tbody>
+          <tr><td>시작</td><td>Pursuer 5</td><td>3 squads</td><td>없음</td><td>첫 15킬 학습</td></tr>
+          <tr><td>누적 15킬</td><td>Pursuer 3 + Emitter 2</td><td>3 squads</td><td>없음</td><td>Emitter 소개</td></tr>
+          <tr><td>누적 30킬</td><td>Pursuer 2 + Emitter 1 + Charger 2</td><td>3 squads</td><td>없음</td><td>Charger 소개</td></tr>
+          <tr><td>누적 45킬</td><td>Pursuer 2 + Charger 1 + Emitter 1 + Defender 1</td><td>3 squads</td><td>없음</td><td>Defender 소개, Emitter 1:Defender 1</td></tr>
+          <tr><td>누적 60킬</td><td>Pursuer 2 + Charger 2 + Coordinator 1</td><td>1 squad</td><td>없음</td><td>Coordinator bridge</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:28px">이후 일반 10팩 shuffle bag</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>팩 종류</th><th>10팩당 수</th><th>4~8기 roster</th><th>Coordinator 가능성</th><th>실제 tactic owner</th></tr></thead>
+        <tbody>
+          <tr><td>Pursuer-primary</td><td>4</td><td>Pursuer 4~8</td><td>선정된 한 팩은 마지막 Pursuer를 Coordinator로 교체</td><td><code>swarm_screen</code></td></tr>
+          <tr><td>Charger-primary</td><td>3</td><td>Charger 4~8</td><td>선정된 한 팩은 마지막 Charger를 Coordinator로 교체</td><td><code>spearhead</code></td></tr>
+          <tr><td>Emitter–Defender paired</td><td>3</td><td>짝수: E:D = 1:1, 홀수: 같은 짝 + Pursuer 1</td><td>불가</td><td><code>crossfire_convoy</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-grid" style="margin-top:16px">
+      <article class="card">
+        <h3>paired 팩의 정확한 roster</h3>
+        <ul>
+          <li>4기: Emitter 2 + Defender 2</li>
+          <li>5기: Emitter 2 + Defender 2 + Pursuer 1</li>
+          <li>6기: Emitter 3 + Defender 3</li>
+          <li>7기: Emitter 3 + Defender 3 + Pursuer 1</li>
+          <li>8기: Emitter 4 + Defender 4</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>목록에 없는 것</h3>
+        <ul>
+          <li>Emitter-only 일반 팩</li>
+          <li>Defender-primary 또는 Defender-only 일반 팩</li>
+          <li>Coordinator-primary 또는 Coordinator-only 일반 팩</li>
+          <li>Coordinator가 리더인 혼성 팩</li>
+          <li>하나의 공유 trait를 명시적으로 소유한 일반 팩</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="callout warn">
+      <strong>팩 기준 구현 여부:</strong> 스폰 예약과 배치 실패 시 전체 squad를 미루는 구조는 팩 기준이다. 그러나 roster 내부 trait는 멤버별이고, tactic과 trait owner는 첫 멤버에 종속된다.
+      따라서 “동시에 묶여서 나오는가”에는 예, “하나의 의미 있는 전술 단위인가”에는 아직 아니오다.
+    </div>
+
+    <div class="evidence-list">
+      <div class="evidence"><b>가방과 overlay:</b> <a href="../../scripts/encounters/vehicle_enemy_spawn_composition.gd">vehicle_enemy_spawn_composition.gd</a>:15–32, 87–110, 231–303</div>
+      <div class="evidence"><b>온보딩과 팩 크기:</b> <a href="../../scripts/vehicle/stages/vehicle_combat_stages.gd">vehicle_combat_stages.gd</a>:143–208, 211–303</div>
+      <div class="evidence"><b>실행 검증:</b> <a href="../../tools/validation/validate_vehicle_enemy_spawn_composition.gd">validate_vehicle_enemy_spawn_composition.gd</a> — <code>VEHICLE_ENEMY_SPAWN_COMPOSITION_VALIDATION_OK</code></div>
+    </div>
+  </section>
+
+  <section id="coordinator">
+    <p class="eyebrow">04 · Why Coordinator feels absent</p>
+    <h2>Coordinator는 희귀할 뿐 아니라, 자신의 정체성을 실행하지 못한다</h2>
+
+    <div class="metric-grid">
+      <div class="metric"><small>온보딩 첫 등장</small><strong>60킬 이후</strong></div>
+      <div class="metric"><small>일반 bag 출현</small><strong>10팩당 1기</strong></div>
+      <div class="metric"><small>팩 내 위치</small><strong>항상 마지막</strong></div>
+      <div class="metric"><small>Coordinator tactic</small><strong>0개 팩</strong></div>
+    </div>
+
+    <p style="margin-top:20px">
+      일반 가방은 Pursuer/Charger 팩 중 하나의 마지막 멤버만 Coordinator로 바꾼다. 팩의 primary family와 tactic ID는 바뀌지 않는다.
+      또한 <code>squad_leader</code>는 첫 멤버이므로 Coordinator는 리더가 아니다. 결과적으로 Coordinator의 body와 기본 <code>ordinary_pulse_01</code> 공격은 존재해도,
+      <code>shepherd_pack</code>, Blink, Pack Feed가 Coordinator 중심 전술로 나타나지 않는다.
+    </p>
+
+    <div class="callout bad">
+      사용자가 “한 번도 못 봤다”고 말한 것은 두 층으로 나뉜다. 실루엣 자체는 낮은 빈도로 생성되지만, 플레이어가 기대하는 “팩을 지휘하는 적”은 현재 구현상 등장하지 않는다.
+      특히 Pack Feed 사양은 “Coordinator leader가 죽으면 중단”이라고 쓰여 있지만, 현재 생성 규칙에서는 Coordinator가 leader가 될 수 없다.
+    </div>
+  </section>
+
+  <section id="boss11">
+    <p class="eyebrow">05 · Stage 11 pressure audit</p>
+    <h2>11번 보스가 너무 빠르고 강하다는 평가는 수치로도 뒷받침된다</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>항목</th><th>1번 보스</th><th>11번 보스</th><th>차이</th><th>체감 영향</th></tr></thead>
+        <tbody>
+          <tr><td>최대 체력</td><td>16,900</td><td>122,300</td><td>약 7.24배</td><td>전투 시간이 길어진다.</td></tr>
+          <tr><td>일반 이동 속도</td><td>405</td><td>545</td><td>약 +34.6%</td><td>거리 규칙을 유지하기 더 어렵다.</td></tr>
+          <tr><td>공격 중 이동 속도</td><td>251.1</td><td>441.45</td><td>약 +75.8%</td><td>공격 중에도 유효 거리 밴드가 빠르게 흔들린다.</td></tr>
+          <tr><td>공통 공격 피해 배율</td><td>1.00</td><td>1.70</td><td>+70%</td><td>같은 공통 언어도 훨씬 큰 처벌이 된다.</td></tr>
+          <tr><td>자율 공격층</td><td>없음</td><td>있음</td><td>1.6초 후 시작</td><td>직접 공격과 별개로 패턴이 겹친다.</td></tr>
+          <tr><td>자율 공격 주기</td><td>해당 없음</td><td>2.40 / 1.95 / 1.55초</td><td>페이즈마다 단축</td><td>후반으로 갈수록 회피 복구 시간이 줄어든다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:26px">현재 거리 피해 규칙</h3>
+    <div class="card-grid">
+      <article class="card">
+        <h3>기본 8초 구간</h3>
+        <p><code>420 ≤ 플레이어-보스 거리 ≤ 760</code>에서만 100% 피해다. 그보다 가깝거나 멀면 20%만 들어간다.</p>
+      </article>
+      <article class="card">
+        <h3>교대 8초 구간</h3>
+        <p>1초 cue 후 밴드가 <code>520 ≤ 거리 ≤ 880</code>으로 바뀐다. 다시 8초가 지나면 원래 밴드로 돌아간다.</p>
+      </article>
+    </div>
+
+    <div class="callout bad">
+      <strong>문제의 본질:</strong> 이 규칙은 플레이어가 “위험 거리 안으로 들어간다”는 한 가지 판단만 요구하지 않는다. 빠르게 움직이는 보스를 상대로 내부 경계와 외부 경계를 동시에 추적하고,
+      8초마다 두 경계가 이동하는 것을 읽게 한다. 보스 자체 이동과 직접·자율 공격이 겹치는 상황에서는 정교한 거리 유지가 현실적인 전투 전략이 아니라 피해 세금에 가까워진다.
+    </div>
+
+    <h3>사용자 피드백을 반영한 올바른 방향</h3>
+    <ul>
+      <li><strong>양방향 밴드를 한쪽 임계값으로 바꾼다.</strong> 예: “보스와의 거리가 A 이하일 때 100% 피해, A 초과 시 감쇠.” 정확한 A는 별도 튜닝 대상으로 남긴다.</li>
+      <li><strong>11번 보스의 이동과 공격 겹침을 먼저 낮춘다.</strong> 체력은 필요하면 유지하거나 보상적으로 늘릴 수 있지만, 자율 공격 주기와 직접 공격을 동시에 더 조이지 않는다.</li>
+      <li><strong>거리 규칙 cue는 한 경계만 설명한다.</strong> 플레이어가 “가까이 들어가야 한다”는 대응을 즉시 이해할 수 있어야 한다.</li>
+    </ul>
+
+    <div class="callout warn">
+      <strong>문장 해석:</strong> “11번째 적은 너무 빠르고 쎄”와 뒤의 “초반 보스 공격빈도는 더 빨라도 된다”를 함께 보면, “체력은 늘려도 공격 빈도 같은 건 늘려야 해”는
+      “체력은 늘려도 공격 빈도는 더 늘리면 안 된다”는 의미로 해석했다. 만약 “11번도 공격 빈도를 더 올리자”는 뜻이었다면 앞뒤 요구와 반대이므로 다음 작업 전에 그 한 문장만 다시 확정해야 한다.
+    </div>
+
+    <div class="evidence-list">
+      <div class="evidence"><b>절대 프로필:</b> <a href="../../scripts/bosses/vehicle_boss_profile_catalog.gd">vehicle_boss_profile_catalog.gd</a>:7–18</div>
+      <div class="evidence"><b>거리 밴드:</b> <a href="../../scripts/bosses/vehicle_late_boss_mechanics.gd">vehicle_late_boss_mechanics.gd</a>:14–20, 94–114</div>
+      <div class="evidence"><b>동시 공격층:</b> <a href="../../scripts/bosses/vehicle_boss_patterns.gd">vehicle_boss_patterns.gd</a>:102–155, 217–220; <a href="../../scripts/bosses/vehicle_boss_runtime.gd">vehicle_boss_runtime.gd</a>:407–453</div>
+    </div>
+  </section>
+
+  <section id="projectiles">
+    <p class="eyebrow">06 · Stage 6 distance-growth ordnance</p>
+    <h2>“trail 제거”는 되었지만 “일반 탄환처럼 분리 발사”는 되지 않았다</h2>
+
+    <div class="flow" aria-label="가속 탄환이 선처럼 보이는 원인">
+      <div><b>두 bank</b><span>보스 좌우에 각각 한 줄을 만든다.</span></div>
+      <div><b>bank당 5발</b><span>진행축을 따라 -96, -48, 0, +48, +96 위치에 동시에 놓는다.</span></div>
+      <div><b>큰 외피</b><span>적 탄환 시각 외피가 충돌 반경의 4.2배이며, 성장하면서 더 커진다.</span></div>
+      <div><b>겹침</b><span>인접한 탄환 그림이 서로 닿아 하나의 막대·선처럼 읽힌다.</span></div>
+    </div>
+
+    <div class="card-grid">
+      <article class="card">
+        <h3>현재 실제 구현</h3>
+        <ul>
+          <li>두 줄 × 다섯 발, 총 10발을 같은 프레임에 생성한다.</li>
+          <li>각 줄의 탄환 중심 간격은 48이다.</li>
+          <li>초기 속도 520에서 이동 거리에 따라 최대 1.35배가 된다.</li>
+          <li>360 거리부터 크기·피해도 함께 성장하고, 720 이후 근접 폭발이 활성화된다.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>이미 고쳐진 부분</h3>
+        <ul>
+          <li>2026-08-22 커밋 <code>222d7a41</code>은 각 탄환 뒤의 명시적 beam-like trail을 삭제했다.</li>
+          <li>렌더러는 현재 개별 hostile projectile sprite와 무장 후 원형 cue만 그린다.</li>
+          <li>그러나 발사 위치·동시성·48 간격은 그대로여서 시각 결과는 계속 연결된다.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="callout bad">
+      <strong>검증기의 맹점:</strong> 현재 검증은 렌더러 소스에 <code>trail_length</code> 문자열이 없는지만 확인한다. 탄환 간 최소 화면 간격, 같은 축에서의 sprite 중첩,
+      시간차 발사 여부는 검사하지 않는다. 그래서 <code>VEHICLE_DISTANCE_GROWTH_PROJECTILE_VALIDATION_OK</code>가 떠도 사용자가 본 연결선은 남을 수 있다.
+    </div>
+
+    <p><strong>의도에 맞는 방향:</strong> 진행축 위에 다섯 발을 미리 늘어놓지 말고, 일반 탄환처럼 각 발을 시간차로 발사하거나 충분한 횡방향 간격의 volley로 만든다. 각 발은 독립된 projectile body로 유지하고, 탄환 사이를 잇는 trail·beam·연속 충돌 형태를 두지 않는다.</p>
+
+    <div class="evidence-list">
+      <div class="evidence"><b>발사 배치:</b> <a href="../../scripts/vehicle/vehicle_run.gd">vehicle_run.gd</a>:6986–7000</div>
+      <div class="evidence"><b>개별 렌더:</b> <a href="../../scripts/presentation/vehicle_combat_renderer.gd">vehicle_combat_renderer.gd</a>:1457–1502</div>
+      <div class="evidence"><b>잘못 좁은 검증:</b> <a href="../../tools/validation/validate_vehicle_distance_growth_projectile.gd">validate_vehicle_distance_growth_projectile.gd</a>:87–100</div>
+    </div>
+  </section>
+
+  <section id="early-bosses">
+    <p class="eyebrow">07 · Early boss cadence</p>
+    <h2>초반 보스는 경고를 더 줄이기보다 공격 사이의 빈 시간을 조금 줄이는 편이 맞다</h2>
+
+    <p>
+      1~3번 보스는 별도 autonomous attack sequence가 없다. 직접 공통 공격과 10초 주기의 squad call만 사용하며, 3번만 shield counterburst를 추가한다.
+      반면 4번부터 다수 보스가 직접 공격과 독립 자율 패턴을 함께 가진다. 따라서 초반 보스가 후반보다 한가롭게 느껴지는 구조적 근거가 있다.
+    </p>
+
+    <div class="card-grid">
+      <article class="card">
+        <h3>유지할 것</h3>
+        <ul>
+          <li>탄환 0.18초, 광역 탄막 0.22초, 돌진 0.28초의 짧은 commit warning을 더 줄이지 않는다.</li>
+          <li>방사형 포격과 빔처럼 위치 판단이 필요한 공격의 긴 경고는 유지한다.</li>
+          <li>공격 형태를 동시에 더 많이 겹치게 하지 않는다.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>조정할 곳</h3>
+        <ul>
+          <li>공격 종료 후 recovery 또는 다음 선택 전 read gap을 소폭 줄인다.</li>
+          <li>1~3번 사이에서만 점진적으로 빈도를 올려 초반 학습 리듬을 유지한다.</li>
+          <li>빈도 상승과 피해 상승을 같은 조정에서 동시에 적용하지 않는다.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="callout good">
+      이 방향은 “초반 보스는 살짝 더 자주 공격해도 된다”와 “11번 보스의 과도한 속도·압력은 낮춘다”를 동시에 만족한다. 전체 캠페인의 단순 선형 가속을 유지하는 대신, 초반의 빈 공간을 줄이고 후반의 중첩 압력을 평탄화하는 방식이다.
+    </div>
+  </section>
+
+  <section id="next">
+    <p class="eyebrow">08 · Correction order, not implementation</p>
+    <h2>수정한다면 우선순위는 이 순서가 자연스럽다</h2>
+    <ol>
+      <li><strong>팩의 단일 의미 owner 복구:</strong> pack family, pack trait, leader를 명시하고 모든 멤버가 같은 pack trait를 공유하게 한다.</li>
+      <li><strong>Defender·Coordinator 도달성 검증 추가:</strong> 실제 생성된 일반 팩으로 Bulwark 확대, Reflector 반사 창, Blink, Pack Feed를 끝까지 실행한다.</li>
+      <li><strong>팩 목록 재확정:</strong> pure/primary Defender·Coordinator가 필요한지, Emitter:Defender 비율을 현재 1:1 pair로 유지할지 결정한다.</li>
+      <li><strong>11번 보스 압력 평탄화:</strong> 양방향 range band를 단일 최대 거리 규칙으로 바꾸고 이동·자율 주기를 함께 재검토한다.</li>
+      <li><strong>6번 보스 발사 topology 변경:</strong> 같은 축 48간격 동시 bank를 시간차 일반 projectile volley로 교체한다.</li>
+      <li><strong>초반 보스 downtime 미세 조정:</strong> startup이 아니라 recovery/read gap을 소폭 줄인다.</li>
+    </ol>
+    <p style="margin-top:14px;color:var(--muted)">이 문서는 수정 순서를 설명할 뿐, 위 항목의 코드·사양·검증기는 변경하지 않았다.</p>
+  </section>
+
+  <section id="evidence-boundary">
+    <p class="eyebrow">Evidence boundary</p>
+    <h2>확인 범위와 한계</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>증거 층</th><th>수행 여부</th><th>확인한 것</th><th>확인하지 못한 것</th></tr></thead>
+        <tbody>
+          <tr><td>현재 소스·사양</td><td class="status-good">수행</td><td>장치 생명주기, 팩 구성, trait owner, 보스 수치, 탄환 배치</td><td>실제 플레이 중 가독성·난이도 체감</td></tr>
+          <tr><td>최근 Git 이력</td><td class="status-good">수행</td><td>장치 통합과 Stage 6 trail 제거 변경</td><td>커밋 이전 모든 외부 대화</td></tr>
+          <tr><td>관련 Codex 세션</td><td class="status-good">수행</td><td>2026-08-21 온보딩/비율 지시, 2026-08-22 튜토리얼 제외 장치 4개 지시</td><td>검색 범위 밖의 다른 대화</td></tr>
+          <tr><td>Godot 4.7.1 headless</td><td class="status-good">수행</td><td>장치, 팩 구성, trait 카탈로그, 보스 패턴, 거리 밴드, 성장 탄환의 기존 검증 계약</td><td>검증기에 assertion이 없는 통합 trait 도달성</td></tr>
+          <tr><td>렌더 캡처·상호작용</td><td class="status-warn">미수행</td><td>없음</td><td>장치가 2사이클에서 실제 보이는지, 탄환이 픽셀상 얼마나 겹치는지, 11번 보스 체감</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="evidence-list">
+      <div class="evidence"><b>실행 결과:</b> <code>vehicle enemy upgrade device validation passed</code>, <code>VEHICLE_ENEMY_SPAWN_COMPOSITION_VALIDATION_OK</code>, <code>VEHICLE_ENEMY_FAMILY_TRAITS_VALIDATION_OK</code>, <code>VEHICLE_DISTANCE_GROWTH_PROJECTILE_VALIDATION_OK</code>, <code>VEHICLE_LATE_BOSS_MECHANICS_CORRECTION_VALIDATION_OK</code>, <code>VEHICLE_BOSS_PATTERNS_VALIDATION_OK</code></div>
+      <div class="evidence"><b>주의:</b> 통과는 각 검증 파일이 실제로 주장하는 범위에만 유효하다. 특히 family trait 검증 통과를 Defender·Coordinator의 플레이 가능성 증명으로 확대 해석하지 않았다.</div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>문서 성격:</strong> 현재 구현 상태에 대한 한국어 진단 보고서. gameplay·사양·자산 변경을 승인하거나 수행하지 않는다.</p>
+    <p><strong>작성 기준:</strong> 저장소 <code>e2993775</code>, 2026-08-22 KST.</p>
+  </footer>
+</main>
+</body>
+</html>
