@@ -1,0 +1,98 @@
+name: Repair Defense Phase Validator
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - ".github/workflows/branch-source-snapshot.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repair-defense-phase-validator-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.head_ref == 'codex/boss-shared-pattern-defense-rules' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: codex/boss-shared-pattern-defense-rules
+          fetch-depth: 0
+
+      - name: Align the phase-flow validator with data-owned defense cycles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tools/validation/validate_vehicle_boss_shield_phase_flow.gd')
+          text = path.read_text()
+          start = text.index('\tvar uses_shield := Catalog.uses_shield(stage_id)')
+          end = text.index('\tvar total_spawned := 0', start)
+          replacement = '''\tvar uses_shield := Catalog.uses_shield(stage_id)
+          \tvar profile := Catalog.defense_profile(stage_id)
+          \tvar starts_active := bool(profile.get("starts_active", false))
+          \tvar expected_initial_state: StringName = &"none"
+          \tif uses_shield:
+          \t\texpected_initial_state = &"shield_up" if starts_active else &"shield_down"
+          \t_expect(runtime.state() == expected_initial_state, "%s enters its authored defense state" % stage_id)
+          \tvar snapshot := runtime.snapshot()
+          \t_expect(int(snapshot["phase"]) == 1, "%s starts at boss phase one" % stage_id)
+          \t_expect(snapshot["phase_history"] == [1], "%s records phase one once" % stage_id)
+          \t_expect(
+          \t\tis_equal_approx(float(snapshot["damage_multiplier"]), 1.0),
+          \t\t"%s publishes neutral directionless damage by default" % stage_id
+          \t)
+          \tvar begin_hint := runtime.take_state_entry_hint()
+          \t_expect(
+          \t\tbegin_hint == ("BOSS_SHIELD_UP_HINT" if starts_active else ""),
+          \t\t"%s publishes only a truthful initial defense hint" % stage_id
+          \t)
+          \tif uses_shield:
+          \t\tvar active_seconds := float(profile["active_seconds"])
+          \t\tvar down_seconds := float(profile["down_seconds"])
+          \t\tvar cue_seconds := float(profile.get("activation_cue_seconds", 0.0))
+          \t\tif starts_active:
+          \t\t\truntime.advance(active_seconds)
+          \t\t\t_expect(runtime.state() == &"shield_down", "%s reaches its complete defense-down window" % stage_id)
+          \t\t\t_expect(runtime.take_state_entry_hint() == "BOSS_SHIELD_DOWN_HINT", "%s announces the defense-down focus window" % stage_id)
+          \t\t\truntime.advance(down_seconds)
+          \t\t\t_expect(runtime.state() == &"shield_up", "%s restores defense after the authored down window" % stage_id)
+          \t\telse:
+          \t\t\truntime.advance(maxf(0.0, down_seconds - cue_seconds))
+          \t\t\t_expect(
+          \t\t\t\truntime.state() == (&"shield_cue" if cue_seconds > 0.0 else &"shield_up"),
+          \t\t\t\t"%s remains attackable through its authored activation cue" % stage_id
+          \t\t\t)
+          \t\t\tif cue_seconds > 0.0:
+          \t\t\t\truntime.advance(cue_seconds)
+          \t\t\t_expect(runtime.state() == &"shield_up", "%s activates defense only after the complete down window" % stage_id)
+          \t\t\t_expect(runtime.take_state_entry_hint() == "BOSS_SHIELD_UP_HINT", "%s announces actual defense activation" % stage_id)
+          \t\t\truntime.advance(active_seconds)
+          \t\t\t_expect(runtime.state() == &"shield_down", "%s returns to a complete defense-down window" % stage_id)
+          \telse:
+          \t\truntime.advance(24.0)
+          \t\t_expect(runtime.state() == &"none", "%s never invents a defense cycle" % stage_id)
+          '''
+          path.write_text(text[:start] + replacement + text[end:])
+          PY
+          rm -f .github/workflows/branch-source-snapshot.yml
+          git diff --check
+
+      - name: Commit repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "test(boss): follow authored defense phase cycles"
+          git push origin HEAD:codex/boss-shared-pattern-defense-rules
