@@ -88,9 +88,10 @@ func _initialize() -> void:
 	var renderer_source := FileAccess.get_file_as_string("res://scripts/presentation/vehicle_combat_renderer.gd")
 	_expect(
 		run_source.contains("_detonate_distance_growth_projectile")
-			and run_source.contains("can_proximity_detonate_on_segment")
+			and run_source.contains("AttackContract.relative_sweep_first_t")
+			and run_source.contains("DISTANCE_GROWTH_PROXIMITY_TRIGGER_RADIUS")
 			and run_source.contains("_spawn_boss_long_banks"),
-		"the authored Stage 6 path owns growth, proximity collision, and retirement"
+		"the authored Stage 6 path owns growth, relative proximity collision, and retirement"
 	)
 	_expect(
 		not renderer_source.contains("trail_length")
