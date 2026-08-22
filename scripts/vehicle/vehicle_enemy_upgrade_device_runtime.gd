@@ -216,9 +216,20 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 	var active_index := _active_device_index()
 	if active_index < 0:
 		return output
-	var device := devices[active_index]
+	output.append(_snapshot_record(devices[active_index]))
+	return output
+
+
+func snapshot() -> Dictionary:
+	var records: Array[Dictionary] = []
+	for device in devices:
+		records.append(_snapshot_record(device))
+	return {"devices":records}
+
+
+static func _snapshot_record(device: Dictionary) -> Dictionary:
 	var capture_elapsed := float(device.get("capture_elapsed", 0.0))
-	output.append({
+	return {
 		"id":StringName(device["id"]),
 		"position":Vector2(device["position"]),
 		"radius":COLLISION_RADIUS,
@@ -227,8 +238,8 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 		"health":float(device["health"]),
 		"max_health":float(device["max_health"]),
 		"outcome":&"weakpoint",
-		"state":&"dormant",
-		"published":true,
+		"state":StringName(device.get("state", &"resolved")),
+		"published":bool(device.get("published", false)),
 		"active_remaining":0.0,
 		"active_duration":0.0,
 		"active_ratio":0.0,
@@ -238,14 +249,7 @@ func fill_device_snapshot(output: Array[Dictionary]) -> Array[Dictionary]:
 		"required_enemy_count":REQUIRED_ENEMY_COUNT,
 		"hit_flash_remaining":float(device.get("hit_flash_remaining", 0.0)),
 		"projectiles_blocked":false,
-	})
-	return output
-
-
-func snapshot() -> Dictionary:
-	var records: Array[Dictionary] = []
-	fill_device_snapshot(records)
-	return {"devices":records}
+	}
 
 
 func is_position_clear(position: Vector2, actor_radius: float) -> bool:

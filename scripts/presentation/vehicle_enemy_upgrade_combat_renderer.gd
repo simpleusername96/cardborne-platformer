@@ -1,7 +1,7 @@
 class_name VehicleEnemyUpgradeCombatRenderer
 extends "res://scripts/presentation/vehicle_combat_renderer.gd"
 
-## Reuses the approved weakpoint-facility symbol at 70% of the retired facility size.
+## Temporary device presentation until one review-only authored candidate is approved.
 
 const UpgradeDeviceRuntime = preload(
 	"res://scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd"
@@ -11,8 +11,6 @@ const UpgradeWorldCatalog = preload(
 )
 const UpgradeArt = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
-const UPGRADE_DEVICE_BOB_PERIOD := 2.2
-const UPGRADE_DEVICE_BOB_AMPLITUDE := 4.0
 const UPGRADE_INTERACTION_CONTOUR := 2.0
 
 
@@ -40,10 +38,6 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			"visual_radius", UpgradeDeviceRuntime.VISUAL_RADIUS
 		))
 		var phase_offset := _upgrade_interaction_phase(device.get("id", ""))
-		if not reduced_motion:
-			position.y += sin(
-				run_time * TAU / UPGRADE_DEVICE_BOB_PERIOD + phase_offset
-			) * UPGRADE_DEVICE_BOB_AMPLITUDE
 		if not visible_world.grow(
 			symbol_radius + UPGRADE_INTERACTION_CONTOUR
 		).has_point(position):
@@ -52,6 +46,12 @@ func _sync_mystery_devices(state: Dictionary, visible_world: Rect2) -> void:
 			float(device.get("capture_ratio", 0.0)), 0.0, 1.0
 		)
 		var capture_count := int(device.get("capture_count", 0))
+		if capture_count > 0:
+			_write_danger_ring(
+				position,
+				UpgradeDeviceRuntime.CAPTURE_RADIUS,
+				Color(UpgradeArt.DANGER, lerpf(0.32, 0.72, capture_ratio))
+			)
 		var edge_alpha := maxf(
 			_upgrade_interaction_edge_alpha(run_time, phase_offset, reduced_motion),
 			lerpf(0.36, 0.86, capture_ratio)

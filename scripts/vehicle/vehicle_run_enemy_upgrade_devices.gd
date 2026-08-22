@@ -1,8 +1,8 @@
 class_name VehicleRunEnemyUpgradeDevices
 extends "res://scripts/vehicle/vehicle_run.gd"
 
-## Feature layer for the map-movement experiment. The base run and retired neutral
-## facility implementation remain intact and can be restored by switching the scene script.
+## Default run layer for the enemy upgrade-device map-movement system. The base run and
+## retired neutral-facility implementation remain intact for compatibility and history.
 
 const EnemyUpgradeRuntime = preload(
 	"res://scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd"
@@ -10,7 +10,6 @@ const EnemyUpgradeRuntime = preload(
 const EnemyUpgradeRenderer = preload(
 	"res://scripts/presentation/vehicle_enemy_upgrade_combat_renderer.gd"
 )
-const UpgradeEffectStore = preload("res://scripts/combat/vehicle_effect_store.gd")
 const UpgradeStatusRuntime = preload("res://scripts/combat/vehicle_status_runtime.gd")
 const UpgradeArt = preload("res://scripts/vehicle/vehicle_stage_visual_profile.gd")
 
@@ -69,7 +68,12 @@ func _physics_process(delta: float) -> void:
 
 func _make_enemy(spec: Dictionary) -> EnemyState:
 	var enemy: EnemyState = super._make_enemy(spec)
-	if enemy == null or enemy.archetype == &"boss_actor" or enemy.role == &"boss":
+	if (
+		enemy == null
+		or enemy.archetype == &"boss_actor"
+		or enemy.role == &"boss"
+		or enemy.summoned
+	):
 		return enemy
 	enemy.health += enemy_upgrade_health_bonus
 	enemy.max_health += enemy_upgrade_health_bonus
@@ -151,13 +155,6 @@ func _refresh_enemy_presentation_facing(enemy: EnemyState) -> void:
 	super._refresh_enemy_presentation_facing(enemy)
 
 
-func _discover_guide(entry_id: StringName) -> void:
-	# The replacement objective must not unlock the retired neutral-facility entry.
-	if entry_id == &"object_mystery_device":
-		return
-	super._discover_guide(entry_id)
-
-
 func _prepare_enemy_for_upgrade_objective(enemy: EnemyState) -> void:
 	enemy.movement_reason = &"enemy_upgrade_device"
 	enemy.phase = &"move"
@@ -183,25 +180,14 @@ func _apply_upgrade_damage_multiplier(enemy: EnemyState) -> void:
 
 func _handle_mystery_device_break(event: Dictionary) -> Dictionary:
 	var device_id := StringName(event.get("device_id", &""))
-	var position := Vector2(event.get("position", Vector2.ZERO))
 	_ui.notify(
-		_localized(
-			"적 업그레이드 기물을 파괴했습니다.",
-			"Enemy upgrade device destroyed."
-		),
+		tr("NOTIFY_ENEMY_UPGRADE_DEVICE_DESTROYED"),
 		1.8,
 		UpgradeArt.SYSTEM,
 		1,
 		&"enemy_upgrade_device_destroyed"
 	)
 	_play_sound(&"destroy_priority", 1.02)
-	_add_effect(
-		UpgradeEffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND,
-		position,
-		UpgradeArt.DANGER,
-		0.22,
-		96.0
-	)
 	_mystery_device_result_receipt.clear()
 	_mystery_device_result_receipt["device_id"] = device_id
 	_session_diagnostics.emit_event("enemy_upgrade_device_destroyed", {
@@ -225,23 +211,13 @@ func _handle_mystery_device_event(event: Dictionary) -> void:
 	))
 	enemy_upgrade_activations += 1
 	_ui.notify(
-		_localized(
-			"적 업그레이드 기물이 활성화되었습니다. 이후 등장하는 적이 강화됩니다.",
-			"Enemy upgrade device activated. Future enemies are stronger."
-		),
+		tr("NOTIFY_ENEMY_UPGRADE_DEVICE_ACTIVATED"),
 		2.4,
 		UpgradeArt.DANGER,
 		2,
 		&"enemy_upgrade_device_activated"
 	)
 	_play_sound(&"destroy_priority", 0.82)
-	_add_effect(
-		UpgradeEffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND,
-		Vector2(event.get("position", Vector2.ZERO)),
-		UpgradeArt.DANGER,
-		0.28,
-		132.0
-	)
 	_session_diagnostics.emit_event("enemy_upgrade_device_activated", {
 		"device_id":StringName(event.get("device_id", &"")),
 		"stage_index":current_stage_index,
@@ -250,7 +226,3 @@ func _handle_mystery_device_event(event: Dictionary) -> void:
 		"damage_multiplier_total":enemy_upgrade_damage_multiplier,
 		"speed_bonus_total":enemy_upgrade_speed_bonus,
 	})
-
-
-static func _localized(korean: String, english: String) -> String:
-	return korean if TranslationServer.get_locale().begins_with("ko") else english

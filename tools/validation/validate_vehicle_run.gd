@@ -1681,7 +1681,7 @@ func _check_hot_path_guards(run) -> void:
 			Vector2(hidden_devices[0]["position"]),
 			24.0
 		)),
-		"one published mystery device participates in collision while five stay dormant"
+		"one enemy upgrade device participates in collision while five sockets stay pending"
 	)
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")

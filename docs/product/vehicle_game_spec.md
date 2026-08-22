@@ -20,8 +20,8 @@ related:
 Cardborne is a top-down vehicle action shooter about steering through one large
 run-selected field while manually aiming a held primary weapon, dashing through pressure,
 and building a compact set of automatic and active weapons. A new run selects one of
-three registered macro fields, one authored tactical arrangement, three neutral
-facilities, and direct experience placements, then keeps that complete physical field
+three registered macro fields, one authored tactical arrangement, six enemy
+upgrade-device sockets, and direct experience placements, then keeps that complete physical field
 through twelve deterministic boss cycles. A boss-cycle boundary advances only the future
 ordinary-enemy composition and the next boss profile.
 
@@ -30,7 +30,7 @@ This is the canonical product contract for the current executable twelve-boss-cy
 ## Scope
 
 This specification covers controls, the run-selected field, boss-cycle flow, enemies,
-bosses, facilities, items, upgrades, HUD and modal flows, the guidebook, localization,
+bosses, enemy upgrade devices, items, upgrades, HUD and modal flows, the guidebook, localization,
 settings, persistence, and release validation. It does not promise unconstrained
 procedural topology, a base stage, exploration puzzles, separate bossless stages, a boss
 room, or an absolute completion-time target.
@@ -185,9 +185,10 @@ second global elite-stat layer.
   route and are never treated as reward cover. `wall_piercing` is an explicit projectile capability whose
   default is false. No current ordinary enemy, boss pattern, primary shot, or
   secondary shot receives that capability implicitly.
-- An intact Anomaly Device blocks actors and player projectiles. Hostile
-  projectiles pass through it and enemy AI never targets it, so a neutral
-  interaction cannot become an unintended shield against enemy fire.
+- An active enemy upgrade device blocks actors while every projectile passes through it.
+  Player direct, projectile, and area damage can damage the device; hostile damage is
+  ignored. Only its three assigned ordinary enemies target it, so it cannot become an
+  unintended shield against enemy fire.
 - The built-in primary weapon has an authored 1600-pixel range. At runtime its
   effective range is never shorter than the current visible world rectangle's
   diagonal plus 80 pixels, so an unobstructed target visible from any
@@ -222,7 +223,7 @@ second global elite-stat layer.
   cycles so a run reads as one continuous field rather than twelve reset maps.
 - Thirty-two ordinary arrival candidates, twelve boss arrival anchors, and at
   least thirty-two content candidates are reusable authored sources. A new run
-  selects three dormant neutral facilities, two experience-recall pickups, and ten XP shards with explicit
+  keeps six enemy upgrade-device sockets, two experience-recall pickups, and ten XP shards with explicit
   separation; boss cleanup never replaces or relocates them. No cycle owns a separate map, boss room,
   closed progression gate, switch maze, or reflector puzzle.
 - Pickup contact uses the swept player path with the 24-pixel player radius and
@@ -234,48 +235,51 @@ second global elite-stat layer.
   debug/performance snapshots expose the selected field, seed, and fingerprint.
 - The explored minimap uses a 20x12 grid. Unvisited geometry remains concealed.
   Dynamic markers expose exactly six tactical roles: player craft, field
-  pickup, intact Anomaly Device, mobile enemy, priority enemy, boss, and
-  no separate objective marker. The pickup marker is `12 x 7.6`. The Anomaly Device silhouette scales every outer
-  point by `1.20`. Family-trait distinctions, stage-specific boss identity, and the
-  Mystery outcome are not separate minimap markers.
+  pickup, active enemy upgrade device, mobile enemy, priority enemy, boss, and
+  no separate objective marker. The pickup marker is `12 x 7.6`. The enemy upgrade-device silhouette scales every outer
+  point by `1.20`. Family-trait distinctions and stage-specific boss identity are not
+  separate minimap markers.
 
-### Inner walls, Transit Gates, and neutral facilities
+### Inner walls, Transit Gates, and enemy upgrade devices
 
 - Run-selected inner walls and paired Transit Gates preserve their geometry, collision,
   line-of-sight, dwell, cooldown, and deterministic layout owners.
-- The persistent field places six distinct neutral facilities from a run-seeded rotation.
-  Across twelve cycles Repair, Cryo, Weakpoint, and Lava each appear at least once.
-- Facilities have 360 health, begin dormant, accept player and hostile damage, and all
-  projectiles pass through them. Destruction activates the assigned effect for exactly 12 seconds;
-  the facility then expires at the end of that timer or at cycle cleanup.
-- Dormant facilities apply no modifier. While active, every facility applies one symmetric
-  center-in-radius rule to the player and eligible enemies. Leaving the radius or expiry
-  ends its effect immediately.
-- Repair uses radius 1260 and restores one sixth of maximum hull per second. Cryo uses
-  radius 1080 and multiplies movement and attack cadence by 0.82. Weakpoint uses radius
-  1260 and multiplies received damage by 1.15. Lava uses radius 1080 and deals 8 neutral
-  damage to the player and every targetable enemy inside every 0.50 seconds without
-  granting quota, XP, defeat credit, or player-damage credit. The actual effect-radius perimeter carries the
-  12-second countdown: its colored arc starts at 12 o'clock and drains clockwise over a
-  thin muted spent perimeter; the facility body has no countdown ring.
-- Facilities are neutral tactical priorities, not allies, enemies, pickups, cover, or
-  boss shield objectives.
+- The field keeps six run-level device sockets. Exactly one unresolved enemy upgrade
+  device is active at a time, at the socket farthest from the player's current position.
+  A resolved device is never republished; the next unresolved device becomes eligible
+  nine seconds later. A run can resolve at most six devices.
+- An active device has base health `360`, multiplied by `1 + 0.12 * (cycle - 1)`. It
+  accepts player damage, ignores hostile damage, and does not grant quota, XP, defeat
+  credit, or player-damage credit when destroyed.
+- The three nearest eligible living ordinary mobile enemies are assigned to the device.
+  They temporarily prioritize reaching it over ordinary combat and collective tactics.
+  When all three remain within radius `180` for five uninterrupted seconds, the device
+  activates. Losing any required participant resets the channel.
+- Each activation permanently upgrades future ordinary enemy admissions by `+30` maximum
+  health, `+12%` pack-owned attack damage, and `+3` movement speed. Existing enemies,
+  bosses, boss summons, and boss attacks are unchanged. Destroying the device prevents
+  that activation.
+- Neutral-facility runtime code and its Repair, Cryo, Weakpoint, and Lava assets remain
+  in the repository as retired compatibility material. The default run does not publish
+  those facilities or apply their effects.
 
 ### Encounter and boss-cycle flow
 
 1. Each cycle executes `ORDINARY_COMBAT -> BOSS_WARNING -> BOSS_COMBAT ->
    BOSS_DEATH_CLEANUP -> CYCLE_TRANSITION`.
 2. Ordinary quotas are `90/99/108/117/126/135/144/153/162/171/180/189`; authored mobile populations are
-   `260/300/340/390/440/500/560/630/700/770/840/910`. Exact materialized ordinary caps are
-   `32/44/56/64/72/72/72/72/72/72/72/72`, and engaged-visible refill floors are
-   `12/16/20/24/28/32/36/40/44/48/52/56`. Reserve scheduling preserves authored populations instead
+   `260/300/340/390/440/500/560/630/700/770/840/910`. Every cycle has an exact
+   materialized ordinary cap of `72` and an engaged-visible refill floor of `56`.
+   Reserve scheduling preserves authored populations instead
    of deleting excess work.
 3. First visible hostile is due within 4.0 seconds, first meaningful attack preparation
    within 8.0 seconds, and no empty or off-screen-only combat gap may exceed 3.0 seconds.
    The scheduler may expedite eligible reserves and redirect nearby mobile hostiles along
    existing paths. It may not teleport them or lower counts, cadence, or collision work.
+   Cycle 1 teaching groups preserve their authored family order but admit sequentially
+   under the same capacity contract instead of waiting for complete group defeats.
 4. Every ordinary family attacks the player. Ordinary defeats advance quota; summons,
-   facilities, and boss-cleanup retirement do not. Living ordinary enemies never block
+   enemy upgrade devices, and boss-cleanup retirement do not. Living ordinary enemies never block
    the quota-triggered boss. Every authored ordinary squad is one persistent semantic pack
    of four to eight actors with one primary family, one tier, and at most one family trait.
    A Emitter pack contains at least one Defender; packs with more than four Emitters contain
@@ -339,9 +343,9 @@ second global elite-stat layer.
 10. Lethal boss damage starts 2.00 seconds of safe cleanup. Boss-owned danger stops
     immediately. The boss body receives a restrained hit tint, dim/desaturation, and
     fade only; no explosion, effect raster, growth, impulse, or hit-stop occurs. Owned
-    summons/facilities stagger-shrink/fade without reward or quota. Transition waits for
+    summons stagger-shrink/fade without reward or quota. Transition waits for
     cleanup completion.
-11. Cycle completion preserves the tactical layout, facilities and their current states,
+11. Cycle completion preserves the tactical layout, device resolution and active channel state,
     pickups, living ordinary enemies, player position, velocity, aim, projectiles, XP,
     build, cooldowns, fixed Hard state, exploration, and terrain. It changes only the
     profile used for future ordinary admissions, the next quota, and the next boss.
@@ -409,16 +413,16 @@ second global elite-stat layer.
   `16/22/26/30/33/36/39/42/46/49/52/55` after cycles 1-12.
 - A new run places four experience-recall pickups. After 90 active seconds, if fewer than
   two remain active, one consumed recall returns every 30 seconds, never above four.
-- The actual viewport publishes at most one placed direct item and one dormant neutral
-  facility. XP dropped by defeated enemies is exempt. `visible_world.grow(240)` is the
+- The actual viewport publishes at most one placed direct item and one active enemy
+  upgrade device. XP dropped by defeated enemies is exempt. `visible_world.grow(240)` is the
   activation safety region: an already visible object stays published and any conflicting
   second object has rendering and collision disabled until the nearest validated off-screen
   anchor becomes eligible. An uncollected direct item may retire only after 60 published
   seconds and only while outside that expanded viewport; it moves to another validated
-  off-screen anchor and resets its timer. Facilities never relocate, and reserve/uncollected
-  counts remain separate from viewport publication.
-- Repair pickups are removed. Their former sockets produce XP shards and Repair facilities
-  own high-rate recovery.
+  off-screen anchor and resets its timer. An active device never relocates, and
+  reserve/uncollected counts remain separate from viewport publication.
+- Repair pickups are removed and their former sockets produce XP shards. Retired Repair
+  facilities are not published; recovery remains owned by the active card and combat systems.
 - The upgrade data resources and generated Korean report are canonical for 27 cards and
   172 nominal level states.
   Thermal Burst, Bio Toxin, and Cryo have no damage/utility slot distinction. A run may
@@ -446,7 +450,7 @@ second global elite-stat layer.
   acquisition and preserve their balance/resource owners.
 - Piercing Rounds levels 1-7 preserve additional penetrations `1/1/2/2/3/3/4` and also
   multiply base primary-projectile damage by `105/111/118/126/135/145/156%`.
-- Active weapons deal zero damage to enemies, bosses, facilities, and structures.
+- Active weapons deal zero damage to enemies, bosses, enemy upgrade devices, and structures.
   EMP stuns and clears hostile projectiles; Black Hole pulls ordinary mobile enemies
   and slows all targetable enemies; Shockwave pushes ordinary mobile enemies and
   staggers all targetable enemies; Cross Beam slows enemies in its two map-spanning
@@ -466,7 +470,7 @@ second global elite-stat layer.
   difficulty selector remains.
 - Guidebook categories remain Ship, Enemies, Bosses, and Field Objects. It lists all twelve
   bosses, fifteen family-tier ordinary actors, and ten family traits from gameplay data;
-  facilities are Field Objects.
+  the enemy upgrade device is a Field Object.
 - Victory, defeat, and Settings Ship Status reuse one report view model and report body:
   one left-aligned vertical stack, exactly one outer scroll, no report tabs, metric
   sub-scroll, narrow build rail, or multi-column metric body.
@@ -501,8 +505,8 @@ second global elite-stat layer.
   spatial-query path, presentation batch, retirement rule, and deterministic
   performance-scenario coverage before increasing runtime load.
 - Static minimap geometry and each bounded dynamic tactical snapshot use one
-  vertex-colored mesh surface. At most three Anomaly Devices reuse retained
-  world batches and create no per-actor canvas draws or per-field scene nodes.
+  vertex-colored mesh surface. At most one active enemy upgrade device reuses one
+  retained world batch and creates no per-actor canvas draws or per-field scene nodes.
 - Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained
   batches. The hard ceiling remains 80 combat batches.
@@ -537,9 +541,9 @@ second global elite-stat layer.
 - Shock has no reachable data, runtime, status, offer, copy, telemetry, or image. Thermal,
   Toxin, and Cryo may occupy either of two acquisition-order attribute slots; Cryo's third
   Chill application clears Chill and routes its level-owned shatter damage once.
-- New primary-fire upgrades, missing-category offer reservations, five symmetric
-  facilities, repair-pickup removal, and ten added visible XP shards per cycle pass
-  deterministic fixtures.
+- New primary-fire upgrades, missing-category offer reservations, the six-socket enemy
+  upgrade-device sequence, uniform `72`/`56` cycle density, repair-pickup removal, and
+  ten added visible XP shards per cycle pass deterministic fixtures.
 - Diagnostics keep the newest ten valid bundles under age/byte/quarantine rules.
 - Report surfaces share one left-aligned stack, one scroll, exact section order, complete
   focus path, and zero clipping/overflow in the locked matrix.

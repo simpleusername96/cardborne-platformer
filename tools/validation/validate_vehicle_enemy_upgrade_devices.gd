@@ -51,6 +51,10 @@ func _validate_capture_and_activation() -> void:
 	_expect(snapshot.size() == 1, "Exactly one upgrade device must be published.")
 	if snapshot.is_empty():
 		return
+	_expect(
+		StringName(snapshot[0]["id"]) == &"test_device_5",
+		"The first device must use the unresolved socket farthest from the player."
+	)
 	var center := Vector2(snapshot[0]["position"])
 	var enemies: Array[EnemyState] = [
 		_enemy("capture_a", center + Vector2(20.0, 0.0)),
@@ -59,6 +63,15 @@ func _validate_capture_and_activation() -> void:
 	]
 	var events: Array[Dictionary] = []
 	runtime.set_context(enemies, 0)
+	runtime.advance(2.0, events)
+	enemies[2].pos = center + Vector2(DeviceRuntime.CAPTURE_RADIUS + 1.0, 0.0)
+	runtime.advance(0.01, events)
+	runtime.fill_device_snapshot(snapshot)
+	_expect(
+		is_zero_approx(float(snapshot[0]["capture_elapsed"])),
+		"Losing one of the three required enemies must reset the channel."
+	)
+	enemies[2].pos = center + Vector2(0.0, 20.0)
 	runtime.advance(DeviceRuntime.CAPTURE_SECONDS + 0.01, events)
 	_expect(events.size() == 1, "Three nearby enemies must activate after five seconds.")
 	if not events.is_empty():
@@ -97,6 +110,22 @@ func _validate_player_owned_destruction() -> void:
 	var player := runtime.receive_damage(device_id, 9999.0, &"player", &"projectile")
 	_expect(bool(player["accepted"]), "Player projectile damage must be accepted.")
 	_expect(bool(player["broken"]), "Player damage must destroy the device at zero health.")
+	runtime.refresh_publication(Rect2(), Vector2.ZERO)
+	snapshot.clear()
+	runtime.fill_device_snapshot(snapshot)
+	_expect(snapshot.is_empty(), "The next device must not publish during the delay.")
+	var events: Array[Dictionary] = []
+	runtime.advance(DeviceRuntime.RESPAWN_DELAY_SECONDS - 0.01, events)
+	runtime.refresh_publication(Rect2(), Vector2.ZERO)
+	runtime.fill_device_snapshot(snapshot)
+	_expect(snapshot.is_empty(), "The full nine-second publication delay must be preserved.")
+	runtime.advance(0.02, events)
+	runtime.refresh_publication(Rect2(), Vector2.ZERO)
+	runtime.fill_device_snapshot(snapshot)
+	_expect(
+		snapshot.size() == 1 and StringName(snapshot[0]["id"]) != device_id,
+		"A different unresolved device must publish after the delay."
+	)
 
 
 func _validate_stage_health_scaling() -> void:
