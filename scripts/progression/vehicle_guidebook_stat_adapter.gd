@@ -197,12 +197,12 @@ static func boss_rows(stage_index: int) -> Array[Dictionary]:
 	if BossPhaseCatalog.uses_shield(stage_id):
 		var defense := BossPhaseCatalog.defense_profile(stage_id)
 		if BossPhaseCatalog.defense_effect(stage_id) == &"guard":
+			var reduction_percent := roundi(
+				(1.0 - float(defense.get("blocked_damage_multiplier", 1.0))) * 100.0
+			)
 			rows.insert(2, _row(
 				"GUIDE_STAT_BOSS_SHIELD", "GUIDE_VALUE_DAMAGE_REDUCTION",
-				[roundi(
-					(1.0 - float(defense.get("blocked_damage_multiplier", 1.0)))
-						* 100.0
-				)], &"protection"
+				[reduction_percent], &"protection"
 			))
 		rows.insert(3, _row(
 			"GUIDE_STAT_EXPOSED", "GUIDE_VALUE_SECONDS",
