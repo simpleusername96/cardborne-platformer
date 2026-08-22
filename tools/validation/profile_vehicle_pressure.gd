@@ -101,10 +101,10 @@ func _profile_difficulty(difficulty: StringName) -> bool:
 		active_capped == cap
 		and shard_count == 192
 		and int(scheduler["queued_windows"]) > 0
-		and int(device_receipt["device_peak"]) == 4
-		and seeded_participants == 12
-		and int(device_receipt["claim_peak"]) == 12
-		and int(device_receipt["route_target_peak"]) == 4
+		and int(device_receipt["device_peak"]) == 1
+		and seeded_participants == 3
+		and int(device_receipt["claim_peak"]) == 3
+		and int(device_receipt["route_target_peak"]) == 1
 		and int(device_receipt["route_cells_peak"]) <= 512
 	)
 	print("WARNING vehicle_pressure_microbenchmark excludes rendering and complete frame orchestration")

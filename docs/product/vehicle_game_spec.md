@@ -251,20 +251,23 @@ second global elite-stat layer.
 
 - Run-selected inner walls and paired Transit Gates preserve their geometry, collision,
   line-of-sight, dwell, cooldown, and deterministic layout owners.
-- The field keeps six run-level device sockets. Cycle 1 publishes no enemy upgrade
-  device. At the start of cycles 2-12, the prior cycle's device state retires and exactly
-  four sockets publish simultaneously. Selection first chooses the socket farthest from
-  the player's cycle-start position, then repeatedly maximizes minimum squared distance
-  from the player and already selected sockets, with stable socket-ID tie breaking.
-  A resolved device never republishes during the same cycle.
-- An active device has base health `360`, multiplied by `1 + 0.12 * (cycle - 1)`. It
+- The field keeps six reusable run-level device sockets and publishes exactly one enemy
+  upgrade device when ordinary combat first begins. Destruction or enemy activation removes
+  that device. After `9.0` active ordinary-combat seconds, one device publishes again; boss
+  warning, boss combat, cleanup, and cycle transition pause this clock and publish no device.
+  Each publication uses the player's current position: it prefers a socket outside
+  `visible_world.grow(220)` and `960-1920` units away, closest to `1440`, then falls back
+  deterministically with stable socket-ID tie breaking. The immediately previous socket is
+  avoided when an equally valid alternative exists. The six sockets are reused indefinitely;
+  cycle number does not select the socket set, count, health, or cooldown.
+- An active device has constant health `360`. It
   accepts player damage, ignores hostile damage, and does not grant quota, XP, defeat
   credit, or player-damage credit when destroyed.
 - Each device has an invisible `720`-unit influence radius and three stable participant
   slots. A living active mobile ordinary enemy that enters influence may claim one device;
   leash bounds do not exclude it. Bosses, summons, fixed actors, and mines cannot claim.
   Claimed enemies prioritize their device over ordinary combat and player pursuit, use
-  one of four bounded device-ID route fields around run-selected walls, and stop within
+  one bounded device-ID route field around run-selected walls, and stop within
   `115.2` units. The route owner shares one walkability mask and expands at most `512`
   combined cells per physics tick. A valid claim persists through temporary range departure.
   When all three participants remain within radius `180` for five uninterrupted seconds,
@@ -275,7 +278,7 @@ second global elite-stat layer.
   activations. Later activations still upgrade their current participants and publish an
   outcome but cannot raise that future-admission tier. Bosses, summons, and boss attacks remain
   unchanged. Destruction prevents that device's activation. Same-tick activation/destruction
-  feedback coalesces into one bilingual current-cycle count announcement; no HUD counter is used.
+  feedback coalesces into one bilingual current-run count announcement; no HUD counter is used.
 - Neutral-facility runtime code and its Repair, Cryo, Weakpoint, and Lava assets remain
   in the repository as retired compatibility material. The default run does not publish
   those facilities or apply their effects.
@@ -378,8 +381,9 @@ second global elite-stat layer.
 11. Cycle completion preserves the tactical layout, pickups, living ordinary enemies,
     player position, velocity, aim, projectiles, XP,
     build, cooldowns, fixed Hard state, exploration, and terrain. It changes only the
-    profile used for future ordinary admissions, the next quota, the next boss, and the
-    cycle-scoped device set: prior unresolved/channel state retires before the next four publish.
+    profile used for future ordinary admissions, the next quota, and the next boss. The
+    run-level device lifecycle remains paused through the transition and resumes its current
+    cooldown when ordinary combat returns; transition does not select or publish a device set.
     Cycle 12 opens Result; failure opens Failure Report.
 
 | Boss cycle | Quota | Authored mobile population | Boss |
@@ -444,13 +448,14 @@ second global elite-stat layer.
   `16/22/26/30/33/36/39/42/46/49/52/55` after cycles 1-12.
 - A new run places four experience-recall pickups. After 45 active seconds, if fewer than
   four remain active, one consumed recall returns every 15 seconds, never above four.
-- The actual viewport publishes at most one placed direct item and all four active enemy
-  upgrade devices. XP dropped by defeated enemies is exempt. `visible_world.grow(240)` is the
+- The actual viewport publishes at most one placed direct item and one active enemy
+  upgrade device. XP dropped by defeated enemies is exempt. `visible_world.grow(240)` is the
   activation safety region: an already visible object stays published and any conflicting
   second object has rendering and collision disabled until the nearest validated off-screen
   anchor becomes eligible. An uncollected direct item may retire only after 60 published
   seconds and only while outside that expanded viewport; it moves to another validated
-  off-screen anchor and resets its timer. An active device never relocates, and
+  off-screen anchor and resets its timer. Device respawn uses its separate `220`-unit
+  visibility margin and player-distance policy above. An active device never relocates, and
   reserve/uncollected counts remain separate from viewport publication.
 - Repair pickups are removed and their former sockets produce XP shards. Retired Repair
   facilities are not published; recovery remains owned by the active card and combat systems.
@@ -536,9 +541,9 @@ second global elite-stat layer.
   spatial-query path, presentation batch, retirement rule, and deterministic
   performance-scenario coverage before increasing runtime load.
 - Static minimap geometry and each bounded dynamic tactical snapshot use one
-  vertex-colored mesh surface. Up to four active enemy upgrade devices reuse one
-  retained world batch and create no per-actor canvas draws or per-field scene nodes.
-  Their route owner retains four fixed-capacity cost arrays, one shared walkability
+  vertex-colored mesh surface. The active enemy upgrade device reuses one retained
+  world batch and creates no per-actor canvas draw or per-field scene node.
+  Its route owner retains one fixed-capacity cost array, one shared walkability
   mask, and one combined `512`-cell expansion budget per physics tick.
 - Combat presentation coalesces mobile enemies, bosses,
   hostile affinity trails, and experience into descriptor-backed retained

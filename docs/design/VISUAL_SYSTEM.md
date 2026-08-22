@@ -299,8 +299,10 @@ collision.
   radius `180`을 한 개의 얇은 code-native danger boundary로 표시하고, reduced motion은
   같은 정적 boundary를 유지한다. 파괴 또는 활성화 시 seeker/explosion raster를
   재사용하지 않고 restrained hit tint, dim과 fade로 장치를 retire한다.
-  Cycle 1에는 표시하지 않고 cycle 2-12에는 같은 retained world batch로 네 장치를
-  동시에 표시한다. 적 배정용 radius `720`은 항상 invisible이며 새로운 range ring,
+  ordinary combat 시작부터 같은 retained world batch로 장치 한 개만 표시한다. 파괴나
+  적 활성화 뒤에는 `9.0`초의 ordinary-combat cooldown 후 현재 player 위치에서 떨어진
+  socket에 다시 표시하며 boss warning부터 cycle transition까지는 표시와 cooldown을
+  중지한다. 적 배정용 radius `720`은 항상 invisible이며 새로운 range ring,
   route line, objective panel 또는 HUD counter를 만들지 않는다.
 - Repair, Cryo, Weakpoint와 Lava neutral-facility PNG 및 runtime code는 삭제하지 않고
   retired compatibility material로 유지한다. default run, minimap, guidebook와 effect
@@ -390,8 +392,8 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
 - neutral 또는 traversable damage-zone surface는 사용하지 않는다. 바닥 detail은
   presentation-only이며 damage, collision, danger telegraph 또는 objective 의미를
   가질 수 없다.
-- 적 업그레이드 장치는 cycle 1에는 publish하지 않고 cycle 2-12에는 여섯 socket 중
-  farthest-first/maximum-separation으로 선택한 네 위치에 동시에 publish한다. authored body의 optical size는 기존 `288` world-unit facility symbol의
+- 적 업그레이드 장치는 ordinary combat에서 여섯 reusable socket 중 현재 player의
+  expanded viewport 밖이면서 적당히 먼 한 위치에만 publish한다. authored body의 optical size는 기존 `288` world-unit facility symbol의
   `70%`를 기준으로 하며 gameplay collision, health와 channel radius는 code truth다.
   장치 본체는 넓은 비대칭 또는 삼방향 silhouette, dark perimeter, danger-coral main
   plane, restrained cool-neutral secondary plane과 한 개의 warm-off-white core를 사용한다.
@@ -918,7 +920,7 @@ Web export만으로 interactive built-Web smoke나 release performance를
 - The enemy upgrade device is the default field-device system. Its production authored
   PNG is the user-approved `candidate-a-triad-forge.png`, published as
   `world/enemy_upgrade_device` with exact approved source bytes.
-  Up to four devices use one retained world batch, no bob, an optional channel-only radius boundary,
+  The single active device uses one retained world batch, no bob, an optional channel-only radius boundary,
   a bright body-wide damage tint, and a dim/fade retirement. Collision, health, assignment, channel,
   future-enemy bonuses, and resolution remain code-owned.
 - The four retired neutral-facility role rasters and their runtime code remain preserved

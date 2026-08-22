@@ -1,15 +1,14 @@
 class_name VehicleEnemyUpgradeDeviceRuntime
 extends "res://scripts/vehicle/vehicle_mystery_device_runtime.gd"
 
-## Owns four cycle-scoped hostile objectives, stable participant claims, capture,
-## ordered collision, and event receipts. Movement and upgrades stay with callers.
+## Owns one continuously recurring run-level hostile objective, stable participant
+## claims, capture, collision, and event receipts. Movement and upgrades stay with callers.
 
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
-const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 
 const MAX_DEVICES := 6
-const ACTIVE_DEVICES_PER_CYCLE := 4
+const ACTIVE_DEVICE_LIMIT := 1
 const MAX_RUN_UPGRADE_TIER := 6
 const BASE_HEALTH := 360.0
 const COLLISION_RADIUS := 58.8
@@ -18,7 +17,11 @@ const CAPTURE_RADIUS := 180.0
 const INFLUENCE_RADIUS := 720.0
 const REQUIRED_ENEMY_COUNT := 3
 const CAPTURE_SECONDS := 5.0
-const HEALTH_SCALE_PER_STAGE := 0.12
+const RESPAWN_DELAY_SECONDS := 9.0
+const SPAWN_VISIBLE_MARGIN := 220.0
+const SPAWN_MIN_PLAYER_DISTANCE := 960.0
+const SPAWN_PREFERRED_DISTANCE := 1440.0
+const SPAWN_MAX_PREFERRED_DISTANCE := 1920.0
 const HEALTH_BONUS_PER_ACTIVATION := 30.0
 const DAMAGE_MULTIPLIER_PER_ACTIVATION := 0.12
 const SPEED_BONUS_PER_ACTIVATION := 3.0
@@ -26,9 +29,12 @@ const ASSIGNMENT_REFRESH_SECONDS := 0.25
 const UPGRADE_HIT_FLASH_SECONDS := 0.14
 
 var _layout_seed := -1
-var _stage_id: StringName = &""
-var _stage_index := 0
+var _context_stage_id: StringName = &""
+var _context_stage_index := 0
+var _publication_enabled := true
 var _publication_pending := false
+var _respawn_delay := 0.0
+var _last_published_index := -1
 var _enemies: Array[EnemyState] = []
 var _spatial_grid: Variant
 var _assignment_refresh_remaining := 0.0
@@ -41,9 +47,12 @@ var _unique_candidate_ids: Dictionary = {}
 func reset() -> void:
 	devices.clear()
 	_layout_seed = -1
-	_stage_id = &""
-	_stage_index = 0
+	_context_stage_id = &""
+	_context_stage_index = 0
+	_publication_enabled = true
 	_publication_pending = false
+	_respawn_delay = 0.0
+	_last_published_index = -1
 	_enemies = []
 	_spatial_grid = null
 	_assignment_refresh_remaining = 0.0
@@ -59,7 +68,7 @@ func set_context(
 	spatial_grid: Variant = null
 ) -> void:
 	_enemies = enemies
-	_stage_index = maxi(0, stage_index)
+	_context_stage_index = maxi(0, stage_index)
 	_spatial_grid = spatial_grid
 
 
@@ -69,52 +78,74 @@ func configure(
 	next_stage_id: StringName
 ) -> void:
 	var rebuild_sockets := devices.is_empty() or _layout_seed != layout_seed
-	if not rebuild_sockets and _stage_id == next_stage_id:
+	_context_stage_id = next_stage_id
+	if not rebuild_sockets:
 		return
-	if rebuild_sockets:
-		devices.clear()
-		_layout_seed = layout_seed
-		for index in mini(MAX_DEVICES, device_blueprint.size()):
-			var blueprint := Dictionary(device_blueprint[index])
-			devices.append({
-				"id":StringName(blueprint.get("id", "enemy_upgrade_device_%d" % index)),
-				"position":Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))),
-				"health":BASE_HEALTH,
-				"max_health":BASE_HEALTH,
-				"state":&"pending",
-				"published":false,
-				"hit_flash_remaining":0.0,
-				"capture_elapsed":0.0,
-				"capture_count":0,
-				"assigned_enemy_ids":{},
-			})
-	_stage_id = next_stage_id
-	_stage_index = maxi(0, BossProfiles.stage_index_from_id(next_stage_id))
-	_retire_cycle_devices()
-	_publication_pending = _stage_index > 0
+	reset()
+	_layout_seed = layout_seed
+	_context_stage_id = next_stage_id
+	for index in mini(MAX_DEVICES, device_blueprint.size()):
+		var blueprint := Dictionary(device_blueprint[index])
+		devices.append({
+			"id":StringName(blueprint.get("id", "enemy_upgrade_device_%d" % index)),
+			"position":Vector2(blueprint.get("pos", blueprint.get("position", Vector2.ZERO))),
+			"health":BASE_HEALTH,
+			"max_health":BASE_HEALTH,
+			"state":&"pending",
+			"published":false,
+			"hit_flash_remaining":0.0,
+			"capture_elapsed":0.0,
+			"capture_count":0,
+			"assigned_enemy_ids":{},
+		})
+	_publication_pending = not devices.is_empty()
+
+
+func set_publication_enabled(enabled: bool) -> void:
+	if _publication_enabled == enabled:
+		return
+	_publication_enabled = enabled
+	if enabled:
+		_publication_pending = not devices.is_empty() and _respawn_delay <= 0.0
+		return
+	var retired_active := false
+	for device in devices:
+		if not _device_is_active(device):
+			continue
+		_retire_device_for_suspension(device)
+		retired_active = true
+	if retired_active:
+		_respawn_delay = RESPAWN_DELAY_SECONDS
+	_publication_pending = false
+	_enemy_device_claims.clear()
+	_assignment_refresh_remaining = 0.0
 
 
 func refresh_publication(
-	_visible_world: Rect2,
+	visible_world: Rect2,
 	player_position: Vector2
 ) -> void:
-	if not _publication_pending:
+	if (
+		not _publication_enabled
+		or not _publication_pending
+		or has_active_device()
+	):
 		return
-	var selected_indices := _select_cycle_socket_indices(player_position)
-	var maximum_health := BASE_HEALTH * (
-		1.0 + float(_stage_index) * HEALTH_SCALE_PER_STAGE
-	)
-	for device_index in selected_indices:
-		var device := devices[device_index]
-		device["health"] = maximum_health
-		device["max_health"] = maximum_health
-		device["state"] = &"dormant"
-		device["published"] = true
-		device["hit_flash_remaining"] = 0.0
-		device["capture_elapsed"] = 0.0
-		device["capture_count"] = 0
-		Dictionary(device["assigned_enemy_ids"]).clear()
+	var device_index := _select_respawn_socket_index(visible_world, player_position)
+	if device_index < 0:
+		return
+	var device := devices[device_index]
+	device["health"] = BASE_HEALTH
+	device["max_health"] = BASE_HEALTH
+	device["state"] = &"dormant"
+	device["published"] = true
+	device["hit_flash_remaining"] = 0.0
+	device["capture_elapsed"] = 0.0
+	device["capture_count"] = 0
+	Dictionary(device["assigned_enemy_ids"]).clear()
+	_last_published_index = device_index
 	_publication_pending = false
+	_respawn_delay = 0.0
 	_assignment_refresh_remaining = 0.0
 
 
@@ -126,8 +157,14 @@ func advance(delta: float, events: Array[Dictionary]) -> void:
 			0.0,
 			float(device.get("hit_flash_remaining", 0.0)) - step
 		)
+	if not _publication_enabled:
+		_enemy_device_claims.clear()
+		return
 	if not has_active_device():
 		_enemy_device_claims.clear()
+		_respawn_delay = maxf(0.0, _respawn_delay - step)
+		if _respawn_delay <= 0.0 and not devices.is_empty():
+			_publication_pending = true
 		return
 	_assignment_refresh_remaining -= step
 	if _assignment_refresh_remaining <= 0.0:
@@ -283,9 +320,11 @@ func snapshot() -> Dictionary:
 	for device in devices:
 		records.append(_snapshot_record(device))
 	return {
-		"stage_id":_stage_id,
-		"stage_index":_stage_index,
+		"stage_id":_context_stage_id,
+		"stage_index":_context_stage_index,
+		"publication_enabled":_publication_enabled,
 		"publication_pending":_publication_pending,
+		"respawn_delay":_respawn_delay,
 		"devices":records,
 		"claim_count":_enemy_device_claims.size(),
 	}
@@ -498,47 +537,68 @@ func _enemy_by_id(enemy_id: String) -> EnemyState:
 	return null
 
 
-func _select_cycle_socket_indices(player_position: Vector2) -> Array[int]:
-	var result: Array[int] = []
-	while result.size() < mini(ACTIVE_DEVICES_PER_CYCLE, devices.size()):
-		var best_index := -1
-		var best_score := -1.0
-		var best_id := ""
-		for device_index in devices.size():
-			if device_index in result:
-				continue
-			var device := devices[device_index]
-			var position := Vector2(device["position"])
-			var score := player_position.distance_squared_to(position)
-			for selected_index in result:
-				score = minf(
-					score,
-					position.distance_squared_to(Vector2(devices[selected_index]["position"]))
-				)
-			var device_id := String(device["id"])
-			if (
-				score > best_score
-				or (is_equal_approx(score, best_score) and (best_id.is_empty() or device_id < best_id))
-			):
-				best_index = device_index
-				best_score = score
-				best_id = device_id
-		if best_index < 0:
-			break
-		result.append(best_index)
-	return result
+func _select_respawn_socket_index(
+	visible_world: Rect2,
+	player_position: Vector2
+) -> int:
+	var best_index := -1
+	var best_bucket := 999
+	var best_repeat_penalty := 999
+	var best_distance_error := INF
+	var best_id := ""
+	var expanded_visible := visible_world.grow(SPAWN_VISIBLE_MARGIN)
+	var has_visible_world := visible_world.size.x > 0.0 and visible_world.size.y > 0.0
+	for device_index in devices.size():
+		var device := devices[device_index]
+		var position := Vector2(device["position"])
+		var distance := player_position.distance_to(position)
+		var offscreen := not has_visible_world or not expanded_visible.has_point(position)
+		var in_preferred_band := (
+			distance >= SPAWN_MIN_PLAYER_DISTANCE
+			and distance <= SPAWN_MAX_PREFERRED_DISTANCE
+		)
+		var bucket := 4
+		if offscreen and in_preferred_band:
+			bucket = 0
+		elif offscreen and distance >= SPAWN_MIN_PLAYER_DISTANCE:
+			bucket = 1
+		elif in_preferred_band:
+			bucket = 2
+		elif distance >= SPAWN_MIN_PLAYER_DISTANCE:
+			bucket = 3
+		var repeat_penalty := 1 if device_index == _last_published_index else 0
+		var distance_error := absf(distance - SPAWN_PREFERRED_DISTANCE)
+		var device_id := String(device["id"])
+		if (
+			bucket < best_bucket
+			or (bucket == best_bucket and repeat_penalty < best_repeat_penalty)
+			or (
+				bucket == best_bucket
+				and repeat_penalty == best_repeat_penalty
+				and distance_error < best_distance_error
+			)
+			or (
+				bucket == best_bucket
+				and repeat_penalty == best_repeat_penalty
+				and is_equal_approx(distance_error, best_distance_error)
+				and (best_id.is_empty() or device_id < best_id)
+			)
+		):
+			best_index = device_index
+			best_bucket = bucket
+			best_repeat_penalty = repeat_penalty
+			best_distance_error = distance_error
+			best_id = device_id
+	return best_index
 
 
-func _retire_cycle_devices() -> void:
-	_enemy_device_claims.clear()
-	_assignment_refresh_remaining = 0.0
-	for device in devices:
-		device["state"] = &"pending"
-		device["published"] = false
-		device["capture_elapsed"] = 0.0
-		device["capture_count"] = 0
-		device["hit_flash_remaining"] = 0.0
-		Dictionary(device["assigned_enemy_ids"]).clear()
+func _retire_device_for_suspension(device: Dictionary) -> void:
+	device["state"] = &"pending"
+	device["published"] = false
+	device["capture_elapsed"] = 0.0
+	device["capture_count"] = 0
+	device["hit_flash_remaining"] = 0.0
+	Dictionary(device["assigned_enemy_ids"]).clear()
 
 
 func _release_claim(enemy_id: String) -> void:
@@ -575,3 +635,5 @@ func _resolve_device(device_index: int, outcome: StringName) -> void:
 	device["published"] = false
 	device["capture_elapsed"] = 0.0
 	device["capture_count"] = 0
+	_publication_pending = false
+	_respawn_delay = RESPAWN_DELAY_SECONDS

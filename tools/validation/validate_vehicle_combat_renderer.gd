@@ -1758,10 +1758,7 @@ func _validate_enemy_upgrade_device_presentation(
 	var renderer := EnemyUpgradeRenderer.new()
 	root.add_child(renderer)
 	await process_frame
-	var positions: Array[Vector2] = [
-		Vector2(360.0, 220.0), Vector2(760.0, 220.0),
-		Vector2(360.0, 500.0), Vector2(760.0, 500.0),
-	]
+	var positions: Array[Vector2] = [Vector2(360.0, 220.0)]
 	var presentation := _player_presentation(Vector2(260.0, 300.0), false)
 	var upgrade_devices: Array[Dictionary] = []
 	for index in positions.size():
@@ -1785,11 +1782,10 @@ func _validate_enemy_upgrade_device_presentation(
 		&"world/enemy_upgrade_device"
 	)
 	_expect(
-		draws.size() == 4
+		draws.size() == 1
 			and Vector2(draws[0]["position"]).is_equal_approx(positions[0])
-			and Vector2(draws[3]["position"]).is_equal_approx(positions[3])
 			and is_equal_approx(float(draws[0]["radius"]), 100.8),
-		"four enemy upgrade devices use the approved Triad Forge production PNG"
+		"the active enemy upgrade device uses the approved Triad Forge production PNG"
 	)
 	if not draws.is_empty():
 		var hit_color := Color(draws[0]["modulate"])

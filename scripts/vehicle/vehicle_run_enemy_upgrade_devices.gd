@@ -29,8 +29,8 @@ var _enemy_upgrade_pursuit_fields := ObjectivePursuitFieldSet.new()
 var _enemy_upgrade_active_targets: Dictionary = {}
 var _enemy_damage_multiplier_by_id: Dictionary = {}
 var _enemy_applied_multiplier_by_id: Dictionary = {}
-var _enemy_upgrade_cycle_activated := 0
-var _enemy_upgrade_cycle_destroyed := 0
+var _enemy_upgrade_run_activated := 0
+var _enemy_upgrade_run_destroyed := 0
 var _enemy_upgrade_notification_scheduled := false
 
 
@@ -54,12 +54,15 @@ func _reset_run(
 ) -> void:
 	_enemy_damage_multiplier_by_id.clear()
 	_enemy_applied_multiplier_by_id.clear()
+	_enemy_upgrade_notification_scheduled = false
 	if not preserve_upgrades:
 		enemy_upgrade_health_bonus = 0.0
 		enemy_upgrade_damage_multiplier = 0.0
 		enemy_upgrade_speed_bonus = 0.0
 		enemy_upgrade_activations = 0
 		enemy_upgrade_tier = 0
+		_enemy_upgrade_run_activated = 0
+		_enemy_upgrade_run_destroyed = 0
 		if _enemy_upgrade_runtime != null:
 			_enemy_upgrade_runtime.reset()
 	super._reset_run(
@@ -76,13 +79,11 @@ func _configure_stage_local_runtime() -> void:
 		current_stage_id, _runtime_cover_rects()
 	)
 	_enemy_upgrade_active_targets.clear()
-	_enemy_upgrade_cycle_activated = 0
-	_enemy_upgrade_cycle_destroyed = 0
-	_enemy_upgrade_notification_scheduled = false
 
 
 func _physics_process(delta: float) -> void:
 	if _enemy_upgrade_runtime != null:
+		_sync_enemy_upgrade_publication_mode()
 		_enemy_upgrade_runtime.set_context(enemies, current_stage_index, enemy_grid)
 		_enemy_upgrade_runtime.fill_active_targets(
 			_enemy_upgrade_active_targets
@@ -91,6 +92,16 @@ func _physics_process(delta: float) -> void:
 			_enemy_upgrade_active_targets, true
 		)
 	super._physics_process(delta)
+	# StageFlow can enter boss warning inside the base tick after the pre-tick sync.
+	# Retire the device before any later caller can observe the warning state.
+	if _enemy_upgrade_runtime != null:
+		_sync_enemy_upgrade_publication_mode()
+
+
+func _sync_enemy_upgrade_publication_mode() -> void:
+	_enemy_upgrade_runtime.set_publication_enabled(
+		stage_flow.state == StageFlow.State.ORDINARY
+	)
 
 
 func _make_enemy(spec: Dictionary) -> EnemyState:
@@ -313,15 +324,15 @@ func _schedule_enemy_upgrade_notification() -> void:
 
 func _record_enemy_upgrade_outcome(outcome: StringName) -> void:
 	if outcome == &"activated":
-		_enemy_upgrade_cycle_activated += 1
+		_enemy_upgrade_run_activated += 1
 	elif outcome == &"destroyed":
-		_enemy_upgrade_cycle_destroyed += 1
+		_enemy_upgrade_run_destroyed += 1
 
 
 func _enemy_upgrade_notification_message() -> String:
 	return tr("NOTIFY_ENEMY_UPGRADE_DEVICE_COUNTS") % [
-		_enemy_upgrade_cycle_activated,
-		_enemy_upgrade_cycle_destroyed,
+		_enemy_upgrade_run_activated,
+		_enemy_upgrade_run_destroyed,
 	]
 
 
@@ -332,7 +343,7 @@ func _flush_enemy_upgrade_notification() -> void:
 	_ui.notify(
 		_enemy_upgrade_notification_message(),
 		2.4,
-		UpgradeArt.DANGER if _enemy_upgrade_cycle_activated > 0 else UpgradeArt.SYSTEM,
-		2 if _enemy_upgrade_cycle_activated > 0 else 1,
+		UpgradeArt.DANGER if _enemy_upgrade_run_activated > 0 else UpgradeArt.SYSTEM,
+		2 if _enemy_upgrade_run_activated > 0 else 1,
 		&"enemy_upgrade_device_counts"
 	)

@@ -3,6 +3,10 @@ extends SceneTree
 ## Focused live-run coverage for transit-gate and hostile upgrade-device integration.
 
 const MAIN_SCENE := "res://scenes/main/GameRoot.tscn"
+const DeviceRuntime = preload(
+	"res://scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd"
+)
+const StageFlow = preload("res://scripts/encounters/vehicle_stage_flow.gd")
 
 var failures: Array[String] = []
 
@@ -48,24 +52,9 @@ func _validate_transit_gate_visual(run) -> void:
 
 
 func _validate_upgrade_device_authority(run) -> void:
-	var blueprint: Array[Dictionary] = [
-		{"id":&"validation_a", "pos":Vector2(900.0, 1080.0)},
-		{"id":&"validation_b", "pos":Vector2(2700.0, 1080.0)},
-		{"id":&"validation_c", "pos":Vector2(4500.0, 1080.0)},
-		{"id":&"validation_d", "pos":Vector2(6300.0, 1080.0)},
-		{"id":&"validation_e", "pos":Vector2(1800.0, 3240.0)},
-		{"id":&"validation_f", "pos":Vector2(5400.0, 3240.0)},
-	]
-	run.mystery_device_runtime.configure(blueprint, 99, &"stage_1")
-	run.mystery_device_runtime.refresh_publication(Rect2(), Vector2.ZERO)
-	_expect(
-		_active_devices(run).is_empty(),
-		"the tutorial cycle publishes no enemy upgrade device"
-	)
-	run.mystery_device_runtime.configure(blueprint, 99, &"stage_2")
-	run.mystery_device_runtime.refresh_publication(Rect2(), Vector2.ZERO)
+	run.call("_refresh_viewport_supply", 0.0)
 	var devices := _active_devices(run)
-	_expect(devices.size() == 4, "a non-tutorial cycle publishes four enemy upgrade devices")
+	_expect(devices.size() == 1, "the initial ordinary-combat cycle publishes one device")
 	if devices.is_empty():
 		return
 	var first := Dictionary(devices[0])
@@ -79,7 +68,7 @@ func _validate_upgrade_device_authority(run) -> void:
 	for marker_variant in Array(minimap["markers"]):
 		if StringName(Dictionary(marker_variant)["kind"]) == &"mystery_device":
 			marker_count += 1
-	_expect(marker_count == 4, "the live minimap publishes all four device markers")
+	_expect(marker_count == 1, "the live minimap publishes one device marker")
 
 	run.player_position = Vector2(3600.0, 2160.0)
 	run.call("_clear_projectiles")
@@ -125,15 +114,30 @@ func _validate_upgrade_device_authority(run) -> void:
 		"player destruction publishes the counted localized device outcome"
 	)
 	_expect(
-		_active_devices(run).size() == 3,
-		"a destroyed device disappears while the other three remain"
+		_active_devices(run).is_empty(),
+		"a destroyed device leaves no simultaneous replacement"
 	)
 	run._ui.clear_notifications()
+	var lifecycle_events: Array[Dictionary] = []
+	run.mystery_device_runtime.advance(
+		DeviceRuntime.RESPAWN_DELAY_SECONDS - 0.01, lifecycle_events
+	)
+	run.call("_refresh_viewport_supply", 0.0)
+	_expect(
+		_active_devices(run).is_empty(),
+		"the replacement remains absent before the full respawn delay"
+	)
+	run.mystery_device_runtime.advance(0.02, lifecycle_events)
+	run.call("_refresh_viewport_supply", 0.0)
+	devices = _active_devices(run)
+	_expect(devices.size() == 1, "one replacement publishes after the respawn delay")
+	if devices.is_empty():
+		return
 
 	var participant = run.call("_make_enemy", {
 		"id":"map_device_participant",
 		"role":&"ordinary_pursuer_t1",
-		"pos":Vector2(devices[1]["position"]),
+		"pos":Vector2(devices[0]["position"]),
 		"active":true,
 		"leash_rect":Rect2(0.0, 0.0, 7200.0, 4320.0),
 	})
@@ -141,7 +145,7 @@ func _validate_upgrade_device_authority(run) -> void:
 	var prior_max_health := float(participant.max_health)
 	run.call("_handle_mystery_device_event", {
 		"kind":&"enemy_upgrade_device_activated",
-		"device_id":StringName(devices[1]["id"]),
+		"device_id":StringName(devices[0]["id"]),
 		"participant_ids":[participant.id],
 	})
 	await process_frame
@@ -152,7 +156,31 @@ func _validate_upgrade_device_authority(run) -> void:
 	_expect(
 		String(run._ui.debug_notification_contract()["active_message"])
 			== tr("NOTIFY_ENEMY_UPGRADE_DEVICE_COUNTS") % [1, 1],
-		"enemy activation publishes current-cycle activation and destruction counts"
+		"enemy activation publishes run-level activation and destruction counts"
+	)
+	run.stage_flow.state = StageFlow.State.BOSS_WARNING
+	run.call("_sync_enemy_upgrade_publication_mode")
+	_expect(
+		_active_devices(run).is_empty(),
+		"boss warning removes the ordinary-combat device without publishing an outcome"
+	)
+	run.mystery_device_runtime.advance(
+		DeviceRuntime.RESPAWN_DELAY_SECONDS + 1.0, lifecycle_events
+	)
+	run.stage_flow.state = StageFlow.State.ORDINARY
+	run.call("_sync_enemy_upgrade_publication_mode")
+	run.call("_refresh_viewport_supply", 0.0)
+	_expect(
+		_active_devices(run).is_empty(),
+		"boss time does not consume the paused replacement delay"
+	)
+	run.mystery_device_runtime.advance(
+		DeviceRuntime.RESPAWN_DELAY_SECONDS + 0.01, lifecycle_events
+	)
+	run.call("_refresh_viewport_supply", 0.0)
+	_expect(
+		_active_devices(run).size() == 1,
+		"ordinary combat resumes the continuous device lifecycle"
 	)
 
 

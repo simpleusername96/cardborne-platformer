@@ -1,8 +1,8 @@
 class_name VehicleObjectivePursuitFieldSet
 extends RefCounted
 
-## Bounded reverse-cost fields for simultaneous static objectives. All fields
-## share one compiled ordinary-enemy walkability mask and one per-tick budget.
+## Bounded reverse-cost routing for the single active static objective. The
+## compiled ordinary-enemy walkability mask is reused across device respawns.
 
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 
@@ -10,7 +10,7 @@ const CELL_SIZE := 96.0
 const GRID_WIDTH := 75
 const GRID_HEIGHT := 45
 const CELL_COUNT := GRID_WIDTH * GRID_HEIGHT
-const MAX_TARGET_FIELDS := 4
+const MAX_TARGET_FIELDS := 1
 const MAX_COMBINED_CELLS_PER_TICK := 512
 const ORDINARY_RADIUS := 36.0
 const CARDINALS: Array[Vector2i] = [

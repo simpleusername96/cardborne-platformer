@@ -1686,11 +1686,11 @@ func _check_hot_path_guards(run) -> void:
 		))
 	_expect(
 		device_rows.size() == 6
-		and published_devices.size() == 4
-		and hidden_devices.size() == 2
+		and published_devices.size() == 1
+		and hidden_devices.size() == 5
 		and all_published_block
 		and all_hidden_clear,
-		"four enemy upgrade devices participate in collision while two sockets stay pending"
+		"one enemy upgrade device participates in collision while five sockets stay pending"
 	)
 	run.call("_clear_enemies")
 	run.call("_clear_projectiles")

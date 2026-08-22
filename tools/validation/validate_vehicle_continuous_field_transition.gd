@@ -32,6 +32,13 @@ func _run() -> void:
 
 	run.call("_reset_run", false)
 	run.capture_set_mode(&"playing")
+	run.call("_refresh_viewport_supply", 0.0)
+	var initial_devices: Array[Dictionary] = []
+	run.mystery_device_runtime.fill_device_snapshot(initial_devices)
+	_expect(
+		initial_devices.size() == 1,
+		"the real initial run path publishes one run-level upgrade device"
+	)
 	var survivor = run.call("_make_enemy", {
 		"id":"continuous_field_survivor",
 		"role":&"ordinary_edge_01",
@@ -79,7 +86,10 @@ func _run() -> void:
 	_expect(run.current_stage_index == 1 and run.current_stage_id == Catalog.STAGE_IDS[1], "cycle profile advances to cycle 2")
 	_expect(is_same(run._active_tactical_layout, layout_before), "cycle advancement keeps the exact tactical layout owner")
 	_expect(int(run.field_layout.fingerprint) == field_fingerprint_before, "field geometry fingerprint does not change")
-	_expect(run.mystery_device_runtime.snapshot() == facility_before, "facilities do not refresh or move")
+	_expect(
+		run.mystery_device_runtime.snapshot() == facility_before,
+		"cycle continuation does not reset, multiply, or move the run-level device"
+	)
 	_expect(run.pickups == pickup_before, "direct pickups do not refresh or move")
 	_expect(run.experience_runtime.snapshot() == experience_before, "experience shards remain unchanged")
 	_expect(run.terrain_runtime.snapshot() == terrain_before, "terrain state remains unchanged")

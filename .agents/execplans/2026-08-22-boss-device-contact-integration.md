@@ -2,6 +2,7 @@
 type: plan
 status: active
 created: 2026-08-22
+last_reviewed: 2026-08-22
 source: "User decisions from the 2026-08-22 planning session and origin/codex/boss-shared-pattern-defense-rules at db007c6c"
 scope: Selective boss-pattern integration, enemy upgrade-device competition, recall availability, universal hostile contact damage, canonical documentation, and release validation
 related:
@@ -15,13 +16,19 @@ related:
 
 # Boss, Device, Recall, and Contact Integration - Execution Contract
 
-Starting from local `master` at `198c6653`, integrate only the required boss behavior from remote commit `db007c6c`, replace its rejected two-lane projectile family with the existing three-row broad barrage, make four enemy upgrade devices create real enemy objectives in every non-tutorial boss cycle, double recall replenishment availability, and make ordinary hostile contact reliably damage an unprotected player. The remote branch is reference material, not a merge source; current local behavior remains authoritative outside the locked changes in this contract.
+Starting from local `master` at `198c6653`, integrate only the required boss behavior from remote commit `db007c6c`, replace its rejected two-lane projectile family with the existing three-row broad barrage, keep one continuously recurring enemy upgrade device as a run-level movement objective during ordinary combat, double recall replenishment availability, and make ordinary hostile contact reliably damage an unprotected player. The remote branch is reference material, not a merge source; current local behavior remains authoritative outside the locked changes in this contract.
 
 ## Purpose
 
 - Objective: produce a faster and more coherent twelve-boss run in which bosses share a reusable attack language, signature mechanics remain distinct, enemies visibly contest upgrade devices, recall pickups remain available under pressure, and hostile bodies and attacks do not pass harmlessly through the player.
 - Deliverable: scoped GDScript, documentation, localization, validator, presentation, and integration changes on local `master`, with coherent task-owned commits and final native/Web evidence.
 - Completion state: every task and named gate passes, accepted product and visual documents match runtime truth, the final built-Web boot is verified through the existing repository workflow or an approved equivalent, and this plan is marked `done` with final commit and evidence identifiers.
+
+## Current Change-Control Amendment — Continuous Device Lifecycle
+
+The user's live-play observation on 2026-08-22 found no upgrade device. Source tracing established a concrete integration defect: the initial run configures the runtime as `stage_1`, which deliberately leaves `_publication_pending` false, while connected-cycle continuation changes `current_stage_id` without calling the device runtime's stage configuration. The focused validator called `configure(stage_2)` directly and therefore proved a path that the real run never executes.
+
+This amendment supersedes the earlier four-device cycle-scoped decision in completed Phase 3 and the historical Phase 5 checkpoints. Those checked tasks remain historical implementation evidence only. Current and future execution must follow Phase 6 and the continuous singleton lifecycle below.
 
 ## Scope and Boundaries
 
@@ -30,7 +37,7 @@ In scope:
 - Selectively port the common/signature boss model, rapid commitment, periodic squads, Stage 6 proximity ordnance, Stage 10 segmented reflection, and Stage 7/9 wall tuning from remote commit `db007c6c`.
 - Keep `common_broad_barrage` as three timed rows of six projectiles. Preserve both its spread variant and its fast row-angle-changing `rotate` variant.
 - Delete `common_lane_volley` from the integrated common-family contract rather than replacing it with a second new family.
-- Publish four enemy upgrade devices simultaneously at the start of each boss cycle from cycle 2 through cycle 12. Cycle 1 remains the tutorial cycle and publishes no device.
+- Publish one enemy upgrade device from the beginning of the run, then republish one device nine active ordinary-combat seconds after destruction or enemy activation. Reuse the six validated run-level sockets indefinitely; boss-cycle numbers do not select device count, health, socket set, or cooldown.
 - Let ordinary mobile enemies claim device participation slots after entering an invisible influence radius, travel to the claimed device, remain for the five-second channel, and receive an immediate personal augmentation when activation succeeds.
 - Keep a bounded run upgrade tier for later ordinary admissions and keep boss actors and boss summons outside the upgrade system.
 - Make experience-recall replenishment begin and retry twice as often while maintaining four active recalls.
@@ -57,12 +64,14 @@ Constraints and invariants:
 - Boss lane, fan, and cross projectiles commit in at most `0.18 s`; the broad barrage commits in at most `0.22 s`; charge commits in at most `0.28 s`; Stage 6 distance-growth ordnance commits in at most `0.30 s`. Radial bombardment, emitted beams, and moving walls retain their authored longer warnings.
 - Rapid committed attacks capture target or direction once and do not track through startup or active execution.
 - Every broad-barrage execution schedules rows at `0.00`, `0.38`, and `0.76 s`, with six projectiles per row. Spread rows retain the current approximately `+/-21` degree within-row fan. Rotate rows change the row axis by `22.5` degrees per row and remain enabled for Stages 2, 4, 7, and 8.
-- Four devices are cycle-scoped opportunities selected from the existing six run-level sockets. Unresolved devices remain until the next cycle transition, then retire before the next four are published.
+- Exactly one device is active at a time. The first publishes immediately. Resolution starts a `9.0 s` respawn delay that advances only during ordinary combat. Boss warning and boss combat publish no device; a live device retires without an activation/destruction outcome when boss warning begins, and the same nine-second delay resumes when ordinary combat returns.
+- Publication reuses only the six layout-validated sockets. Prefer a socket outside `visible_world.grow(220)`, between `960` and `1920` units from the player, and nearest the preferred `1440`-unit travel distance. Fall back deterministically to the best distant valid socket and avoid the immediately previous socket when another equally valid candidate exists.
+- Device health remains the stage-independent `360` baseline. The lifecycle does not read boss-cycle index for publication, durability, or respawn timing.
 - Each device accepts at most three participants. One enemy can hold at most one device claim at a time. The capture radius stays `180`; the uninterrupted channel stays `5.0 s`; the invisible influence radius is `720` world units; assignment refresh remains `0.25 s`.
 - A successful device activation immediately grants each living participant one personal augmentation of `+30` maximum/current health, `+12%` pack-owned attack damage, and `+3` movement speed. A living enemy can receive this personal augmentation at most once.
 - Each successful activation also increments the run upgrade tier up to six. Future ordinary admissions receive the tier total. Activation after tier six still augments its current participants and remains a real player-facing event, but does not raise the future-admission tier beyond the existing six-activation maximum.
 - Bosses, boss-owned summons, fixed hostile structures, and immobile mines cannot claim a device or receive device bonuses. Ordinary encounter enemies remain eligible even when they have a non-empty `leash_rect`.
-- Player-primary projectiles damage and stop at the earliest intersected active device. Hostile projectiles pass through devices. Device bodies continue to block actor movement. Multiple active devices never depend on array order for collision selection.
+- Player-primary projectiles damage and stop at the active device. Hostile projectiles pass through it. The device body continues to block actor movement while published and retires from collision, rendering, and the minimap in the same simulation state.
 - Every unprotected contact with a living hostile body produces a damage attempt. Authored charge, lunge, shield-bash, collective, and boss-contact attacks take precedence so one physical crossing cannot apply both authored and generic contact damage.
 - Generic mobile/support/fixed/mine hull scrape uses `6` base damage and a `1.0 s` per-enemy accepted-hit cooldown. Defender/coordinator persistent contact retains `12` damage and `0.8 s`. Boss generic hull scrape uses `12` damage and `1.0 s`; authored boss charge damage takes precedence.
 - A dash-protected or post-hit-protected player can reject damage. A rejected persistent overlap remains armed and retries after protection expires; protection does not consume the contact cooldown.
@@ -89,7 +98,7 @@ Canonical terms:
 | Common boss attack | A reusable attack family selected from the shared common pool | Ordering cursors and per-stage damage scaling stay inside `VehicleBossPatterns` and `VehicleBossRuntime` |
 | Signature boss attack | A stage-owned direct or autonomous mechanic with a distinct interaction | Scheduling remains separate from the common cursor |
 | Broad barrage | Three timed rows of six projectiles, using spread or rotate row axes | Projectile allocation remains in `VehicleRun` under the fixed hostile capacity |
-| Enemy upgrade device | A hostile, destructible cycle objective that enemies attempt to activate | Socket selection, claims, capture progress, and outcomes stay inside the device runtime |
+| Enemy upgrade device | A hostile, destructible run-level movement objective that enemies attempt to activate during ordinary combat | Socket selection, cooldown, claims, capture progress, and outcomes stay inside the device runtime |
 | Device participant | One eligible ordinary mobile enemy holding one stable claim on one device | Influence queries and route-field storage are not exposed to UI or encounter code |
 | Personal augmentation | One immediate, non-stacking bonus applied to a participant after activation | Per-enemy application receipts remain runtime-only |
 | Run upgrade tier | The bounded zero-through-six bonus applied to later ordinary admissions | UI receives event counts, not mutation access |
@@ -98,14 +107,15 @@ Canonical terms:
 
 Device lifecycle:
 
-1. Cycle 1 keeps all sockets unpublished.
-2. At the start of cycles 2–12, retire prior-cycle device state and select four valid sockets deterministically. Choose the socket farthest from the player's cycle-start position first; then repeatedly choose the socket whose minimum squared distance to the player and every already selected socket is greatest. Resolve equal scores by stable socket ID. Publish all four as unresolved active devices.
-3. An eligible enemy entering a device's `720`-unit influence circle may claim one of its three vacant participant slots. Equal-distance ties resolve by stable device ID, then enemy ID.
-4. A claim persists until the enemy dies, becomes invalid, the device resolves, or the cycle changes. Temporary movement outside the influence circle does not cause assignment thrash.
+1. Configure the six run-level sockets once for a new layout and publish exactly one device immediately during the first ordinary-combat frame.
+2. Select from the validated socket set using the locked off-screen and player-distance priorities; keep the chosen position immutable while that device is active.
+3. An eligible enemy entering the device's `720`-unit influence circle may claim one of its three vacant participant slots. Equal-distance ties resolve by enemy ID.
+4. A claim persists until the enemy dies, becomes invalid, the device resolves, or publication is suspended for the boss. Temporary movement outside the influence circle does not cause assignment thrash.
 5. Assigned enemies route to their device and stop inside `115.2` units, preserving the current `0.64 * CAPTURE_RADIUS` stop rule.
 6. Three living assigned enemies inside radius `180` advance the uninterrupted five-second channel. Losing a required in-radius participant resets channel time but preserves valid claims.
 7. Activation applies personal augmentation, increments the bounded run tier, publishes an event, and resolves that device. Player destruction publishes the corresponding destruction event and resolves it without quota, XP, or upgrade credit.
-8. Resolved or unresolved devices do not republish during the same cycle. The next cycle starts a new four-device set.
+8. Resolution removes the device immediately and starts a `9.0 s` ordinary-combat cooldown. When it expires, select one new socket relative to the player's then-current position; resolved sockets remain reusable and the previous socket is avoided when an equally valid alternative exists.
+9. Boss warning suspends publication and retires any active device without recording a player/enemy outcome. The cooldown is paused through boss warning, boss combat, cleanup, and transition, then resumes when ordinary combat returns.
 
 ## Discovery Closure
 
@@ -117,13 +127,13 @@ Device lifecycle:
 | Faster combat | Local ordinary attack cadence is already faster; remote adds exact rapid boss startup caps | `VehicleAttackContract.ORDINARY_ATTACKS`; `VehicleEncounterDirector.ENEMY_RECOVERY_RATE`; remote `startup_seconds()` | Preserve ordinary values and adopt remote boss rapid caps | 1.3 |
 | Stage-specific boss fixes | Local Stage 6 lacks proximity detonation; Stage 10 uses facing-based reflection; Stage 7/9 walls retain full speed and damage | Current boss, projectile, and late-mechanic owners compared with `db007c6c` | Port the remote fixes while preserving current local non-boss code | 2.1–2.4 |
 | Recall availability | Four authored recalls already exist; replenishment starts at 90 seconds, retries at 30 seconds, and stops at the low-water mark of two | `scripts/rewards/vehicle_recall_replenishment_runtime.gd`; field-layout validators | Use `45/15`, low-water mark four, active cap four; do not add more layout objects | 4.1 |
-| Device count and pursuit | Current runtime exposes one of six sockets per run, globally reselects three nearest enemies, and has one objective route field | Device runtime, run subtype, and completed device plan | Four simultaneous devices per cycles 2–12 with stable influence claims and a bounded four-target route owner | 3.1–3.4 |
+| Device absence and lifecycle | Real run setup configures `stage_1` with publication disabled; continuation never calls the later-stage device configure path; the focused validator calls that unreachable path directly | `VehicleRun._configure_stage_local_runtime()`, `_finalize_next_stage_continuation()`, `VehicleEnemyUpgradeDeviceRuntime.configure()`, current validator, user live-play observation | Remove cycle-gated publication. Publish one immediately, reuse six sockets forever, and republish after nine ordinary-combat seconds | 6.1–6.3 |
 | Enemies ignore devices | Real encounter enemies receive `leash_rect`; `_eligible_enemy()` rejects every such enemy; validator fakes empty leash data | Encounter materialization, `_eligible_enemy()`, device validator | Leash is not an eligibility exclusion; validate with a real encounter-spawned enemy | 3.2, 3.7 |
-| Device upgrades and feedback | Current activation strengthens only later spawns; bilingual activation/destruction messages exist; one snapshot/marker is published | Run subtype, localization CSV, device renderer | Immediately augment participants, keep bounded future tier, publish counted messages, show four world/minimap markers, add no HUD counter | 3.4–3.6 |
+| Device upgrades and feedback | Participant and bounded future-admission upgrades, bilingual counted outcomes, the approved world PNG, and the existing minimap marker are integrated | Run subtype, localization CSV, device renderer | Preserve these owners; show one world body and one minimap marker; add no spawn notification, HUD counter, or new art | 6.1–6.3 |
 | Harmless body overlap | Current contract deliberately leaves pursuit, charger outside attack, support, fixed, and mine overlap inert | Contact runtime and validator | Add generic hull scrape for every hostile body while keeping authored attack priority and player protection | 4.2–4.3 |
 | Projectile and zone crossing | Hostile projectile collision sweeps the projectile against the player's endpoint; beams and areas sample the player endpoint | `VehicleRun._update_projectile_buffer()` and `_update_denied_zones()` | Use relative swept tests for projectile and active-zone crossings without changing radii or widths | 4.4 |
 | Visual authority | Authority pair is unchanged and covers barrage, defense, device, minimap, messages, and collision separation | Receipt below | Reuse existing assets and retained geometry; update documents and inspect one batched rendered result | 2.4, 3.5, 5.1–5.3 |
-| Runtime capacity | Four route targets and twelve participants add bounded recurring work; current performance evidence is not a comparable baseline for this new workload | Performance policy and runtime architecture audit | Share walkability, cap combined route expansion at 512 cells/tick, reuse query buffers, and report only focused scenario validity unless a clean release gate is run | 3.3, 3.7, 5.3 |
+| Runtime capacity | The current four-target field owner is bounded but the new product contract permits one target and three participants only | Performance policy, runtime architecture audit, `VehicleObjectivePursuitFieldSet` | Reduce route target capacity to one without changing per-target walkability or collision; label the focused pressure run `scenario valid`, not a performance pass | 6.2–6.3 |
 
 Readiness statement:
 
@@ -134,12 +144,12 @@ Readiness statement:
 
 ## Visual Authority Receipt
 
-- Canonical text: `docs/design/VISUAL_SYSTEM.md`, completely read for this root task; observed SHA-256 `9b660b372a724cc526a83b3f4bfdf63c2d185b8fc1b1ec6d612e1e92931b4c0e`.
+- Canonical text: `docs/design/VISUAL_SYSTEM.md`, completely reread for this root task; observed SHA-256 `e4473a3e06cb84e9752293def68f9a535f25d19adcfe71175ebdfcc92cfa5218` before Phase 6 edits.
 - Canonical sheet: `docs/design/cardborne-universal-art-style-reference.png`; expected and observed SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`; inspected at original `1448 x 1086` detail.
 - Original artifact provenance: `C:/Users/BK/.codex/generated_images/019fbfe9-857e-7453-b72d-20908d848577/exec-0b8aa606-cf55-45c1-abb3-fb3df762b080.png`, timestamp `2026-08-02 12:13:44 KST`.
 - User sketch inspected at original detail: `D:/Program Files/ImageMagick-7.1.1-Q16-HDRI/captures/2026-08-22 11 24 36.png`. It is a gameplay-arrangement reference for the existing broad barrage, not an asset source.
 - `actual_image_reference_used=false`; `reference_input_method=not_applicable`. No raster or SVG deliverable is authorized.
-- Task constraints: preserve collision/presentation separation; render shield gaps from the exact angular collision snapshot; keep Stage 6 projectiles disconnected from false beam trails; keep the device's approved authored PNG and semantic marker; show up to four devices through retained batches; use counted bilingual announcements; add no HUD panel or live upgrade rail; do not increase any collision footprint to match effects.
+- Task constraints: preserve collision/presentation separation; render shield gaps from the exact angular collision snapshot; keep Stage 6 projectiles disconnected from false beam trails; keep the device's approved authored PNG, fixed no-bob body, channel-only `180` boundary, restrained hit/fade states, and `mystery_device` minimap marker; show one device through the retained batch; use counted bilingual activation/destruction announcements; add no spawn announcement, HUD panel, live upgrade rail, raster, SVG, route line, or objective marker; do not increase any collision footprint to match effects.
 - Phase 5 authority refresh after editing the canonical visual contract: the text was completely reread at SHA-256 `e4473a3e06cb84e9752293def68f9a535f25d19adcfe71175ebdfcc92cfa5218`; the canonical sheet remained SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889` and was reinspected at original `1448 x 1086` detail. `actual_image_reference_used=false`; `reference_input_method=not_applicable`; no image was created, edited, or promoted.
 
 ## Tasks
@@ -330,8 +340,8 @@ Source owners: `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.m
   - Change: load `$codebase-quality-auditor`; review responsibility creep, competing schedulers, catch-all expansion, mutable snapshot leakage, device collision ordering, contact double-hit paths, public contract drift, localization completeness, and missing integration fixtures. Apply only small task-scoped corrections.
   - Accept: no reachable task-owned failure path, competing common/signature/device/contact owner, stale fallback publication, or missing validator remains; material redesign findings stop this phase and trigger contract revision.
 - [ ] **5.3** Run the single final broad gate after user alignment.
-  - Change: explain the exact all-validator, import, rendered-capture, Web-export, and built-Web boot workload and obtain alignment; then run the repository workflow on the coherent commit or an approved exact local equivalent. Inspect the boss barrage/defense/device/contact-relevant native captures and the built-Web boot image; run one focused human play pass for attack pace, device pursuit, announcements, recall availability, and ordinary contact feel.
-  - Accept: document authority, visual authority, Godot import, every production validator except the workflow's three explicit manual/performance exclusions, native `1280x720` capture, Web release export, itch static verification, and built-Web boot pass; human observations confirm no harmless unprotected overlap, four-device competition after cycle 1, readable rapid source cues, and no collision larger than the visible threat.
+  - Change: after Phase 6 passes, explain the exact all-validator, import, rendered-capture, Web-export, and built-Web boot workload and use the user's current authorization to proceed with the approved exact local equivalent. Inspect the boss barrage/defense/device/contact-relevant native captures and the built-Web boot image; preserve the user's live-play observation as the reason for the device correction and leave attack/contact feel claims to a later human play pass.
+  - Accept: document authority, visual authority, Godot import, every production validator except the workflow's three explicit manual/performance exclusions, native `1280x720` capture, Web release export, itch static verification, and built-Web boot pass; rendered evidence shows one readable device body and its channel/hit states, while no headless or agent-driven run is mislabeled as human feel evidence.
   - Guard: do not deploy. A workflow dispatch must use `publish=false`; a push to `master` is approval-gated because the workflow can publish on push.
 - [ ] **5.4** Close the execution contract.
   - Change: record final commit IDs, commands/workflow run, exact partial-pass labels, capture/evidence locations, known non-blocking warnings, and any unqualified performance boundary; change frontmatter to `status: done` only after every completion condition passes.
@@ -344,6 +354,51 @@ Final gate checkpoint 1 (2026-08-22): document authority, visual authority, full
 Final gate checkpoint 2 (2026-08-22): the native `1280 x 720` capture completed with all `160` manifest entries at `build/vehicle-run-final/captures-native-device-fixture/`; its log is `build/vehicle-run-final/logs/native-capture-device-fixture.log`. Original-detail inspection covered the broad barrage, Stage 3 shield, Stage 6 body defense, representative Stage 10 pressure, contact overlay, and the four new device fixtures. The prior neutral-facility capture setup was stale against the accepted default-run contract and produced no device body. Commit `febfee5c` replaces that evidence-only setup with the production four-device ready state plus close, channel, and hit states. The new evidence shows exactly four hostile bodies, the authored silhouette inside its interaction contour, a `180`-unit channel ring, and a body-local hit flash without enlarging collision truth. The capture-driver validator, visual-authority validator, diff check, and a task-scoped quality audit pass; the audit found no new gameplay owner or public contract and corrected only capture failure cleanup and fixture constants. Web export, built-Web boot, and the focused play pass remain open.
 
 Final gate checkpoint 3 (2026-08-22): the production Web release exported from `febfee5c` through `tools/export_web.ps1 -SkipImport`; all four required files are non-empty. Static itch verification passed `9` exact-case files with `24,698,399` gzip bytes against the `26,949,682` allowance. The built artifact served only on the `$npjt-port-guard` `codex` lane at `127.0.0.1:13029`. A real-time Chrome DevTools Protocol check waited `20 s`, observed `document.readyState=complete`, confirmed the Godot `#status` overlay was removed and the canvas was `1280 x 720`, and captured the Korean deployment screen at `build/vehicle-run-final/web-boot/99-web-build-boot-cdp-febfee5c.png`. A separate agent-driven interaction launched the run, moved, aimed, held primary fire, dashed, invoked EMP, defeated enemies, collected enough XP to open the first upgrade selection, and retained the live canvas without crash or loader regression; captures are under `build/vehicle-run-final/web-play/`. Both exact task-owned Python server PIDs and all dedicated-profile browser helpers were stopped, with port `13029` free afterward. This objective interaction pass does not claim human attack or contact feel. The user-controlled subjective pass remains the only open completion condition.
+
+### Phase 6: Continuous Singleton Enemy Upgrade Device
+
+Goal: correct the live-run absence and make the device a continuous run-level movement incentive instead of a boss-cycle publication set.
+
+Preconditions:
+
+- The current change-control amendment and visual-authority receipt above are active.
+- Godot `4.7.1.stable` is available through `./tools/godot.ps1`.
+- Existing untracked evidence images and `.uid` files remain untouched.
+
+Source owners: `scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd`, `scripts/vehicle/vehicle_run_enemy_upgrade_devices.gd`, `scripts/enemies/vehicle_objective_pursuit_field_set.gd`, `scripts/enemies/vehicle_enemy_state.gd`, `docs/product/vehicle_game_spec.md`, `docs/design/VISUAL_SYSTEM.md`, `tools/validation/validate_vehicle_enemy_upgrade_devices.gd`, `tools/validation/validate_vehicle_map_mechanics_integration.gd`, `tools/validation/validate_vehicle_continuous_field_transition.gd`, `tools/validation/validate_vehicle_run.gd`, `tools/validation/validate_vehicle_combat_renderer.gd`, `tools/validation/profile_vehicle_pressure.gd`, existing capture owners
+
+- [x] **6.1** Replace cycle publication with one continuous runtime lifecycle.
+  - Change: configure the six layout sockets once per new layout; publish one device immediately during the first ordinary-combat frame; remove cycle-index publication and health scaling; after activation or destruction, wait exactly `9.0 s` of enabled ordinary-combat time, then choose one reusable socket through the locked `220`-margin, `960–1920` distance, `1440` preferred-distance policy with stable ID ties and previous-socket avoidance.
+  - Accept: a fixed runtime fixture observes one initial device in cycle 1, never more than one active device, zero publication before `9.0 s`, one republished device after the delay at a valid different socket, constant `360` health across context-stage changes, and continued reuse after more than six resolutions.
+  - Guard: selection never invents world coordinates, moves an active device, publishes inside the player collision footprint, or depends on dictionary/array iteration order.
+- [x] **6.2** Gate publication at the run boundary and shrink the route owner to the reachable workload.
+  - Change: the feature run enables device time/publication only while `stage_flow.state == ORDINARY`; boss warning retires a live device without an outcome and pauses the cooldown until ordinary combat returns; run activation/destruction totals do not reset at a cycle profile boundary; keep stable claims and spatial-grid queries, but cap the objective route set at one active target and three participants.
+  - Accept: a run-layer fixture proves the real initial path publishes, boss warning removes collision/render/minimap state and claims without changing activation/destruction totals, a direct connected-cycle continuation cannot reset or create a four-device set, and one route field converges within the existing combined `512`-cell budget.
+  - Guard: bosses, summons, fixed actors, mines, and dead/inactive actors remain ineligible; player-primary blocking, hostile pass-through, capture interruption, immediate participant bonuses, and the six-tier future-admission cap remain unchanged.
+- [x] **6.3** Align canonical contracts and close the validator blind spot.
+  - Change: update the product and visual specs from cycle-scoped four-device language to the continuous singleton contract; update focused, live-scene, collision/minimap, and capture expectations; ensure at least one fixture follows the real run initialization and continuation boundary instead of directly calling a later-stage configure path.
+  - Accept: targeted stale-contract searches find no active product/visual rule for cycle-1 suppression, four simultaneous devices, cycle health scaling, or no same-cycle respawn; focused validators, `git diff --check`, and visual-authority validation pass; a real rendered capture shows the existing approved device body, channel boundary, and hit state with no clipping or new visual owner.
+  - Guard: historical completed plans, dated checkpoints, and the Korean audit report may retain the old behavior only as clearly dated evidence; active specs and unchecked tasks must not present it as current truth.
+
+Phase 6 gate:
+
+```powershell
+./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_enemy_upgrade_devices.gd
+./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_map_mechanics_integration.gd
+./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_continuous_field_transition.gd
+./tools/godot.ps1 --headless --path . --script res://tools/validation/validate_vehicle_run.gd
+./tools/godot.ps1 --headless --path . --script res://tools/validation/profile_vehicle_pressure.gd
+./tools/validation/validate_cardborne_visual_authority.ps1
+git diff --check
+```
+
+The pressure result may be labeled only `scenario valid`. Run one existing production capture pass and inspect only `09v`–`09y` after the functional gate passes; do not repeat the passing capture unless a presentation input changes.
+
+Phase 6 checkpoint (2026-08-22): the defect was the combination of initial `stage_1` publication suppression and connected-cycle continuation never reconfiguring the device runtime; the prior validator bypassed the real run path by directly configuring `stage_2`. The runtime now publishes one device on the real first ordinary-combat frame, reuses six sockets through a deterministic current-player selection policy, keeps constant `360` health, waits `9.0` enabled seconds after every outcome, and pauses publication and cooldown from boss warning until ordinary combat returns. The run layer retains activation/destruction totals for the full run and the route owner admits one target and three claims. Product and visual authority now describe the continuous singleton contract. Focused runtime, live map, connected transition, integrated run, and combat-renderer validators pass. The hard headless pressure fixture is only `scenario valid`: `72/72` active-capped enemies, `192` shards, `1` queued window, `1` device, `3` seeded participants, `3` peak claims, `1` peak route target, and `512` peak route cells. Visual authority passes with the unchanged canonical sheet hash. The native `1280x720` capture produced `160` PNGs and a manifest under `build/vehicle-run-device-continuous/captures-native/`; original-detail inspection of `09v`–`09y` shows one unclipped approved body, one minimap marker, the `180`-unit channel boundary, and the body-local hit state. The quality audit found one same-tick StageFlow edge: boss warning could begin inside the base physics tick after the pre-tick gate. A post-tick gate now retires the device before callers can observe the warning state; the live map and integrated run validators pass after that correction. No competing lifecycle, routing, presentation, or upgrade owner remains in the task-owned diff.
+
+Phase 6 final local gate (2026-08-22): document authority passed across `92` Markdown files, the Godot import completed, the Web release exported with four required files, and itch static verification passed `9` exact-case files at `24,700,832` gzip bytes against the `26,949,682` allowance. The built artifact was served only on the `$npjt-port-guard` `codex` lane at `127.0.0.1:13029`. After `20 s`, Chrome reported `document.readyState=complete`, no loader/status element, a `1280x720` canvas after viewport normalization, and zero console warnings or errors; the Korean deployment surface rendered without clipping. The exact task-owned Python server was stopped and port `13029` was free afterward. This boot check does not claim human combat feel or release-performance qualification.
+
+Post-gate workspace note (2026-08-22): after the passing `92`-file document-authority run, an unrelated untracked `.agents/execplans/2026-08-22-general-uiux-refinement.md` changed to a completed lifecycle state while remaining in the active plan tree. The final document-authority rerun therefore stops on that external file. This task does not modify, move, stage, or commit it. The task-owned Markdown diff still passes `git diff --check`, and the final visual-authority rerun passes.
 
 Final local checks before any approval-gated external workflow:
 
@@ -364,8 +419,8 @@ The authoritative all-validator, rendered-capture, Web-export, and built-Web boo
 | --- | --- | --- | --- |
 | Inner loop | The task-local Godot validator named in the current task, plus `git diff --check` for edited text | After a coherent owner edit | A relevant implementation input changes |
 | Phase gate | The exact focused command block under that phase | All phase tasks pass their acceptance checks | A phase-owned input changes |
-| Device capacity trend | `./tools/godot.ps1 --headless --path . --script res://tools/validation/profile_vehicle_pressure.gd` | Once after Phase 3 behavior is coherent | Device query, routing, actor counts, or pressure-fixture inputs change |
-| Final gate | The existing `vehicle-run-validation.yml` sequence or approved exact equivalent | Once after Phases 1–5.2 pass and the user aligns on cost/impact | A final-gate input changes |
+| Device capacity trend | `./tools/godot.ps1 --headless --path . --script res://tools/validation/profile_vehicle_pressure.gd` | Once after Phase 6 behavior is coherent | Device query, routing, actor counts, or pressure-fixture inputs change |
+| Final gate | The existing `vehicle-run-validation.yml` sequence or approved exact equivalent | Once after Phase 6 and prior phases pass; the current user request supplies alignment to proceed after the workload is restated | A final-gate input changes |
 
 Validation rules:
 
@@ -385,9 +440,9 @@ Validation rules:
 | Remote code conflicts with current device or encounter code | Reimplement the named boss behavior through current local owners and validators | Never resolve by accepting the remote file wholesale |
 | A tracked remote hunk changes neutral facilities, current devices, ordinary enemies, CI, migration, or unrelated docs | Reject that hunk and keep local `master` | Only the locked boss behavior may cross the branch boundary |
 | Six shots per row exceed the fixed hostile projectile store in a valid scenario | Preserve eighteen-shot behavior and boss reserve; correct scheduling/retirement or capacity ownership inside existing fixed limits | Do not reduce row count or weaken collision without revising this contract |
-| Four device route fields exceed the `512`-cell combined budget or fail to converge | Preserve four targets and claims; fix incremental scheduling, shared masks, or target invalidation | Do not lower device/participant counts or bypass walls as an optimization |
+| The singleton route field exceeds the existing `512`-cell budget or fails to converge | Fix incremental scheduling, shared-mask use, or target invalidation inside the existing route owner | Do not bypass walls, relax reachability, or change participant count |
 | A device has fewer than three eligible ordinary enemies | Keep it unresolved until eligible enemies enter; do not assign bosses, summons, fixed actors, or mines | This is valid gameplay state, not a reason to relax eligibility |
-| Four simultaneous device events overflow announcements | Coalesce same-tick events into truthful counted bilingual messages | Do not add a HUD panel or silently drop the final count |
+| Device publication cannot find a socket in the preferred off-screen annulus | Use the deterministic distant-socket fallback from the six validated layout sockets | Do not invent a new coordinate, teleport an active device, or publish on the player |
 | Generic contact double-hits with an authored attack | Give authored contact exclusive precedence for that crossing and fix the resolver | Do not lower authored damage or remove generic contact from other overlaps |
 | Collision can damage outside the visible body/effect | Correct collision use to the existing smaller gameplay footprint or correct presentation if it is stale simulation output | Never enlarge presentation solely to hide an oversized collision and never enlarge collision for feel |
 | A focused check fails for unrelated pre-existing worktree content | Preserve the failure evidence, isolate the path, and continue only if task-owned acceptance is independently provable | Do not stage, revert, delete, or repair unrelated user work |
@@ -398,9 +453,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 5.
-- Next task: Task 5.3, obtain the user-controlled subjective attack/contact/device-play observation and resolve any reported defect.
-- Last completed gate: production Web export, itch static verification, built-Web boot, and agent-driven interaction on commit `febfee5c`.
+- Current phase: Phase 6.
+- Next task: Task 6.1, implement and validate the continuous singleton runtime lifecycle.
+- Last completed gate: Discovery Closure Gate for the device correction; source tracing identified the real-run publication defect, Godot `4.7.1.stable` was verified, and the visual authority pair was reread/reinspected at the hashes recorded above.
 - Update rule: on start or resume, read this contract and inspect the worktree only enough to confirm checkpoint inputs, then continue from the first unchecked task whose prerequisites pass. After each checkpoint, record concise evidence, check the task, advance this pointer, and commit the coherent phase. Do not mirror progress into another plan.
 
 ## Completion and Stop Conditions
@@ -409,7 +464,7 @@ Complete when:
 
 - Every task acceptance check passes.
 - Every guard, phase gate, and final gate named by this contract passes.
-- The five-family common pool, three-by-six spread/rotate barrage, rapid timings, signatures, squads, Stage 6/7/9/10 mechanics, four-device cycle, personal and bounded upgrades, recall policy, and universal contact behavior are runtime truth.
+- The five-family common pool, three-by-six spread/rotate barrage, rapid timings, signatures, squads, Stage 6/7/9/10 mechanics, continuous singleton device lifecycle, personal and bounded upgrades, recall policy, and universal contact behavior are runtime truth.
 - Korean and English changed surfaces are complete.
 - Product and visual documents match implementation and retain local device authority.
 - The final task-owned commits contain no unrelated user changes.
@@ -419,7 +474,7 @@ Complete when:
 Replan when:
 
 - A material discovery invalidates a locked count, timing, lifecycle, ownership boundary, collision invariant, dependency boundary, or validation path.
-- Four simultaneous devices cannot be supported inside the fixed route budget without changing gameplay counts or architecture beyond the bounded field-set owner.
+- The six validated sockets cannot support the locked off-screen/distance fallback without inventing coordinates or violating walkability.
 - The only path to reliable contact requires removing dash or post-hit protection, increasing collision beyond presentation, changing physics tick rate, or adding a dependency.
 
 Do not replan or stop for:

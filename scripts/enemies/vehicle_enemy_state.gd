@@ -84,7 +84,7 @@ var pack_trait_ratio := 0.0
 var pack_feed_stacks := 0
 var pack_damage_multiplier := 1.0
 var pack_speed_multiplier := 1.0
-# One cycle-device activation may augment an ordinary enemy once. Future-tier
+# One device activation may augment an ordinary enemy once. Future-tier
 # admission remains owned by the run layer and is intentionally separate.
 var enemy_upgrade_personal_applied := false
 var packet_beat := 0
