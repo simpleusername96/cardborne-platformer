@@ -297,6 +297,22 @@ func _validate_stat_parity(outside: Dictionary, active: Dictionary) -> void:
 				== roundi(expected_stage_two_health),
 		"enemy health row derives the Cycle 2 exact value and outside-run Cycle 1–8 range"
 	)
+	var emitter_rows := StatAdapter.enemy_rows(
+		&"ordinary_emitter_t1", {"active_stage_index":1}
+	)
+	var coordinator_rows := StatAdapter.enemy_rows(
+		&"ordinary_coordinator_t1", {"active_stage_index":1}
+	)
+	var emitter_attack := Dictionary(emitter_rows[1])
+	var coordinator_attack := Dictionary(coordinator_rows[1])
+	_expect(
+		String(emitter_attack["value_key"]) == "GUIDE_VALUE_DAMAGE_WITH_RANGE"
+			and int(Array(emitter_attack["value_args"])[1]) == 700
+			and String(coordinator_attack["value_key"])
+				== "GUIDE_VALUE_DAMAGE_WITH_RANGE"
+			and int(Array(coordinator_attack["value_args"])[1]) == 660,
+		"Emitter and Coordinator guide rows publish their exact attack ranges"
+	)
 	var boss := _entry(active, &"bosses", &"boss_stage_01")
 	var boss_rows := Array(boss["stat_rows"])
 	_expect(

@@ -422,6 +422,11 @@ second global elite-stat layer.
 - Ordinary movement uses the global `1.48x` multiplier. Post-active recovery uses
   `0.90x`; Emitter recovery applies an additional `0.85x`. Startup warnings are
   not shortened by either cadence adjustment.
+- The base Emitter projectile uses a `0.62 s` startup, `560` base speed, `700` attack
+  range, `0.64 s` post-active recovery, and `0.70 s` cooldown. The Coordinator projectile
+  uses a `0.80 s` startup, `470` base speed, `660` attack range, and `1.32 s` recovery.
+  Both retain line-of-sight checks, frozen committed aim, the global `0.82x` hostile
+  projectile-speed multiplier, and the existing ranged-commit and projectile caps.
 - Tiers own family stats and presentation scale. They do not create a new behavior family.
   All actors in one pack share the authored tier. Pack admission is atomic: a failed
   four-to-eight-member placement delays the complete pack and never creates an orphan.
@@ -453,13 +458,17 @@ second global elite-stat layer.
 - Enemy defeats leave collectible XP shards; boss-cleanup retirement never grants XP.
   A new run adds exactly ten visible XP shards to authored placements; cycle advancement
   does not repopulate them.
+- XP shards begin moving toward the ship inside a base `132`-unit attraction radius,
+  travel at `520` units per second, and collect only inside the unchanged `34`-unit
+  physical radius. Pickup Magnet adds `36/72/108/144/180/216` attraction radius across
+  its six levels, for an effective `348`-unit radius at level 6.
 - Level requirements are `14/16/18/21/25` for levels 1-5. From level 6 onward,
   with `k = current level - 5`, the requirement is
   `min(1,536, ceil(25 + 4.01k + 0.176k²))`. The requirement rises smoothly and
   reaches the cap only in the very late fallback progression. The fixed connected-run
-  trace uses composed family traits, collects the initial ten authored shards once,
-  excludes boss and boss-add XP, and reaches levels
-  `16/22/26/30/33/36/39/42/46/49/52/55` after cycles 1-12.
+  trace uses composed semantic packs and family traits, collects the initial ten authored
+  shards once, excludes boss and boss-add XP, and reaches levels
+  `17/23/27/31/35/38/41/44/48/51/55/58` after cycles 1-12.
 - A new run places four experience-recall pickups. After 45 active seconds, if fewer than
   four remain active, one consumed recall returns every 15 seconds, never above four.
 - The actual viewport publishes at most one placed direct item and one active enemy
@@ -488,7 +497,7 @@ second global elite-stat layer.
 - When no compatible card remains, leveling offers three catalog-independent fallback choices.
   `fallback_firepower` adds 3% base primary-projectile damage per rank;
   `fallback_chassis` alternates +3 maximum Hull on odd ranks and +1.5% movement speed on
-  even ranks; `fallback_operations` alternates +18 pickup radius on odd ranks and -1.5%
+  even ranks; `fallback_operations` alternates +14 pickup radius on odd ranks and -1.5%
   dash cooldown on even ranks. Each caps at rank 20 and previews the next exact effect.
   Card acquisition order and build rail exclude fallback ranks. `EXP MAX` is legal only
   when all cards and all three fallback tracks are maxed. Boss rewards use the same fallback

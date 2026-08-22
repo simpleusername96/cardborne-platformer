@@ -48,6 +48,12 @@ func _validate_stage_items() -> void:
 
 func _validate_experience_runtime() -> void:
 	var runtime := ExperienceRuntime.new()
+	_expect(
+		is_equal_approx(ExperienceRuntime.BASE_ATTRACTION_RADIUS, 132.0)
+			and is_equal_approx(ExperienceRuntime.BASE_PICKUP_RADIUS, 34.0)
+			and is_equal_approx(ExperienceRuntime.ATTRACT_SPEED, 520.0),
+		"XP attraction starts at 132 while collection radius and speed stay unchanged"
+	)
 	var expected_requirements := [
 		14, 16, 18, 21, 25, 30, 34, 39, 44, 50,
 		56, 62, 69, 76, 83, 91, 99, 107, 116, 125,
@@ -78,6 +84,27 @@ func _validate_experience_runtime() -> void:
 	_expect(runtime.required_experience() == 1030, "level 70 remains below the very-late cap")
 	runtime.run_level = 90
 	_expect(runtime.required_experience() == 1536, "very-late requirements respect the 1536-XP cap")
+	runtime.reset()
+	runtime.spawn_shard(Vector2(120.0, 0.0), 1)
+	var attraction_result := runtime.advance(
+		0.05, Vector2.ZERO, ExperienceRuntime.BASE_ATTRACTION_RADIUS, 0.0
+	)
+	_expect(
+		int(attraction_result["experience"]) == 0
+			and runtime.shards.size() == 1
+			and runtime.shards[0].pos.x < 120.0,
+		"base attraction reaches a shard outside the former 92-unit radius"
+	)
+	runtime.reset()
+	runtime.spawn_shard(Vector2(133.0, 0.0), 1)
+	runtime.advance(
+		0.05, Vector2.ZERO, ExperienceRuntime.BASE_ATTRACTION_RADIUS, 0.0
+	)
+	_expect(
+		runtime.shards.size() == 1
+			and runtime.shards[0].pos.is_equal_approx(Vector2(133.0, 0.0)),
+		"base attraction does not reach beyond its 132-unit boundary"
+	)
 	runtime.reset()
 	var empty_receipt := runtime.advance(0.0, Vector2.ZERO, 0.0, 0.0)
 	var source_buffer: Array = empty_receipt["reward_sources"]
@@ -117,7 +144,12 @@ func _validate_experience_runtime() -> void:
 	_expect(runtime.required_experience() == 16, "level two requirement follows the early locked curve")
 	runtime.reset()
 	runtime.spawn_shard(Vector2(900.0, 0.0), 2)
-	_expect(int(runtime.advance(0.1, Vector2.ZERO, 92.0, 0.0)["experience"]) == 0, "distant XP is not awarded before collection")
+	_expect(
+		int(runtime.advance(
+			0.1, Vector2.ZERO, ExperienceRuntime.BASE_ATTRACTION_RADIUS, 0.0
+		)["experience"]) == 0,
+		"distant XP is not awarded before collection"
+	)
 	var recall_remaining := 0.65
 	var recalled_experience := 0
 	var moving_player := Vector2.ZERO
@@ -188,9 +220,9 @@ func _validate_route_level_cadence() -> void:
 	}
 	var bundle := ProgressionCapture.new().build("experience-validation", identity)
 	var stages: Array = bundle.get("stages", [])
-	var expected_stage_levels := [16, 22, 26, 30, 33, 36, 39, 42, 46, 49, 52, 55]
+	var expected_stage_levels := [17, 23, 27, 31, 35, 38, 41, 44, 48, 51, 55, 58]
 	var expected_stage_experience := [
-		726, 633, 682, 741, 902, 956, 1037, 1112, 1569, 1642, 1687, 1811,
+		777, 741, 794, 855, 1063, 1094, 1197, 1274, 1788, 1867, 1938, 2122,
 	]
 	_expect(
 		bool(Dictionary(bundle.get("acceptance", {})).get("capture_valid", false)),
@@ -214,13 +246,13 @@ func _validate_route_level_cadence() -> void:
 		)
 	var run := Dictionary(bundle.get("run", {}))
 	_expect(
-		int(run.get("xp_collected", 0)) == 13498,
-		"the connected composed-identity route yields 13498 total XP"
+		int(run.get("xp_collected", 0)) == 15510,
+		"the current semantic-pack route yields 15510 total XP"
 	)
 	_expect(
-		int(run.get("modal_opens", 0)) == 54
-			and int(run.get("level_reached", 0)) == 55,
-		"the corrected smooth XP curve reaches level 55 with 54 rewards"
+		int(run.get("modal_opens", 0)) == 57
+			and int(run.get("level_reached", 0)) == 58,
+		"the semantic-pack XP trace reaches level 58 with 57 rewards"
 	)
 
 
@@ -240,11 +272,36 @@ func _validate_level_up_cards() -> void:
 	for _level in 6:
 		_expect(
 			bool(build.apply(&"pickup_radius").get("applied", false)),
-			"Pickup Radius preserves three collection levels"
+			"Pickup Magnet applies every authored collection level"
 		)
 	_expect(
-		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 252.0),
-		"Pickup Magnet reaches its exact final collection bonus"
+		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 216.0)
+			and is_equal_approx(
+				ExperienceRuntime.BASE_ATTRACTION_RADIUS
+					+ build.stat(&"pickup_radius_bonus", 0.0),
+				348.0
+			),
+		"Pickup Magnet ends at +216 and a 348-unit effective attraction radius"
+	)
+	var first_operations_preview := build.fallback_preview(&"fallback_operations")
+	_expect(
+		StringName(first_operations_preview.get("effect_id", &"")) == &"pickup_radius"
+			and is_equal_approx(float(first_operations_preview.get("value", 0.0)), 14.0),
+		"Operations fallback previews its rebalanced +14 pickup radius"
+	)
+	for _rank in RunBuild.FALLBACK_MAX_RANK:
+		_expect(
+			bool(build.apply_fallback(&"fallback_operations").get("applied", false)),
+			"Operations fallback applies every authored rank"
+		)
+	_expect(
+		is_equal_approx(
+			ExperienceRuntime.BASE_ATTRACTION_RADIUS
+				+ build.stat(&"pickup_radius_bonus", 0.0),
+			488.0
+		)
+			and is_equal_approx(build.fallback_dash_cooldown_multiplier(), 0.85),
+		"full Operations fallback ends at 488 attraction without changing dash scaling"
 	)
 
 

@@ -7,7 +7,7 @@
 script = ExtResource("2_mod")
 stat_id = &"pickup_radius_bonus"
 operation = "add"
-values_by_level = Array[float]([42, 84, 126, 168, 210, 252])
+values_by_level = Array[float]([36, 72, 108, 144, 180, 216])
 
 [resource]
 script = ExtResource("1_def")

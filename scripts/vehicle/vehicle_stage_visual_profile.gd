@@ -74,6 +74,7 @@ const EXPERIENCE_RADII := {
 ## Visual envelopes are intentionally larger than collision truth. They are
 ## presentation-only and keep the shared teardrop readable at live speed.
 const HOSTILE_PROJECTILE_ENVELOPE_SCALE := 4.20
+const ORDINARY_HOSTILE_PROJECTILE_PRESENTATION_SCALE := 1.16
 const PLAYER_PRIMARY_PROJECTILE_SCALE := 4.375
 const PLAYER_SEEKER_PROJECTILE_SCALE := 5.0
 const PLAYER_OPENING_BREACH_PROJECTILE_SCALE := 4.55
@@ -88,6 +89,12 @@ const WALL_FILL := STRUCTURE_BASE
 const WALL_SHADOW := COBALT_DEEP
 const WALL_RAIL_WIDTH := 48.0
 const WALL_SHADOW_OFFSET := Vector2(0.0, 12.0)
+
+
+static func hostile_projectile_envelope_scale(boss_projectile: bool) -> float:
+	return HOSTILE_PROJECTILE_ENVELOPE_SCALE * (
+		1.0 if boss_projectile else ORDINARY_HOSTILE_PROJECTILE_PRESENTATION_SCALE
+	)
 
 # The flat map pass reuses established neutral tokens without changing shared
 # UI semantics. Geometry remains owned by the field snapshot.
@@ -237,6 +244,12 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("flat map role colors must remain opaque")
 	if not is_equal_approx(HOSTILE_PROJECTILE_ENVELOPE_SCALE, 4.20):
 		errors.append("hostile projectile envelope must remain 4.20x collision radius")
+	if not (
+		is_equal_approx(ORDINARY_HOSTILE_PROJECTILE_PRESENTATION_SCALE, 1.16)
+		and is_equal_approx(hostile_projectile_envelope_scale(false), 4.872)
+		and is_equal_approx(hostile_projectile_envelope_scale(true), 4.20)
+	):
+		errors.append("ordinary hostile projectiles must be 1.16x the boss-safe base envelope")
 	if not is_equal_approx(PLAYER_PRIMARY_PROJECTILE_SCALE, 4.375):
 		errors.append("player primary projectile visual must remain 4.375x collision radius")
 	if not is_equal_approx(PLAYER_SEEKER_PROJECTILE_SCALE, 5.0):

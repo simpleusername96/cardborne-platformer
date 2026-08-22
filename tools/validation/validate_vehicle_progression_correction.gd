@@ -23,7 +23,13 @@ func _initialize() -> void:
 	_expect(is_equal_approx(build.fallback_primary_damage_multiplier(), 1.60), "firepower rank 20 adds 60 percent")
 	_expect(is_equal_approx(build.stat(&"max_health_bonus", 100.0), 130.0), "chassis rank 20 adds 30 Hull")
 	_expect(is_equal_approx(build.stat(&"move_speed_multiplier", 300.0), 345.0), "chassis rank 20 adds 15 percent movement speed")
-	_expect(is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 180.0), "operations rank 20 adds 180 pickup radius")
+	_expect(
+		is_equal_approx(
+			build.stat(&"pickup_radius_bonus", 0.0),
+			10.0 * Build.FALLBACK_OPERATIONS_PICKUP_RADIUS_BONUS
+		),
+		"operations rank 20 adds the authored pickup radius"
+	)
 	_expect(is_equal_approx(build.fallback_dash_cooldown_multiplier(), 0.85), "operations rank 20 reduces dash cooldown by 15 percent")
 
 	for level in range(0, PrimaryRules.MAX_PIERCE_LEVEL + 1):

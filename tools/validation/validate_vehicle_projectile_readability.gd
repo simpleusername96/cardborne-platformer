@@ -61,8 +61,15 @@ func _initialize() -> void:
 func _validate_scale_contract() -> void:
 	var collision_radius := AttackContract.hostile_projectile_radius(12.0)
 	_expect(
-		is_equal_approx(collision_radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE, 31.5),
-		"hostile visual envelope uses the profile multiplier"
+		is_equal_approx(
+			collision_radius * Art.hostile_projectile_envelope_scale(false),
+			36.54
+		)
+			and is_equal_approx(
+				collision_radius * Art.hostile_projectile_envelope_scale(true),
+				31.5
+			),
+		"ordinary hostile shots are larger while boss shots keep the base envelope"
 	)
 	_expect(
 		is_equal_approx(collision_radius * Art.PLAYER_PRIMARY_PROJECTILE_SCALE, 32.8125),

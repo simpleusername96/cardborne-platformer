@@ -92,7 +92,11 @@ func _validate_family_direct_attacks(run) -> void:
 	_expect(
 		run.hostile_projectiles.size() == projectile_count + 1
 			and coordinator.phase == &"recovery"
-			and is_equal_approx(coordinator.phase_time, 1.50 * 0.90),
+			and is_equal_approx(
+				coordinator.phase_time,
+				float(AttackContract.ordinary_attack(&"ordinary_pulse_01")["recovery"])
+					* 0.90
+			),
 		"coordinator commits one visible direct projectile and scaled recovery"
 	)
 

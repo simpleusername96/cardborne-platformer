@@ -5,6 +5,8 @@ const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 const PrimaryPayload = preload("res://scripts/combat/vehicle_primary_payload_profile.gd")
+const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
+const ProjectileStore = preload("res://scripts/combat/vehicle_projectile_store.gd")
 
 var failures: Array[String] = []
 
@@ -91,8 +93,18 @@ func _initialize() -> void:
 				== &"ground_impact",
 		"ordinary controller stays projectile-based while artillery owns a marked ground impact"
 	)
+	var emitter_bolt := AttackContract.ordinary_attack(&"ordinary_lane_01")
 	var defender_bash := AttackContract.ordinary_attack(&"ordinary_shield_01")
 	var coordinator_bolt := AttackContract.ordinary_attack(&"ordinary_pulse_01")
+	_expect(
+		StringName(emitter_bolt.get("kind", &"")) == &"projectile"
+			and is_equal_approx(float(emitter_bolt.get("startup", 0.0)), 0.62)
+			and is_equal_approx(float(emitter_bolt.get("speed", 0.0)), 560.0)
+			and is_equal_approx(float(emitter_bolt.get("range", 0.0)), 700.0)
+			and is_equal_approx(float(emitter_bolt.get("recovery", 0.0)), 0.64)
+			and is_equal_approx(float(emitter_bolt.get("cooldown", 0.0)), 0.70),
+		"Emitter exposes the exact faster ranged-pressure contract"
+	)
 	_expect(
 		StringName(defender_bash.get("kind", &"")) == &"charge"
 			and is_equal_approx(float(defender_bash.get("startup", 0.0)), 0.60)
@@ -106,10 +118,32 @@ func _initialize() -> void:
 		StringName(coordinator_bolt.get("kind", &"")) == &"projectile"
 			and is_equal_approx(float(coordinator_bolt.get("startup", 0.0)), 0.80)
 			and is_equal_approx(float(coordinator_bolt.get("damage", 0.0)), 12.0)
-			and is_equal_approx(float(coordinator_bolt.get("speed", 0.0)), 420.0)
+			and is_equal_approx(float(coordinator_bolt.get("speed", 0.0)), 470.0)
 			and is_equal_approx(float(coordinator_bolt.get("origin_offset", 0.0)), 34.0)
-			and is_equal_approx(float(coordinator_bolt.get("recovery", 0.0)), 1.50),
+			and is_equal_approx(float(coordinator_bolt.get("range", 0.0)), 660.0)
+			and is_equal_approx(float(coordinator_bolt.get("recovery", 0.0)), 1.32),
 		"coordinator exposes the exact direct-projectile contract"
+	)
+	var emitter_travel_seconds := (
+		(float(emitter_bolt["range"]) - float(emitter_bolt["origin_offset"]))
+		/ Director.effective_hostile_projectile_speed(float(emitter_bolt["speed"]))
+	)
+	var coordinator_travel_seconds := (
+		(float(coordinator_bolt["range"]) - float(coordinator_bolt["origin_offset"]))
+		/ Director.effective_hostile_projectile_speed(float(coordinator_bolt["speed"]))
+	)
+	_expect(
+		emitter_travel_seconds < AttackContract.HOSTILE_PROJECTILE_LIFETIME
+			and coordinator_travel_seconds < AttackContract.HOSTILE_PROJECTILE_LIFETIME
+			and float(emitter_bolt["startup"]) + emitter_travel_seconds > 2.0
+			and float(coordinator_bolt["startup"]) + coordinator_travel_seconds > 2.0,
+		"maximum-range shots arrive within lifetime while preserving over two seconds of warning plus travel"
+	)
+	_expect(
+		Director.STAGE_MAX_RANGED_COMMITS == [3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4]
+			and ProjectileStore.HOSTILE_CAPACITY == 120
+			and ProjectileStore.HOSTILE_BOSS_RESERVE == 24,
+		"ranged tuning preserves commit caps and the 96-shot ordinary hostile budget"
 	)
 	var rail: Dictionary = AttackContract.ordinary_attack(&"ordinary_beam_01")
 	var orbit: Dictionary = AttackContract.ordinary_attack(&"ordinary_range_01")

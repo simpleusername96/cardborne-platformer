@@ -453,11 +453,11 @@ func _validate_stats(catalog: Catalog) -> void:
 			"Movement Speed uses its exact level speed"
 		)
 	build.reset()
-	for _level in 3:
+	for _level in 6:
 		build.apply(&"pickup_radius")
 	_expect(
-		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 210.0),
-		"Pickup Radius preserves the three-level +210 collection behavior"
+		is_equal_approx(build.stat(&"pickup_radius_bonus", 0.0), 216.0),
+		"Pickup Magnet preserves the six-level +216 collection behavior"
 	)
 	build.reset()
 	_expect(

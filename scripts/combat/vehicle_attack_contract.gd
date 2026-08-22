@@ -58,7 +58,8 @@ const ORDINARY_ATTACKS := {
 	},
 	&"ordinary_lane_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.62,
-		"damage":10.0, "speed":500.0, "origin_offset":30.0,
+		"damage":10.0, "speed":560.0, "origin_offset":30.0,
+		"range":700.0, "recovery":0.64, "cooldown":0.70,
 	},
 	&"ordinary_gap_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":0.82,
@@ -83,8 +84,8 @@ const ORDINARY_ATTACKS := {
 	},
 	&"ordinary_pulse_01":{
 		"kind":&"projectile", "affinity":ARC, "startup":0.80,
-		"damage":12.0, "speed":420.0, "origin_offset":34.0,
-		"recovery":1.50,
+		"damage":12.0, "speed":470.0, "origin_offset":34.0,
+		"range":660.0, "recovery":1.32,
 	},
 	&"ordinary_beam_01":{
 		"kind":&"projectile", "affinity":KINETIC, "startup":1.40,
@@ -369,6 +370,23 @@ static func validate_contract() -> PackedStringArray:
 			errors.append("ordinary attack has an unknown affinity: %s" % role)
 		if float(attack.get("startup", 0.0)) < 0.4:
 			errors.append("ordinary attack lacks readable startup: %s" % role)
+	var emitter: Dictionary = ordinary_attack(&"ordinary_lane_01")
+	if not (
+		is_equal_approx(float(emitter.get("startup", 0.0)), 0.62)
+		and is_equal_approx(float(emitter.get("speed", 0.0)), 560.0)
+		and is_equal_approx(float(emitter.get("range", 0.0)), 700.0)
+		and is_equal_approx(float(emitter.get("recovery", 0.0)), 0.64)
+		and is_equal_approx(float(emitter.get("cooldown", 0.0)), 0.70)
+	):
+		errors.append("Emitter must expose its exact ranged-pressure contract")
+	var coordinator: Dictionary = ordinary_attack(&"ordinary_pulse_01")
+	if not (
+		is_equal_approx(float(coordinator.get("startup", 0.0)), 0.80)
+		and is_equal_approx(float(coordinator.get("speed", 0.0)), 470.0)
+		and is_equal_approx(float(coordinator.get("range", 0.0)), 660.0)
+		and is_equal_approx(float(coordinator.get("recovery", 0.0)), 1.32)
+	):
+		errors.append("Coordinator must expose its exact ranged-pressure contract")
 	var rail: Dictionary = ordinary_attack(&"ordinary_beam_01")
 	if not (
 		is_equal_approx(float(rail.get("startup", 0.0)), 1.40)

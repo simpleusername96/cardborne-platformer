@@ -463,7 +463,9 @@ Breakable Bulkhead는 현재 product category가 아니다. 내부 구조벽·�
   primary와 Seeker thickness는 `0.50`, hostile bolt thickness는 이전 `0.50`의
   두 배인 `1.00`을 적용한다. hostile bolt의 collision radius는 damage tier별
   `6/7.5/9`이며 approved raster의 collision-derived presentation envelope는
-  `4.20`을 적용한다. 이 transform은 collision truth를 바꾸지 않는다.
+  `4.20`을 base로 적용한다. ordinary와 family-trait hostile bolt는 이 base envelope에
+  presentation-only `1.16`을 추가 적용하고 boss projectile은 `4.20` base를 그대로
+  사용한다. 이 transform은 collision truth, capacity 또는 retained batch 수를 바꾸지 않는다.
   player primary는 선택한 단일 element affinity tint를 사용하고 Seeker와 hostile
   bolt는 authored identity를 유지한다. cadence, speed, homing, collision과 damage는
   gameplay code가 소유한다.

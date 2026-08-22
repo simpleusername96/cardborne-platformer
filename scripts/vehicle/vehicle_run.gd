@@ -2768,7 +2768,10 @@ func _collect_pickup(pickup: Dictionary) -> void:
 
 
 func _update_experience(delta: float) -> void:
-	var attraction_radius := 92.0 + run_build.stat(&"pickup_radius_bonus", 0.0)
+	var attraction_radius := (
+		experience_runtime.BASE_ATTRACTION_RADIUS
+		+ run_build.stat(&"pickup_radius_bonus", 0.0)
+	)
 	var result := experience_runtime.advance(
 		delta,
 		player_position,
@@ -3673,7 +3676,7 @@ func _enemy_recovery_cooldown(enemy: EnemyState) -> float:
 		&"ordinary_edge_01":
 			cooldown = 0.55
 		&"ordinary_lane_01":
-			cooldown = 0.78
+			cooldown = float(AttackContract.ordinary_attack(role)["cooldown"])
 		&"ordinary_gap_01":
 			cooldown = 1.15
 		&"ordinary_fixed_ranged_01":
@@ -3727,7 +3730,10 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 		&"ordinary_edge_01":
 			return distance <= 175.0
 		&"ordinary_lane_01":
-			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
+			return (
+				distance <= float(AttackContract.ordinary_attack(role)["range"])
+				and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
+			)
 		&"ordinary_gap_01":
 			return distance <= 590.0 and _runtime_has_line_of_sight(enemy.pos, target, 4.0)
 		&"ordinary_fixed_ranged_01":
@@ -3739,7 +3745,10 @@ func _enemy_can_attack(enemy: EnemyState) -> bool:
 		&"ordinary_shield_01":
 			return _protected_emitter(enemy) == null and distance <= 190.0
 		&"ordinary_pulse_01":
-			return distance <= 620.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
+			return (
+				distance <= float(AttackContract.ordinary_attack(role)["range"])
+				and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
+			)
 		&"ordinary_fixed_ranged_02":
 			return distance <= 700.0 and _runtime_has_line_of_sight(enemy.pos, target, 7.0)
 		&"ordinary_pull_01":
@@ -3851,7 +3860,9 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 				enemy.family_trait == &"slow",
 				FamilyTraits.SLOW_DURATION
 			)
-			_enter_ordinary_recovery(enemy, 0.72)
+			_enter_ordinary_recovery(
+				enemy, float(shooter_attack["recovery"])
+			)
 		&"ordinary_gap_01":
 			if enemy.archetype == &"ordinary_compression_01":
 				_enter_ordinary_recovery(enemy, 1.0)

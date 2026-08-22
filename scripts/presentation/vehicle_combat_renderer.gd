@@ -1467,8 +1467,10 @@ func _sync_projectiles(
 			var hostile_batch: BatchHandle = _projectile_batches[
 				ProjectileCatalog.HOSTILE
 			]
-			var hostile_visual_radius := (
-				radius * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+			var hostile_visual_radius := radius * (
+				Art.hostile_projectile_envelope_scale(
+					projectile.threat_tier == AttackContract.THREAT_BOSS
+				)
 			)
 			if not visible_world.grow(hostile_visual_radius).has_point(position):
 				continue

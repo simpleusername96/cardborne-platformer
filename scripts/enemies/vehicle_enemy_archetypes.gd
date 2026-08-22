@@ -13,6 +13,7 @@ const ORDINARY_ARCHETYPES: Array[StringName] = [
 ]
 const PROJECTILE_FIRING_ARCHETYPES: Array[StringName] = [
 	&"ordinary_emitter_t1", &"ordinary_emitter_t2", &"ordinary_emitter_t3",
+	&"ordinary_coordinator_t1", &"ordinary_coordinator_t2", &"ordinary_coordinator_t3",
 	&"boss_pattern_fixed_beam_01", &"boss_actor",
 ]
 

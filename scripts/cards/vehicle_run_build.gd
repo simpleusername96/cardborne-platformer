@@ -14,6 +14,7 @@ const FALLBACK_IDS: Array[StringName] = [
 	&"fallback_firepower", &"fallback_chassis", &"fallback_operations",
 ]
 const FALLBACK_MAX_RANK := 20
+const FALLBACK_OPERATIONS_PICKUP_RADIUS_BONUS := 14.0
 
 var catalog: VehicleUpgradeCatalog
 var levels: Dictionary = {}
@@ -136,7 +137,10 @@ func stat(stat_id: StringName, base_value: float) -> float:
 		&"move_speed_multiplier":
 			value *= 1.0 + float(floori(float(fallback_rank(&"fallback_chassis")) * 0.5)) * 0.015
 		&"pickup_radius_bonus":
-			value += float(ceili(float(fallback_rank(&"fallback_operations")) * 0.5)) * 18.0
+			value += (
+				float(ceili(float(fallback_rank(&"fallback_operations")) * 0.5))
+				* FALLBACK_OPERATIONS_PICKUP_RADIUS_BONUS
+			)
 	return value
 
 
@@ -169,7 +173,10 @@ func fallback_preview(fallback_id: StringName) -> Dictionary:
 			value = 3.0 if new_rank % 2 == 1 else 1.5
 		&"fallback_operations":
 			effect_id = &"pickup_radius" if new_rank % 2 == 1 else &"dash_cooldown_percent"
-			value = 18.0 if new_rank % 2 == 1 else 1.5
+			value = (
+				FALLBACK_OPERATIONS_PICKUP_RADIUS_BONUS
+				if new_rank % 2 == 1 else 1.5
+			)
 	return {
 		"valid":true, "id":fallback_id, "old_rank":old_rank,
 		"new_rank":new_rank, "max_rank":FALLBACK_MAX_RANK,

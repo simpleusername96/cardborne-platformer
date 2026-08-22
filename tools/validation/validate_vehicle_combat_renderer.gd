@@ -474,10 +474,10 @@ func _run() -> void:
 	var hostile_buffer := hostile_visual.multimesh.buffer
 	_expect(
 		Vector2(hostile_buffer[0], hostile_buffer[4]).is_equal_approx(
-			Vector2.LEFT * 5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+			Vector2.LEFT * 5.0 * Art.hostile_projectile_envelope_scale(false)
 				* Art.PROJECTILE_LENGTH_FACTOR
 		),
-		"hostile visual envelope uses the reduced presentation length"
+		"ordinary hostile visual envelope uses the larger presentation length"
 	)
 	_expect(
 		Vector2(hostile_buffer[3], hostile_buffer[7]).is_equal_approx(
@@ -488,10 +488,10 @@ func _run() -> void:
 	_expect(
 		is_equal_approx(
 			Vector2(hostile_buffer[1], hostile_buffer[5]).length(),
-			5.0 * Art.HOSTILE_PROJECTILE_ENVELOPE_SCALE
+			5.0 * Art.hostile_projectile_envelope_scale(false)
 				* Art.HOSTILE_PROJECTILE_THICKNESS_FACTOR
 		),
-		"hostile visual envelope uses twice the previous presentation thickness"
+		"ordinary hostile visual envelope uses the larger opaque thickness"
 	)
 	_expect(
 		projectile_visual.texture != null

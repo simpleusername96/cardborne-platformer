@@ -4,6 +4,7 @@ extends RefCounted
 ## Run-scoped XP ownership, including capped geometric shards and queued levels.
 
 const MAX_SHARDS := 192
+const BASE_ATTRACTION_RADIUS := 132.0
 const BASE_PICKUP_RADIUS := 34.0
 const ATTRACT_SPEED := 520.0
 const EARLY_LEVEL_REQUIREMENTS: Array[int] = [14, 16, 18, 21, 25]

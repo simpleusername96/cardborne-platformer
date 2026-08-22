@@ -317,7 +317,7 @@ static func _enemy_attack(
 				"damage":SpecialistRuntime.BEAM_DAMAGE,
 				"range":SpecialistRuntime.BEAM_RANGE,
 			}
-		&"ordinary_shield_01", &"ordinary_pulse_01":
+		&"ordinary_shield_01":
 			return {
 				"damage":ContactRuntime.PERSISTENT_CONTACT_DAMAGE,
 				"range":0.0,
@@ -328,10 +328,11 @@ static func _enemy_attack(
 	var attack_range := 0.0
 	match StringName(attack["kind"]):
 		&"projectile":
-			attack_range = (
+			attack_range = float(attack.get(
+				"range",
 				EncounterDirector.effective_hostile_projectile_speed(float(attack["speed"]))
-				* AttackContract.HOSTILE_PROJECTILE_LIFETIME
-			)
+					* AttackContract.HOSTILE_PROJECTILE_LIFETIME
+			))
 		&"charge":
 			attack_range = (
 				float(attack["speed"])
