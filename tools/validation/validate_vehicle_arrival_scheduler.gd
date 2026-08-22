@@ -4,7 +4,6 @@ const CombatStages = preload("res://scripts/vehicle/stages/vehicle_combat_stages
 const Generator = preload("res://scripts/vehicle/vehicle_field_layout_generator.gd")
 const Runtime = preload("res://scripts/encounters/vehicle_encounter_runtime.gd")
 const RunDifficulty = preload("res://scripts/vehicle/vehicle_run_difficulty.gd")
-const Director = preload("res://scripts/encounters/vehicle_encounter_director.gd")
 const EngagementDirector = preload("res://scripts/encounters/vehicle_engagement_director.gd")
 const EnemyArchetypes = preload("res://scripts/enemies/vehicle_enemy_archetypes.gd")
 const MovementPolicy = preload("res://scripts/enemies/vehicle_enemy_movement_policy.gd")
@@ -108,10 +107,7 @@ func _validate_truthful_rounds(stage_id: StringName, packet: Dictionary, tactica
 
 func _validate_capacity_reservation(stage_id: StringName, packet: Dictionary, tactical) -> void:
 	var runtime := _runtime(stage_id, [packet], tactical)
-	var packet_cap := RunDifficulty.scaled_active_cap(
-		Director.materialized_active_cap_for(int(packet["beat"])),
-		RunDifficulty.HARD
-	)
+	var packet_cap := runtime.active_cap()
 	var window_units := _window_unit_count(packet, 0)
 	var blocked := runtime.tick(0.1, packet_cap - window_units + 1, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 	_expect(Array(blocked["cues"]).is_empty(), "cue admission waits until the complete window fits")
@@ -129,10 +125,7 @@ func _validate_capacity_reservation(stage_id: StringName, packet: Dictionary, ta
 func _validate_cued_window_never_reblocks(stage_id: StringName, packet: Dictionary, tactical) -> void:
 	var runtime := _runtime(stage_id, [packet], tactical)
 	var authored_units := _packet_unit_count(packet)
-	var packet_cap := RunDifficulty.scaled_active_cap(
-		Director.materialized_active_cap_for(int(packet["beat"])),
-		RunDifficulty.HARD
-	)
+	var packet_cap := runtime.active_cap()
 	var window_units := _window_unit_count(packet, 0)
 	var admission := runtime.tick(0.1, 0, [], tactical.geometry_snapshot.player_start, _visible(tactical))
 	_expect(Array(admission["cues"]).size() == 4, "whole-window fixture receives one cue set")
