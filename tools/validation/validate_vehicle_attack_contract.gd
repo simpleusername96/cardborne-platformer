@@ -194,6 +194,34 @@ func _initialize() -> void:
 		) == INF,
 		"path clipping leaves a missed circle untouched"
 	)
+	_expect(
+		is_equal_approx(
+			AttackContract.relative_sweep_first_t(
+				Vector2(-100.0, 0.0), Vector2(100.0, 0.0),
+				Vector2(100.0, 0.0), Vector2(-100.0, 0.0), 20.0
+			),
+			0.45
+		),
+		"relative sweep returns the first simultaneous between-endpoint contact"
+	)
+	_expect(
+		AttackContract.relative_sweep_first_t(
+			Vector2(-100.0, 20.1), Vector2(100.0, 20.1),
+			Vector2.ZERO, Vector2.ZERO, 20.0
+		) == INF,
+		"relative sweep does not enlarge the exact combined circle"
+	)
+	_expect(
+		is_zero_approx(AttackContract.segment_segment_distance(
+			Vector2(-100.0, 0.0), Vector2(100.0, 0.0),
+			Vector2(0.0, -100.0), Vector2(0.0, 100.0)
+		))
+			and is_equal_approx(AttackContract.segment_segment_distance(
+				Vector2(-100.0, 30.0), Vector2(100.0, 30.0),
+				Vector2(-50.0, 0.0), Vector2(50.0, 0.0)
+			), 30.0),
+		"segment distance distinguishes corridor crossings from exact outside paths"
+	)
 
 	var profile := PrimaryPayload.new()
 	profile.thermal_enabled = true

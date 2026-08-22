@@ -22,18 +22,21 @@ func _initialize() -> void:
 func _validate_replenishment_timing() -> void:
 	var runtime := RecallReplenishmentRuntime.new()
 	var pickups := _pickups(1)
-	_expect(not runtime.advance(60.0, 89.9, pickups), "recalls do not replenish before 90 seconds")
-	_expect(not runtime.advance(29.9, 90.0, pickups), "the first eligible interval remains 30 seconds")
-	_expect(runtime.advance(0.1, 90.0, pickups), "one inactive recall replenishes after 30 eligible seconds")
-	_expect(_active_recall_count(pickups) == 2, "replenishment restores the two-recall low watermark")
+	_expect(not runtime.advance(60.0, 44.9, pickups), "recalls do not replenish before 45 seconds")
+	_expect(not runtime.advance(14.9, 45.0, pickups), "the first eligible interval remains 15 seconds")
+	_expect(runtime.advance(0.1, 45.0, pickups), "one inactive recall replenishes after 15 eligible seconds")
+	_expect(_active_recall_count(pickups) == 2, "each interval restores one authored recall")
+	_expect(runtime.advance(15.0, 60.0, pickups), "a second eligible interval restores another recall")
+	_expect(runtime.advance(15.0, 75.0, pickups), "a third eligible interval restores the four-recall watermark")
+	_expect(_active_recall_count(pickups) == 4, "replenishment restores all four authored recalls")
 
 
 func _validate_active_pickup_bounds() -> void:
 	var runtime := RecallReplenishmentRuntime.new()
-	var pickups := _pickups(2)
-	_expect(not runtime.advance(90.0, 180.0, pickups), "two active recalls suppress replenishment")
+	var pickups := _pickups(4)
+	_expect(not runtime.advance(90.0, 180.0, pickups), "four active recalls suppress replenishment")
 	pickups[0]["active"] = false
-	_expect(runtime.advance(30.0, 180.0, pickups), "a consumed recall can replenish later")
+	_expect(runtime.advance(15.0, 180.0, pickups), "a consumed recall can replenish later")
 	_expect(_active_recall_count(pickups) <= RecallReplenishmentRuntime.ACTIVE_CAP, "active recalls stay within the authored cap")
 	runtime.elapsed = 18.0
 	runtime.reset()

@@ -240,6 +240,7 @@ var _motion_cover_static_safe := false
 var _motion_cover_static_cover_clear := false
 
 var player_position := Vector2.ZERO
+var _player_combat_previous_position := Vector2.ZERO
 var player_velocity := Vector2.ZERO
 var player_hull_direction := Vector2.RIGHT
 var player_aim_direction := Vector2.RIGHT
@@ -658,11 +659,11 @@ func _physics_process(delta: float) -> void:
 		if timing_active:
 			section_started = Time.get_ticks_usec()
 		if _performance_ablation != &"attacks":
-			_update_projectiles(delta)
+			_update_projectiles(delta, pickup_motion_start)
 		var effects_started := (
 			Time.get_ticks_usec() if _performance_detail_sample_active else 0
 		)
-		_update_denied_zones(delta)
+		_update_denied_zones(delta, pickup_motion_start)
 		if _simulation_lod_bucket == 0:
 			_update_effects(delta * 2.0)
 		if _performance_detail_sample_active:
@@ -1166,6 +1167,7 @@ func _reset_run(
 	_pending_continuation_stage_id = &""
 	_pending_final_result_snapshot.clear()
 	player_position = Rules.player_start(current_stage_id)
+	_player_combat_previous_position = player_position
 	player_velocity = Vector2.ZERO
 	player_slow_timer = 0.0
 	player_hull_direction = Vector2.RIGHT
@@ -2788,6 +2790,7 @@ func _update_enemies(
 	delta: float,
 	player_contact_previous_position: Vector2
 ) -> void:
+	_player_combat_previous_position = player_contact_previous_position
 	var performance_active := _performance_detail_sample_active
 	var section_started := Time.get_ticks_usec() if performance_active else 0
 	var decision_bucket := _enemy_decision_bucket
@@ -3420,7 +3423,7 @@ func _update_ordinary_enemy(
 		enemy.mechanic_inner_radius = 72.0
 		enemy.mechanic_outer_radius = 170.0
 		if enemy.phase_time <= 0.0:
-			if player_position.distance_to(enemy.pos) <= enemy.mechanic_outer_radius + Rules.PLAYER_RADIUS:
+			if _player_sweep_distance_to_point(enemy.pos) <= enemy.mechanic_outer_radius + Rules.PLAYER_RADIUS:
 				_damage_player(26.0 * enemy.pack_damage_multiplier, "Charger self-destruct", true)
 			_add_effect(EffectStore.EXPLOSIVE_SEEKER_IMPACT_KIND, enemy.pos, Art.DANGER, 0.24, enemy.mechanic_outer_radius)
 			_defeat_enemy(enemy, "self_destruct")
@@ -3839,7 +3842,7 @@ func _begin_enemy_active(enemy: EnemyState) -> void:
 		&"ordinary_fixed_area_01":
 			var mine_attack: Dictionary = AttackContract.ORDINARY_ATTACKS[role]
 			enemy.phase_time = 0.15
-			var mine_distance := player_position.distance_to(enemy.pos)
+			var mine_distance := _player_sweep_distance_to_point(enemy.pos)
 			var mine_damage := AttackContract.radial_damage(
 				float(mine_attack["damage"]),
 				mine_distance,
@@ -4072,9 +4075,11 @@ func _update_enemy_active(enemy: EnemyState, delta: float) -> void:
 			)
 			if (
 				not enemy.hit_committed
-				and Rules.point_segment_distance(
-					player_position, enemy.pos, live_beam_end
-				) <= Rules.PLAYER_RADIUS + SpecialistRuntime.BEAM_WIDTH * 0.5
+				and _player_sweep_hits_corridor(
+					enemy.pos,
+					live_beam_end,
+					SpecialistRuntime.BEAM_WIDTH * 0.5
+				)
 			):
 				enemy.hit_committed = true
 				_damage_player(SpecialistRuntime.BEAM_DAMAGE, "Fixed Beam Ordinary Enemy Lv.1 sweep", true)
@@ -4641,19 +4646,28 @@ func _count_hostile_projectiles() -> int:
 	return projectile_store.hostile_count()
 
 
-func _update_projectiles(delta: float) -> void:
+func _update_projectiles(delta: float, player_motion_from: Variant = null) -> void:
+	_player_combat_previous_position = (
+		player_position
+		if player_motion_from == null
+		else Vector2(player_motion_from)
+	)
 	_boss_barrage_hit_lock_remaining = maxf(0.0, _boss_barrage_hit_lock_remaining - maxf(0.0, delta))
 	var section_started := (
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
 	)
-	_update_projectile_buffer(hostile_projectiles, true, delta)
+	_update_projectile_buffer(
+		hostile_projectiles, true, delta, _player_combat_previous_position
+	)
 	_performance_accumulate_enemy_section(
 		"projectile_hostile", section_started
 	)
 	section_started = (
 		Time.get_ticks_usec() if _performance_detail_sample_active else 0
 	)
-	_update_projectile_buffer(player_projectiles, false, delta)
+	_update_projectile_buffer(
+		player_projectiles, false, delta, _player_combat_previous_position
+	)
 	_performance_accumulate_enemy_section(
 		"projectile_player", section_started
 	)
@@ -4662,7 +4676,8 @@ func _update_projectiles(delta: float) -> void:
 func _update_projectile_buffer(
 	buffer: Array[ProjectileState],
 	hostile: bool,
-	delta: float
+	delta: float,
+	player_from: Vector2
 ) -> void:
 	var index := 0
 	while index < buffer.size():
@@ -4784,33 +4799,37 @@ func _update_projectile_buffer(
 
 		projectile.pos = to
 		if hostile:
-			var direct_contact := (
-				Rules.point_segment_distance(player_position, from, to)
-					<= Rules.PLAYER_RADIUS + projectile.radius
+			var direct_contact_t := AttackContract.relative_sweep_first_t(
+				player_from,
+				player_position,
+				from,
+				to,
+				Rules.PLAYER_RADIUS + projectile.radius
 			)
+			var direct_contact := not is_inf(direct_contact_t)
 			if (
 				projectile.distance_growth_kind
 					== ProjectileState.DISTANCE_GROWTH_GROWTH_KIND
 				and projectile.distance_growth_proximity_armed
-				and (
-					direct_contact
-					or projectile.can_proximity_detonate_on_segment(
-						from, to, player_position, Rules.PLAYER_RADIUS
-					)
-				)
 			):
-				var trigger_t := AttackContract.segment_circle_first_t(
+				var trigger_t := AttackContract.relative_sweep_first_t(
+					player_from,
+					player_position,
 					from,
 					to,
-					player_position,
 					ProjectileState.DISTANCE_GROWTH_PROXIMITY_TRIGGER_RADIUS
 						+ Rules.PLAYER_RADIUS
 				)
-				if trigger_t <= 1.0:
+				if not is_inf(trigger_t):
 					projectile.pos = from.lerp(to, clampf(trigger_t, 0.0, 1.0))
-				_detonate_distance_growth_projectile(projectile)
-				projectile_store.remove_hostile_at_swap(index)
-				continue
+					_detonate_distance_growth_projectile(
+						projectile,
+						player_from.lerp(
+							player_position, clampf(trigger_t, 0.0, 1.0)
+						)
+					)
+					projectile_store.remove_hostile_at_swap(index)
+					continue
 			if direct_contact:
 				if projectile.owner.begins_with("boss_barrage:") and _boss_barrage_hit_lock_remaining > 0.0:
 					projectile_store.remove_hostile_at_swap(index)
@@ -5029,13 +5048,18 @@ func _try_reflect_direct_projectile(
 	return true
 
 
-func _detonate_distance_growth_projectile(projectile: ProjectileState) -> bool:
+func _detonate_distance_growth_projectile(
+	projectile: ProjectileState,
+	player_sample: Vector2 = Vector2.INF
+) -> bool:
 	if projectile == null or not projectile.consume_distance_growth_detonation():
 		return false
+	if not is_finite(player_sample.x) or not is_finite(player_sample.y):
+		player_sample = player_position
 	var explosion_radius := ProjectileState.DISTANCE_GROWTH_EXPLOSION_RADIUS
 	var explosion_damage := AttackContract.radial_damage(
 		projectile.damage,
-		player_position.distance_to(projectile.pos),
+		player_sample.distance_to(projectile.pos),
 		explosion_radius
 	)
 	if explosion_damage > 0.0:
@@ -5185,7 +5209,49 @@ func _find_enemy_by_id(enemy_id: String) -> EnemyState:
 	return enemy_store.find(enemy_id)
 
 
-func _update_denied_zones(delta: float) -> void:
+func _player_sweep_distance_to_point(point: Vector2) -> float:
+	return Rules.point_segment_distance(
+		point, _player_combat_previous_position, player_position
+	)
+
+
+func _player_sweep_hits_corridor(
+	corridor_from: Vector2,
+	corridor_to: Vector2,
+	half_width: float,
+	translation: Vector2 = Vector2.ZERO
+) -> bool:
+	# Subtracting a corridor's same-tick translation from the player's endpoint
+	# turns parallel segment motion into one static-corridor sweep.
+	return AttackContract.segment_segment_distance(
+		_player_combat_previous_position,
+		player_position - translation,
+		corridor_from,
+		corridor_to
+	) <= Rules.PLAYER_RADIUS + maxf(0.0, half_width)
+
+
+func _boss_charge_contact_hits(
+	charge_from: Vector2,
+	charge_to: Vector2,
+	boss_radius: float,
+	contact_padding: float
+) -> bool:
+	return not is_inf(AttackContract.relative_sweep_first_t(
+		_player_combat_previous_position,
+		player_position,
+		charge_from,
+		charge_to,
+		Rules.PLAYER_RADIUS + boss_radius + contact_padding
+	))
+
+
+func _update_denied_zones(delta: float, player_motion_from: Variant = null) -> void:
+	_player_combat_previous_position = (
+		player_position
+		if player_motion_from == null
+		else Vector2(player_motion_from)
+	)
 	for index in range(denied_zones.size() - 1, -1, -1):
 		# A lethal zone hit can transition the run and clear the array while this
 		# reverse pass is still unwinding. Treat that transition as terminal for
@@ -5202,15 +5268,16 @@ func _update_denied_zones(delta: float) -> void:
 			denied_zones.remove_at(index)
 			continue
 		var shape := StringName(zone.get("shape", &"area"))
+		var corridor_translation := Vector2.ZERO
 		if shape == &"corridor" and zone.has("motion"):
-			var translation := Vector2(zone["motion"]) * delta
-			zone["from"] = Vector2(zone["from"]) + translation
-			zone["to"] = Vector2(zone["to"]) + translation
+			corridor_translation = Vector2(zone["motion"]) * delta
+			zone["from"] = Vector2(zone["from"]) + corridor_translation
+			zone["to"] = Vector2(zone["to"]) + corridor_translation
 		var damage := 0.0
 		if shape == &"area":
 			damage = AttackContract.radial_damage(
 				float(zone["damage"]),
-				player_position.distance_to(Vector2(zone["pos"])),
+				_player_sweep_distance_to_point(Vector2(zone["pos"])),
 				float(zone["radius"])
 			)
 		elif shape == &"corridor":
@@ -5235,11 +5302,12 @@ func _update_denied_zones(delta: float) -> void:
 				corridor_to = AttackContract.emitted_beam_live_endpoint(
 					emitter, corridor_to, growth_ratio
 				)
-			if Rules.point_segment_distance(
-				player_position,
-				corridor_from,
-				corridor_to
-			) <= Rules.PLAYER_RADIUS + float(zone["width"]) * 0.5:
+			if _player_sweep_hits_corridor(
+				corridor_from - corridor_translation,
+				corridor_to - corridor_translation,
+				float(zone["width"]) * 0.5,
+				corridor_translation
+			):
 				damage = float(zone["damage"])
 		else:
 			push_error("Unsupported denied-zone shape: %s" % String(shape))

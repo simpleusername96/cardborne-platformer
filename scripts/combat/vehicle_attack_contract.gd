@@ -267,6 +267,45 @@ static func segment_circle_first_t(
 	return first_t if first_t >= 0.0 and first_t <= 1.0 else INF
 
 
+static func relative_sweep_first_t(
+	actor_from: Vector2,
+	actor_to: Vector2,
+	threat_from: Vector2,
+	threat_to: Vector2,
+	combined_radius: float
+) -> float:
+	## Converts two simultaneous linear motions into one relative segment so a
+	## between-endpoint crossing uses the same exact circle contract.
+	return segment_circle_first_t(
+		actor_from - threat_from,
+		actor_to - threat_to,
+		Vector2.ZERO,
+		combined_radius
+	)
+
+
+static func segment_segment_distance(
+	first_from: Vector2,
+	first_to: Vector2,
+	second_from: Vector2,
+	second_to: Vector2
+) -> float:
+	if Geometry2D.segment_intersects_segment(
+		first_from, first_to, second_from, second_to
+	) != null:
+		return 0.0
+	return minf(
+		minf(
+			Rules.point_segment_distance(first_from, second_from, second_to),
+			Rules.point_segment_distance(first_to, second_from, second_to)
+		),
+		minf(
+			Rules.point_segment_distance(second_from, first_from, first_to),
+			Rules.point_segment_distance(second_to, first_from, first_to)
+		)
+	)
+
+
 static func condition_mask_for_profile(profile: Variant) -> int:
 	if profile == null:
 		return 0

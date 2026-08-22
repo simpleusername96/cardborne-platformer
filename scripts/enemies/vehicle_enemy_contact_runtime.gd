@@ -12,6 +12,7 @@ const SpecialistRuntime = preload(
 )
 const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const EnemyStore = preload("res://scripts/enemies/vehicle_enemy_store.gd")
+const BossPatterns = preload("res://scripts/bosses/vehicle_boss_patterns.gd")
 
 const ATTACK_EDGE_CONTACT: StringName = &"ordinary_edge_01"
 const ATTACK_PULL_CHARGE: StringName = &"ordinary_pull_01"
@@ -20,16 +21,15 @@ const ATTACK_COLLECTIVE: StringName = &"collective"
 const PERSISTENT_CONTACT_COOLDOWN := 0.8
 const PERSISTENT_CONTACT_PADDING := 12.0
 const PERSISTENT_CONTACT_DAMAGE := 12.0
-const MOBILE_RANGED_CONTACT_COOLDOWN := 1.0
-const MOBILE_RANGED_CONTACT_PADDING := 12.0
-const MOBILE_RANGED_CONTACT_DAMAGE := 6.0
+const GENERIC_CONTACT_COOLDOWN := 1.0
+const GENERIC_CONTACT_PADDING := 0.0
+const GENERIC_CONTACT_DAMAGE := 6.0
+const BOSS_CONTACT_COOLDOWN := 1.0
+const BOSS_CONTACT_DAMAGE := 12.0
 const COLLECTIVE_CONTACT_PADDING := 10.0
 const COLLECTIVE_CONTACT_DAMAGE := 12.0
 const PERSISTENT_ROLES: Array[StringName] = [
 	&"ordinary_shield_01", &"ordinary_pulse_01",
-]
-const MOBILE_RANGED_CONTACT_ROLES: Array[StringName] = [
-	&"ordinary_lane_01", &"ordinary_gap_01", &"ordinary_growth_01",
 ]
 
 var _damage_player: Callable
@@ -99,6 +99,8 @@ func advance(
 					"Collective charge"
 				)
 			_:
+				if _boss_charge_owns_contact(enemy):
+					continue
 				if enemy.role in PERSISTENT_ROLES:
 					_resolve_persistent(
 						enemy,
@@ -109,15 +111,18 @@ func advance(
 						PERSISTENT_CONTACT_COOLDOWN,
 						"Enemy hull impact"
 					)
-				elif enemy.role in MOBILE_RANGED_CONTACT_ROLES:
+				else:
+					var boss_contact := (
+						enemy.role == &"boss" or enemy.archetype == &"boss_actor"
+					)
 					_resolve_persistent(
 						enemy,
 						player_from,
 						player_to,
-						MOBILE_RANGED_CONTACT_PADDING,
-						MOBILE_RANGED_CONTACT_DAMAGE,
-						MOBILE_RANGED_CONTACT_COOLDOWN,
-						"Mobile ranged hull impact"
+						GENERIC_CONTACT_PADDING,
+						BOSS_CONTACT_DAMAGE if boss_contact else GENERIC_CONTACT_DAMAGE,
+						BOSS_CONTACT_COOLDOWN if boss_contact else GENERIC_CONTACT_COOLDOWN,
+						"Boss hull impact" if boss_contact else "Enemy hull impact"
 					)
 	return _last_contact_attempts
 
@@ -129,12 +134,17 @@ static func relative_sweep_hits(
 	enemy_to: Vector2,
 	combined_radius: float
 ) -> bool:
-	return AttackContract.segment_circle_first_t(
-		player_from - enemy_from,
-		player_to - enemy_to,
-		Vector2.ZERO,
-		combined_radius
+	return AttackContract.relative_sweep_first_t(
+		player_from, player_to, enemy_from, enemy_to, combined_radius
 	) != INF
+
+
+static func _boss_charge_owns_contact(enemy: EnemyState) -> bool:
+	return (
+		(enemy.role == &"boss" or enemy.archetype == &"boss_actor")
+		and enemy.phase == &"boss_active"
+		and BossPatterns.kind(String(enemy.pattern)) == &"charge"
+	)
 
 
 func debug_snapshot() -> Dictionary:

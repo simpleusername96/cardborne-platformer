@@ -282,16 +282,16 @@ Preconditions:
 
 Source owners: `scripts/rewards/vehicle_recall_replenishment_runtime.gd`, `scripts/enemies/vehicle_enemy_contact_runtime.gd`, `scripts/combat/vehicle_attack_contract.gd`, `scripts/vehicle/vehicle_run.gd`, `tools/validation/validate_vehicle_recall_replenishment.gd`, `tools/validation/validate_vehicle_enemy_contact.gd`, `tools/validation/validate_vehicle_damage_feedback.gd`
 
-- [ ] **4.1** Double recall replenishment frequency and maintained quantity.
+- [x] **4.1** Double recall replenishment frequency and maintained quantity.
   - Change: set `START_SECONDS = 45.0`, `INTERVAL_SECONDS = 15.0`, `LOW_WATERMARK = 4`, and retain `ACTIVE_CAP = 4`; reactivate one authored inactive recall per eligible interval and reset its publication state through the current owner.
   - Accept: replenishment cannot occur before 45 seconds, occurs after each 15-second eligible interval, restores the four-recall low-water mark, never exceeds four active recalls, and does not create new layout objects.
-- [ ] **4.2** Add generic contact damage to every hostile body.
+- [x] **4.2** Add generic contact damage to every hostile body.
   - Change: extend the single contact runtime to all active hostile `EnemyState` roles, including ordinary pursuit/charger outside attacks, support, fixed actors, mines, and boss; use the locked damage/cooldowns; retain relative swept motion; and give authored contact attacks first and exclusive precedence.
   - Accept: each role family damages an unprotected player on endpoint overlap and between-endpoint crossing; a warned lunge/charge/bash applies only its authored damage; one crossing never double-hits; a protected rejection remains armed; a retired/dead/inactive actor cannot damage.
-- [ ] **4.3** Preserve protection and visible-footprint limits.
+- [x] **4.3** Preserve protection and visible-footprint limits.
   - Change: route generic contact through `_damage_player()` without bypassing dash or post-hit protection; retain existing player/enemy radii and attack padding; add assertions against the documented presentation envelope rather than enlarging gameplay shapes.
   - Accept: dash and one-second hit protection reject contact, the same continuing overlap retries when protection ends, and every contact danger radius remains no larger than the corresponding visible body envelope.
-- [ ] **4.4** Use relative swept collision for hostile projectiles and active zones.
+- [x] **4.4** Use relative swept collision for hostile projectiles and active zones.
   - Change: compare player previous-to-current motion against projectile previous-to-current motion; test the player's swept segment against active beam corridors and radial areas; account for translated corridor motion through its previous and current geometry; preserve damage falloff, widths, radii, tick cadence, and one-hit locks.
   - Accept: deterministic crossings that start and end separated still damage once; paths outside the exact combined circle/corridor remain safe; direct endpoint contacts remain unchanged; no projectile, beam, or area radius/width increases.
 
@@ -308,6 +308,7 @@ Batch gate:
 Checkpoint and commit:
 
 - Record the focused receipts in this plan, check Tasks 4.1–4.4, and commit only Phase 4 files with a short explanatory body.
+- 2026-08-22 receipt: recall-replenishment, enemy-contact, attack-contract, damage-feedback, attack-route-readability, and affected boss-runtime validators passed under Godot `4.7.1.stable`. Recall fixtures observed no publication before `45 s`, one authored recall per `15 s` eligible interval, restoration to the existing four-object cap, and no new layout object. Contact fixtures exercised pursuit, charger outside attack, support, fixed, mine, defender/coordinator, and boss bodies at endpoints and between endpoints; rejected protected overlaps retained a zero cooldown, authored charge/lunge/bash/collective paths remained exclusive, and generic contact used zero hidden padding. Relative projectile, static area, static beam, and translated-beam crossings passed; fixed-beam, boss-beam, boss-area, and boss-charge owners route through those shared swept helpers and the affected boss runtime passed. No radius or width changed, and the exact `0.1`-outside projectile path remained safe.
 
 ### Phase 5: Canonical Documentation, Quality Audit, and Final Evidence
 
@@ -388,9 +389,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 4.
-- Next task: Task 4.1, double recall replenishment availability while retaining four authored recalls.
-- Last completed gate: Phase 3 focused device/map/renderer/localization gate plus the bounded hard-pressure scenario sample.
+- Current phase: Phase 5.
+- Next task: Task 5.1, synchronize canonical product and visual documentation with runtime truth.
+- Last completed gate: Phase 4 focused recall/contact/attack/damage/readability gate plus affected boss-runtime regression coverage.
 - Update rule: on start or resume, read this contract and inspect the worktree only enough to confirm checkpoint inputs, then continue from the first unchecked task whose prerequisites pass. After each checkpoint, record concise evidence, check the task, advance this pointer, and commit the coherent phase. Do not mirror progress into another plan.
 
 ## Completion and Stop Conditions

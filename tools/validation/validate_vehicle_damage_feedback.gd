@@ -76,15 +76,15 @@ func _run() -> void:
 	_expect(is_equal_approx(float(stage.get("player_invulnerable")), 1.0), "unblockable hull damage starts the one-second invulnerability window")
 	stage.set("player_health", 1.0)
 	stage.set("player_invulnerable", 0.0)
-	stage.set("denied_zones", [{
-		"pos": Vector2.ZERO,
+	_replace_denied_zones(stage, {
+		"pos": Vector2(stage.get("player_position")),
 		"warning": 0.0,
 		"duration": 1.0,
 		"tick": 0.0,
 		"damage": 10.0,
 		"radius": 500.0,
 		"source": "validation lethal zone",
-	}])
+	})
 	stage.call("_update_denied_zones", 0.1)
 	_expect(stage.get("denied_zones").is_empty(), "lethal zone transition clears safely without stale reverse-pass indexing")
 
@@ -175,6 +175,7 @@ func _run() -> void:
 	if hostile_projectiles.size() == 1:
 		_expect(is_equal_approx(float(hostile_projectiles[0].radius), 9.0), "heavy hostile damage uses a nine-unit collision radius")
 		_expect(hostile_projectiles[0].affinity == AttackContract.ARC, "heavy projectile retains its distinct affinity")
+	_check_swept_hostile_damage(stage)
 
 	projectile_store.call("clear")
 	stage.call("_spawn_player_projectile", Vector2.ZERO, Vector2.RIGHT, 4.0, 500.0, 0)
@@ -197,6 +198,102 @@ func _run() -> void:
 	stage.queue_free()
 	await process_frame
 	_finish()
+
+
+func _check_swept_hostile_damage(stage: Node) -> void:
+	stage.call("capture_set_mode", &"playing")
+	stage.set("stage_complete", false)
+	var center := Vector2(3600.0, 2160.0)
+	var projectile_store: RefCounted = stage.get("projectile_store")
+	projectile_store.call("clear")
+	stage.set("player_health", 120.0)
+	stage.set("player_invulnerable", 0.0)
+	stage.set("player_position", center + Vector2(-100.0, 0.0))
+	projectile_store.call("add_hostile", {
+		"pos":center + Vector2(-100.0, 0.0),
+		"velocity":Vector2.RIGHT * 200.0,
+		"radius":6.0,
+		"damage":8.0,
+		"life":2.0,
+		"owner":"relative projectile crossing",
+		"wall_piercing":true,
+	})
+	stage.call("_update_projectiles", 1.0, center + Vector2(100.0, 0.0))
+	_expect(
+		float(stage.get("player_health")) < 120.0
+			and projectile_store.call("hostile_count") == 0,
+		"hostile projectile and player paths that cross between endpoints damage once"
+	)
+
+	projectile_store.call("clear")
+	stage.set("player_health", 120.0)
+	stage.set("player_invulnerable", 0.0)
+	stage.set("player_position", center + Vector2(-100.0, 30.1))
+	projectile_store.call("add_hostile", {
+		"pos":center + Vector2(-100.0, 0.0),
+		"velocity":Vector2.RIGHT * 200.0,
+		"radius":6.0,
+		"damage":8.0,
+		"life":2.0,
+		"owner":"outside projectile crossing",
+		"wall_piercing":true,
+	})
+	stage.call("_update_projectiles", 1.0, center + Vector2(100.0, 30.1))
+	_expect(
+		is_equal_approx(float(stage.get("player_health")), 120.0),
+		"hostile projectile crossing 0.1 outside the exact combined radius remains safe"
+	)
+
+	stage.set("player_health", 120.0)
+	stage.set("player_invulnerable", 0.0)
+	stage.set("player_position", center + Vector2(200.0, 0.0))
+	_replace_denied_zones(stage, {
+		"shape":&"area", "pos":center, "warning":0.0,
+		"duration":2.0, "tick":0.0, "damage":10.0, "radius":100.0,
+		"single_hit":true, "hit_committed":false, "source":"swept area",
+	})
+	stage.call("_update_denied_zones", 0.1, center + Vector2(-200.0, 0.0))
+	_expect(
+		float(stage.get("player_health")) < 120.0,
+		"an active radial area catches a player path whose endpoints are both outside"
+	)
+
+	stage.set("player_health", 120.0)
+	stage.set("player_invulnerable", 0.0)
+	stage.set("player_position", center + Vector2(0.0, -100.0))
+	_replace_denied_zones(stage, {
+		"shape":&"corridor", "from":center + Vector2(-100.0, 0.0),
+		"to":center + Vector2(100.0, 0.0), "width":20.0,
+		"warning":0.0, "duration":2.0, "tick":0.0, "damage":10.0,
+		"single_hit":true, "hit_committed":false, "source":"swept beam",
+	})
+	stage.call("_update_denied_zones", 0.1, center + Vector2(0.0, 100.0))
+	_expect(
+		float(stage.get("player_health")) < 120.0,
+		"an active beam catches a between-endpoint player crossing"
+	)
+
+	stage.set("player_health", 120.0)
+	stage.set("player_invulnerable", 0.0)
+	stage.set("player_position", center)
+	_replace_denied_zones(stage, {
+		"shape":&"corridor", "from":center + Vector2(-100.0, -100.0),
+		"to":center + Vector2(100.0, -100.0), "width":20.0,
+		"motion":Vector2(0.0, 200.0), "warning":0.0,
+		"duration":2.0, "tick":0.0, "damage":10.0,
+		"single_hit":true, "hit_committed":false, "source":"moving beam",
+	})
+	stage.call("_update_denied_zones", 1.0, center)
+	_expect(
+		float(stage.get("player_health")) < 120.0,
+		"a translated beam crossing the player is resolved from previous and current geometry"
+	)
+
+
+func _replace_denied_zones(stage: Node, zone: Dictionary) -> void:
+	var zones: Array[Dictionary] = stage.get("denied_zones")
+	zones.clear()
+	zones.append(zone)
 
 
 func _check_emp_footprint_results(stage: Node) -> void:

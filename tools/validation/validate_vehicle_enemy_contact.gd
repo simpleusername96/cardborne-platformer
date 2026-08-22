@@ -72,6 +72,10 @@ func _validate_relative_sweep() -> void:
 
 
 func _validate_role_and_repeat_contracts() -> void:
+	_expect(
+		is_zero_approx(ContactRuntime.GENERIC_CONTACT_PADDING),
+		"generic hull scrape uses exact body circles without hidden contact padding"
+	)
 	var runtime := _configured_runtime()
 	var active: Array[EnemyState] = []
 	var edge_enemy := _enemy(&"ordinary_edge_01", Vector2(120.0, 0.0), Vector2(-120.0, 0.0))
@@ -153,9 +157,9 @@ func _validate_role_and_repeat_contracts() -> void:
 	_expect(
 		_probe_calls == 6
 			and is_equal_approx(_probe_last_amount, 6.0)
-			and is_equal_approx(shooter.contact_cooldown, ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN)
-			and is_equal_approx(controller.contact_cooldown, ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN)
-			and is_equal_approx(artillery.contact_cooldown, ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN),
+			and is_equal_approx(shooter.contact_cooldown, ContactRuntime.GENERIC_CONTACT_COOLDOWN)
+			and is_equal_approx(controller.contact_cooldown, ContactRuntime.GENERIC_CONTACT_COOLDOWN)
+			and is_equal_approx(artillery.contact_cooldown, ContactRuntime.GENERIC_CONTACT_COOLDOWN),
 		"accepted mobile ranged hull contact deals six damage and starts the per-enemy cooldown"
 	)
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 0.99)
@@ -172,11 +176,50 @@ func _validate_role_and_repeat_contracts() -> void:
 	var support := _enemy(&"ordinary_support_01", Vector2.ZERO, Vector2.ZERO)
 	var fixed := _enemy(&"ordinary_fixed_ranged_01", Vector2.ZERO, Vector2.ZERO)
 	active.assign([ordinary_edge_enemy, ordinary_pull_enemy, mine, support, fixed])
+	_probe_accept = true
 	_reset_probe()
 	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0)
 	_expect(
+		_probe_calls == 5
+			and is_equal_approx(_probe_last_amount, ContactRuntime.GENERIC_CONTACT_DAMAGE),
+		"unwarned pursuit, charger, fixed, support, and mine bodies all deal generic contact damage"
+	)
+	for enemy in active:
+		_expect(
+			is_equal_approx(enemy.contact_cooldown, ContactRuntime.GENERIC_CONTACT_COOLDOWN),
+			"generic contact starts the per-enemy one-second accepted-hit cooldown"
+		)
+
+	var crossing := _enemy(
+		&"ordinary_edge_01", Vector2(120.0, 0.0), Vector2(-120.0, 0.0)
+	)
+	active.assign([crossing])
+	_reset_probe()
+	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0 / 60.0)
+	_expect(
+		_probe_calls == 1,
+		"generic hull scrape catches an enemy crossing between separated endpoints"
+	)
+
+	var boss := _enemy(&"boss", Vector2.ZERO, Vector2.ZERO)
+	boss.archetype = &"boss_actor"
+	active.assign([boss])
+	_reset_probe()
+	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0)
+	_expect(
+		_probe_calls == 1
+			and is_equal_approx(_probe_last_amount, ContactRuntime.BOSS_CONTACT_DAMAGE)
+			and is_equal_approx(boss.contact_cooldown, ContactRuntime.BOSS_CONTACT_COOLDOWN),
+		"boss generic hull scrape retains twelve damage and a one-second cooldown"
+	)
+	boss.contact_cooldown = 0.0
+	boss.phase = &"boss_active"
+	boss.pattern = "common_charge"
+	_reset_probe()
+	runtime.advance(active, Vector2.ZERO, Vector2.ZERO, 1.0 / 60.0)
+	_expect(
 		_probe_calls == 0,
-		"unwarned pursuit, fixed, support, and mine body overlap never deals contact damage"
+		"the authored boss charge owns its crossing instead of generic scrape"
 	)
 
 
@@ -375,7 +418,7 @@ func _validate_run_damage_receipts_and_integration() -> void:
 		run.player_health < health_before
 			and is_equal_approx(
 				shooter.contact_cooldown,
-				ContactRuntime.MOBILE_RANGED_CONTACT_COOLDOWN
+				ContactRuntime.GENERIC_CONTACT_COOLDOWN
 			),
 		"crossing a ranged enemy body resolves one persistent swept hull contact"
 	)

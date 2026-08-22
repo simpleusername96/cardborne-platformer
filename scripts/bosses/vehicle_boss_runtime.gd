@@ -328,10 +328,13 @@ func update_active(
 		)
 		if (
 			not boss.hit_committed
-			and services.player_position.distance_to(boss.pos)
-				<= AttackContract.contact_danger_half_width(
-					boss.radius, Patterns.BOSS_CONTACT_PADDING
-				)
+			and bool(services.call(
+				"_boss_charge_contact_hits",
+				before,
+				boss.pos,
+				boss.radius,
+				Patterns.BOSS_CONTACT_PADDING
+			))
 		):
 			boss.hit_committed = true
 			services.call("_damage_player", damage, pattern, true, true, true)
@@ -364,9 +367,12 @@ func update_active(
 				)
 				if (
 					not boss.hit_committed
-					and Rules.point_segment_distance(
-						services.player_position, emitter, live_end
-					) <= Rules.PLAYER_RADIUS + Patterns.width(pattern, stage_index) * 0.5
+					and bool(services.call(
+						"_player_sweep_hits_corridor",
+						emitter,
+						live_end,
+						Patterns.width(pattern, stage_index) * 0.5
+					))
 				):
 					boss.hit_committed = true
 					services.call("_damage_player", damage, pattern, true, true, true)
@@ -381,7 +387,9 @@ func update_active(
 			)
 		var area_damage := AttackContract.radial_damage(
 			damage,
-			services.player_position.distance_to(boss.committed_target),
+			float(services.call(
+				"_player_sweep_distance_to_point", boss.committed_target
+			)),
 			Patterns.radius(pattern, stage_index)
 		)
 		if area_damage > 0.0 and not boss.hit_committed:

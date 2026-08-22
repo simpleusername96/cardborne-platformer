@@ -7,6 +7,7 @@ const EnemyState = preload("res://scripts/enemies/vehicle_enemy_state.gd")
 const BossProfiles = preload("res://scripts/bosses/vehicle_boss_profile_catalog.gd")
 const AttackContract = preload("res://scripts/combat/vehicle_attack_contract.gd")
 const AttackTelegraphs = preload("res://scripts/combat/vehicle_attack_telegraph_builder.gd")
+const Rules = preload("res://scripts/vehicle/vehicle_stage_rules.gd")
 
 var _failures: Array[String] = []
 
@@ -58,6 +59,35 @@ class BossServiceStub:
 
 	func _spawn_boss_long_banks(_event: Dictionary) -> void:
 		long_bank_projectiles_fired += 10
+
+
+	func _player_sweep_distance_to_point(point: Vector2) -> float:
+		return player_position.distance_to(point)
+
+
+	func _player_sweep_hits_corridor(
+		corridor_from: Vector2,
+		corridor_to: Vector2,
+		half_width: float
+	) -> bool:
+		return Rules.point_segment_distance(
+			player_position, corridor_from, corridor_to
+		) <= Rules.PLAYER_RADIUS + half_width
+
+
+	func _boss_charge_contact_hits(
+		charge_from: Vector2,
+		charge_to: Vector2,
+		boss_radius: float,
+		contact_padding: float
+	) -> bool:
+		return AttackContract.relative_sweep_first_t(
+			player_position,
+			player_position,
+			charge_from,
+			charge_to,
+			Rules.PLAYER_RADIUS + boss_radius + contact_padding
+		) != INF
 
 
 func _init() -> void:
