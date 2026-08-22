@@ -288,6 +288,7 @@ NOTIFY_FACILITY_EXPIRY_WARNING,"%s · 3초 후 종료","%s · shutting down in 3
 NOTIFY_FACILITY_SHUTDOWN,"%s 종료","%s offline"
 NOTIFY_ENEMY_UPGRADE_DEVICE_DESTROYED,"적 업그레이드 장치를 파괴했습니다.","Enemy upgrade device destroyed."
 NOTIFY_ENEMY_UPGRADE_DEVICE_ACTIVATED,"적 업그레이드 장치 활성화 · 이후 등장하는 적 강화","Enemy upgrade device activated · future enemies strengthened"
+NOTIFY_ENEMY_UPGRADE_DEVICE_COUNTS,"적 업그레이드 장치 · 적 활성화 %d / 파괴 %d","Enemy upgrade devices · enemy activated %d / destroyed %d"
 SECONDARY_HOMING_MISSILES_NAME,"추적 미사일","Homing Missiles"
 SECONDARY_HOMING_MISSILES_DESC,"시야 안의 우선 표적을 자동으로 추적합니다.","Automatically tracks priority targets in line of sight."
 SECONDARY_ELECTRIC_FIELD_NAME,"전기장","Electric Field"

@@ -1758,18 +1758,24 @@ func _validate_enemy_upgrade_device_presentation(
 	var renderer := EnemyUpgradeRenderer.new()
 	root.add_child(renderer)
 	await process_frame
-	var position := Vector2(520.0, 300.0)
+	var positions: Array[Vector2] = [
+		Vector2(360.0, 220.0), Vector2(760.0, 220.0),
+		Vector2(360.0, 500.0), Vector2(760.0, 500.0),
+	]
 	var presentation := _player_presentation(Vector2(260.0, 300.0), false)
-	presentation["mystery_devices"] = [{
-		"id":"upgrade-device-a",
-		"state":&"dormant",
-		"visible":true,
-		"position":position,
-		"visual_radius":100.8,
-		"capture_ratio":0.0,
-		"capture_count":0,
-		"hit_flash_remaining":0.14,
-	}]
+	var upgrade_devices: Array[Dictionary] = []
+	for index in positions.size():
+		upgrade_devices.append({
+			"id":"upgrade-device-%d" % index,
+			"state":&"dormant",
+			"visible":true,
+			"position":positions[index],
+			"visual_radius":100.8,
+			"capture_ratio":0.0,
+			"capture_count":0,
+			"hit_flash_remaining":0.14,
+		})
+	presentation["mystery_devices"] = upgrade_devices
 	renderer.sync(
 		no_enemies, no_projectiles, no_projectiles, no_shards, no_effects,
 		Rect2(0, 0, 1280, 720), Vector2(260.0, 300.0), 1.0, true, "",
@@ -1779,10 +1785,11 @@ func _validate_enemy_upgrade_device_presentation(
 		&"world/enemy_upgrade_device"
 	)
 	_expect(
-		draws.size() == 1
-			and Vector2(draws[0]["position"]).is_equal_approx(position)
+		draws.size() == 4
+			and Vector2(draws[0]["position"]).is_equal_approx(positions[0])
+			and Vector2(draws[3]["position"]).is_equal_approx(positions[3])
 			and is_equal_approx(float(draws[0]["radius"]), 100.8),
-		"enemy upgrade device uses the approved Triad Forge production PNG"
+		"four enemy upgrade devices use the approved Triad Forge production PNG"
 	)
 	if not draws.is_empty():
 		var hit_color := Color(draws[0]["modulate"])

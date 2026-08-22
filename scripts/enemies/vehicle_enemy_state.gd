@@ -84,6 +84,9 @@ var pack_trait_ratio := 0.0
 var pack_feed_stacks := 0
 var pack_damage_multiplier := 1.0
 var pack_speed_multiplier := 1.0
+# One cycle-device activation may augment an ordinary enemy once. Future-tier
+# admission remains owned by the run layer and is intentionally separate.
+var enemy_upgrade_personal_applied := false
 var packet_beat := 0
 var carrier_id := ""
 var summoned := false
@@ -163,6 +166,7 @@ func reset_runtime_collections() -> void:
 	pack_feed_stacks = 0
 	pack_damage_multiplier = 1.0
 	pack_speed_multiplier = 1.0
+	enemy_upgrade_personal_applied = false
 	contact_previous_position = pos
 	contact_cooldown = 0.0
 	contact_attack = &""

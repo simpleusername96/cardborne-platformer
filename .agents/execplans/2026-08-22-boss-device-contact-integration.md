@@ -232,26 +232,26 @@ Preconditions:
 
 Source owners: `scripts/vehicle/vehicle_enemy_upgrade_device_runtime.gd`, `scripts/vehicle/vehicle_run_enemy_upgrade_devices.gd`, `scripts/enemies/vehicle_enemy_state.gd`, `scripts/enemies/vehicle_pursuit_field.gd`, new `scripts/enemies/vehicle_objective_pursuit_field_set.gd`, `scripts/combat/vehicle_spatial_grid.gd`, `scripts/presentation/vehicle_enemy_upgrade_combat_renderer.gd`, `scripts/ui/vehicle_minimap_mesh_builder.gd`, `localization/vehicle_stage.csv`, `tools/validation/validate_vehicle_enemy_upgrade_devices.gd`
 
-- [ ] **3.1** Replace the one-per-run sequence with four cycle-scoped devices.
+- [x] **3.1** Replace the one-per-run sequence with four cycle-scoped devices.
   - Change: retain six generated sockets as layout capacity; publish none in cycle 1; select and publish four deterministic valid sockets at the start of cycles 2–12 using the locked farthest-first, greedy maximum-separation rule; retire the prior cycle's device set before republishing; scale health from the current cycle index; never respawn a resolved device inside the same cycle.
   - Accept: a twelve-cycle fixture observes `0` devices in cycle 1 and exactly `4` unresolved published devices at the start of every later cycle, with the exact expected socket IDs for a fixed player position, no fifth device, no stale collision body, and no same-cycle republish.
-- [ ] **3.2** Recruit real ordinary enemies through stable influence claims.
+- [x] **3.2** Recruit real ordinary enemies through stable influence claims.
   - Change: add `INFLUENCE_RADIUS = 720.0`; query nearby enemies at `0.25 s` cadence through caller-owned spatial-grid buffers; remove `leash_rect` as an exclusion; accept only living active mobile ordinary non-summons; reserve at most three participants per device and one device per enemy; preserve claims through temporary range departure and reset channel time when fewer than three participants remain inside radius `180`.
   - Accept: a fixture materialized through the real encounter spawn path retains a non-empty leash, enters the influence circle, claims a slot, changes movement reason, reaches the device, and contributes to a five-second activation. Fixed actors, mines, bosses, summons, dead actors, and a fourth claimant are rejected.
   - Guard: equal-distance arbitration is deterministic by device ID and enemy ID; assignment refresh does not clear and rebuild valid claims every tick.
-- [ ] **3.3** Add one bounded four-target objective route owner.
+- [x] **3.3** Add one bounded four-target objective route owner.
   - Change: implement `VehicleObjectivePursuitFieldSet` with shared static walkability, at most four device-ID target fields, one combined `512`-cell expansion budget per physics tick, stable round-robin progress, and direct-target fallback until a field is ready. Assigned enemies use their claimed device's field, stop at `115.2`, and remain exempt from player-pursuit bias and ordinary attack selection.
   - Accept: all four targets become reachable around authored walls; per-tick processed cells never exceed `512`; removing a device releases only its participants and field; container capacities do not grow across a bounded repeated-cycle fixture.
-- [ ] **3.4** Apply immediate personal and bounded future-enemy upgrades.
+- [x] **3.4** Apply immediate personal and bounded future-enemy upgrades.
   - Change: on activation, apply one personal augmentation to each living participant, mark that enemy so it cannot receive a second personal augmentation, increment the run upgrade tier up to six, and apply the tier to later ordinary admissions through the existing health/speed/pack-damage owners. Preserve boss and summon exclusions.
   - Accept: participants gain current and maximum health, speed, and attack multiplier immediately; an already-personally-augmented participant does not stack again; later admissions receive the exact bounded tier total; a seventh activation cannot raise the future tier above six but still augments eligible current participants.
-- [ ] **3.5** Make four devices collision- and presentation-complete.
+- [x] **3.5** Make four devices collision- and presentation-complete.
   - Change: publish all unresolved devices in snapshots, retained world rendering, and minimap markers; test actor clearance against all active bodies; return the earliest segment hit among all active devices; preserve player-primary blocking/damage and hostile-projectile pass-through.
   - Accept: four world bodies and four minimap markers are visible without new nodes or textures; projectile ordering selects the nearest geometric hit regardless of device-array order; resolved devices disappear from collision and presentation in the same simulation state.
-- [ ] **3.6** Publish counted bilingual outcomes without a new HUD counter.
+- [x] **3.6** Publish counted bilingual outcomes without a new HUD counter.
   - Change: retain activation and destruction announcements, include current-cycle outcome counts so simultaneous events do not collapse into indistinguishable text, coalesce same-tick events to the final truthful count, and update Korean and English strings together.
   - Accept: player destruction and enemy activation each produce a localized verified announcement; a four-event same-tick fixture retains the final activated/destroyed counts without queue overflow or stale prior-cycle values.
-- [ ] **3.7** Replace the synthetic device validator gap with end-to-end fixtures.
+- [x] **3.7** Replace the synthetic device validator gap with end-to-end fixtures.
   - Change: extend focused device validation through real encounter materialization, four simultaneous devices, route progress, channel interruption/retry, immediate participant augmentation, bounded future tier, collision ordering, event counting, and cycle retirement.
   - Accept: the validator fails on the current leash exclusion and passes only through the production owners after correction; its debug snapshot proves fixed capacities and the combined route budget.
 
@@ -270,6 +270,7 @@ The pressure script is a focused trend sample and may be reported only as `scena
 Checkpoint and commit:
 
 - Record device counts, route-budget evidence, focused validator receipts, and the pressure label in this plan; check Tasks 3.1–3.7; commit only Phase 3 files with a short explanatory body.
+- 2026-08-22 receipt: enemy-upgrade-device, map-mechanics integration, combat-renderer, and UI-localization validators passed under Godot `4.7.1.stable`. The twelve-cycle fixture observed `0` tutorial devices and exact IDs `test_device_1/2/3/5` for all `4` later-cycle publications; real materialization retained a non-empty leash and produced `12` bounded claims across four devices. Four shared route fields converged with a fixed `3375`-cell capacity each and never exceeded the combined `512`-cell tick budget. The hard pressure microbenchmark is labeled only `scenario valid`: `72/72` active-capped enemies, `192` shards, `1` queued window, `4` devices, `12` seeded participants, `12` peak claims, `4` peak route targets, `512` peak route cells, and `6.767 ms` combined subsystem sample. This is not native or Web release-performance evidence.
 
 ### Phase 4: Recall Availability and Standard Player Hit Detection
 
@@ -387,9 +388,9 @@ Implementation-local discoveries may be handled inside the locked contract when 
 ## Progress and Next Steps
 
 - Canonical progress: the task checkboxes in this contract.
-- Current phase: Phase 3.
-- Next task: Task 3.1, publish four cycle-scoped enemy upgrade devices outside the tutorial.
-- Last completed gate: Phase 2 focused projectile/late-mechanics/renderer/identity gate plus affected boss regression checks.
+- Current phase: Phase 4.
+- Next task: Task 4.1, double recall replenishment availability while retaining four authored recalls.
+- Last completed gate: Phase 3 focused device/map/renderer/localization gate plus the bounded hard-pressure scenario sample.
 - Update rule: on start or resume, read this contract and inspect the worktree only enough to confirm checkpoint inputs, then continue from the first unchecked task whose prerequisites pass. After each checkpoint, record concise evidence, check the task, advance this pointer, and commit the coherent phase. Do not mirror progress into another plan.
 
 ## Completion and Stop Conditions
