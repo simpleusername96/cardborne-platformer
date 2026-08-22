@@ -23,7 +23,7 @@ Add the smallest reliable map-movement incentive to the vehicle run: a visible e
 - Let player direct, projectile, and area damage destroy the device. Hostile damage is ignored.
 - Scale device health by 12% per stage index from the existing 360-health baseline.
 - Publish the next unresolved device after a nine-second gap.
-- Double experience-recall replenishment frequency by changing the initial threshold from 90 to 45 active-run seconds and the retry interval from 30 to 15 seconds.
+- Preserve experience-recall replenishment at the independent canonical threshold of 90 active-run seconds and the 30-second retry interval.
 
 ## Implementation
 
@@ -67,7 +67,7 @@ Manual checks:
 5. Only subsequently spawned ordinary enemies receive the accumulated bonuses.
 6. Player attacks destroy the device; hostile attacks do not.
 7. A new device appears at another unresolved socket after the delay.
-8. Recall pickups replenish at twice the previous cadence when below the low-water mark.
+8. Recall pickups begin replenishing after 90 active-run seconds and retry every 30 seconds when below the low-water mark.
 
 ## Canonical Default Continuation
 
@@ -98,11 +98,11 @@ Locked decisions:
   - Change the encounter pressure owner and Stage 1 admission gates.
   - Restore recall replenishment to `90s/30s`.
   - Accept when focused encounter, composition, recall, and device validators pass.
-- [ ] **C2 — Canonical product and visual contracts**
+- [x] **C2 — Canonical product and visual contracts**
   - Replace active neutral-facility requirements with enemy upgrade-device rules.
   - Preserve retired implementation and asset history explicitly.
   - Accept when doc and visual-authority validation pass.
-- [ ] **C3 — Review-only PNG candidates**
+- [x] **C3 — Review-only PNG candidates**
   - Generate three distinct transparent candidates with the canonical sheet supplied
     through ImageGen's image-reference input.
   - Record prompts, hashes, authority evidence, and pending approval status in the
@@ -118,10 +118,32 @@ Locked decisions:
 ## Progress and Next Steps
 
 - Canonical progress: the continuation task checkboxes above.
-- Current phase: C2.
-- Next task: replace active neutral-facility product and visual rules with the
-  canonical enemy upgrade-device contract while retaining retired sources.
-- Last completed gate: encounter pacing, spawn composition, enemy upgrade-device,
-  and active-run-clock validators pass for the `72/56` density and `90s/30s`
-  recall contracts.
+- Current phase: C4.
+- Next task: complete the integration, quality, Web-export, and bounded workload gates.
+- Last completed gates: visual-authority, guidebook, and bilingual localization
+  validators pass after the canonical spec and Field Object integration updates.
 - Update rule: record each checkpoint result here before moving to the next task.
+
+## Review-only Candidate Evidence
+
+- Candidate root: `docs/design/visual-replacement-workbench/previews/enemy-upgrade-device-candidates-2026-08-22/`
+- Actual reference input: `image_gen.referenced_image_paths`
+- Canonical reference: `docs/design/cardborne-universal-art-style-reference.png`
+- Reference SHA-256: `96CCF5D053E66DD3A102CCDF39DAEFD0B0C54B0E88D20428B7BA1C894F002889`
+- Common prompt contract: isolated orthographic top-down hostile installation;
+  three broad docking approaches, dark perimeter, danger-coral main plane,
+  restrained cool-neutral support plane, warm-off-white core, `3–5` broad filled
+  planes, small-scale readability, and no text, badge, rings, repeated lamps,
+  greeble, glow, perspective, or retired facility-role symbols.
+- `candidate-a-triad-forge.png`: symmetric three-arm forge silhouette;
+  SHA-256 `F4229F8EEE2CDED317C1A1198B3EEAFD3885E15EBE7C97E1C4A116F80C8B38D0`.
+- `candidate-b-split-anvil.png`: asymmetric heavy split-anvil silhouette;
+  SHA-256 `49E7D9EBAEBDBC5FC90F1C5CA0C653797BC72FCF65A8C99B698714B79850432B`.
+- `candidate-c-vector-clamp.png`: compact swept triangular clamp silhouette;
+  SHA-256 `034CE4CA80FDCAFB78A67E09BDE98BC1B9E0E5F07401E01792C9D537D688410C`.
+- The generator returned opaque checkerboard-backed PNGs. A non-creative
+  ImageMagick edge-connected alpha cleanup removed only the background; all
+  three retained files were non-creatively resized to `512×512` and report
+  `srgba`, `opaque=False`, and transparent corner/background samples.
+- Approval state: review-only; exact user selection remains pending. No candidate
+  is a production asset, workbench TO-BE deliverable, or runtime replacement.
