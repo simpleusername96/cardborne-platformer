@@ -46,6 +46,18 @@ related:
 
 ## Tasks
 
+### Correction pass: challenge foundational assumptions
+
+- [x] Record the user's rejection of the previous wide navy/amber, asset-heavy direction.
+- [x] Refresh the complete visual-authority preflight for the expanded scope.
+- [x] Decide asset use by information value instead of decoration.
+- [x] Compare neutral palette directions instead of inheriting navy/amber by default.
+- [x] Replace maximum-width defaults with content-fit width bands per panel family.
+- [x] Generate and inspect corrected ImageGen concepts under the revised assumptions.
+- [x] Revise the Korean report, mark the prior concepts rejected, validate, and commit only task-owned changes.
+
+Correction gate: the revised direction must explicitly answer why each retained asset, accent color, and panel width exists.
+
 ### Phase 1: Establish current truth
 
 - [x] Create `feat/general-uiux-refinement` without disturbing pre-existing worktree changes.
@@ -94,8 +106,8 @@ Phase gate: the report links current evidence and mockups, and all retained file
 
 - Canonical progress: the task checkboxes in this file.
 - Current phase: complete.
-- Next task: none; runtime implementation requires a new user-approved task.
-- Last completed gate: Phase 4. The visual-authority validator, report asset-link check, retained-image hash check, and task-only whitespace check passed. The scoped commit contains only this checklist, the Korean report, ten preserved current-state captures plus their manifest, and three unapproved ImageGen concepts.
+- Next task: none in this analysis scope. Runtime implementation requires a new approval decision because it changes the canonical visual specification and shared UI owners.
+- Last completed gate: the corrected Korean report, current-worktree snapshots, three inspected palette/density experiments, and rejected prior concepts are retained. Local links and the three correction image hashes passed; the Cardborne visual-authority validator passed with the expected canonical sheet hash; the task-only diff passed `git diff --check`.
 - Update rule: preserve passing evidence until a relevant owned input changes; do not repeat the full capture for reassurance.
 
 ## Completion and Stop Conditions

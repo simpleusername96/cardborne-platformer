@@ -7,281 +7,318 @@ scope: Cardborne general UI panels and pages
 source:
   - ../design/VISUAL_SYSTEM.md
   - ../product/vehicle_game_spec.md
-  - ./assets/2026-08-22-general-uiux-analysis/current/capture-manifest.json
+  - ./assets/2026-08-22-general-uiux-analysis/current-head-correction/capture-manifest.json
 related:
   - ../design/cardborne-universal-art-style-reference.png
   - ../../.agents/execplans/2026-08-22-general-uiux-refinement.md
 ---
 
-# Cardborne 일반 UI/UX 개선 분석
+# Cardborne 일반 UI/UX 개선 분석 — 기반 가정 교정판
 
-## 결론
+## 한 줄 결론
 
-Cardborne의 일반 UI는 기능이 부족해서 어렵다기보다, **큰 빈 면적과 약한 정보 그룹, 화면마다 달라지는 행동 위치, 의미보다 먼저 보이는 거대한 외곽 패널** 때문에 어렵다. 현재 화면은 읽을 내용이 적을 때도 전체 화면을 크게 감싸며, 게임의 기계적 형태 문법보다 개발 도구의 설정 창에 가깝게 보인다.
+이전 제안은 철회한다. Cardborne의 일반 UI는 **그림을 채우고 남색·노란색을 넓게 바르는 방향**이 아니라, **콘텐츠에 맞는 작은 면적, 필요한 곳에만 쓰는 식별 자산, 중성 크롬, 의미가 분명한 소수의 색**으로 다시 설계해야 한다.
 
-권장 방향은 **공용 작전 셸(shared operational shell) + 화면 역할별 단일 semantic rail**이다. 모든 화면은 `현재 맥락 → 중요한 내용 → 다음 행동`의 같은 골격을 쓰되, 선택은 amber, focus와 시스템 조작은 cyan, 위험 행동은 coral로 제한한다. 화면별 장식 실루엣이나 별도 프레임은 만들지 않는다.
+가장 먼저 바꿀 것은 장식이 아니라 폭이다. 1280×720에서 현재 Report 1200 px, Deployment 1176 px, Guidebook 1160 px는 사용 가능 폭의 각각 97.4%, 95.5%, 94.2%를 차지한다. 이 값들은 상한이 아니라 사실상 기본값으로 작동한다. 내용이 적어도 화면 전체를 덮으므로 정보가 커 보이는 것이 아니라 패널이 비어 보인다.
 
-우선순위는 다음과 같다.
+교정 방향은 다음 세 문장으로 요약한다.
 
-1. Deployment, Pause, Stage/Failure/Result에서 제목·본문·주요 행동의 위치를 통일한다.
-2. Settings와 Guidebook을 `category rail → list/content → fixed navigation` 구조로 정리한다.
-3. Report 첫 화면에 결과, 진행, 현재 상태를 압축하고 상세 지표는 하나의 세로 흐름에서 단계 공개한다.
-4. Upgrade는 현재의 비교 구조를 유지하되 빈 build rail과 텍스트 행의 시선 분산을 줄인다.
-5. 모든 화면에서 한국어/영어, 960/1280/1920, 200% text, keyboard/controller focus를 같은 계약으로 검증한다.
+1. **자산은 선택과 식별에 직접 필요한 경우에만 쓴다.** 고정 기체를 보여 주며 빈 공간을 채우는 이미지는 제거한다.
+2. **어두운 남색·노란색을 공용 UI 브랜드로 쓰지 않는다.** 중성 흑연색을 기본 크롬으로 삼고, cyan은 focus/system, amber는 실제 보상·선택에만 제한한다.
+3. **패널은 viewport가 아니라 과업의 정보량에 맞춘다.** 각 화면에 content-fit 권장 폭과 예외 조건을 둔다.
 
-## 조사 범위와 증거 한계
+## 이전 방향을 철회하는 이유
+
+첫 보고서는 현재 명세와 화면을 개선 대상으로 보면서도, 다음 전제를 충분히 검증하지 않았다.
+
+- Deployment에 기체 그림이 있으니 개선안에도 기체 그림이 필요하다고 가정했다.
+- 현재 Theme가 navy/amber를 넓게 쓰므로 그것이 Cardborne의 올바른 공용 UI 정체성이라고 가정했다.
+- 명세에 적힌 modal 최대 크기를 정상적인 기본 크기로 해석했다.
+- 넓은 패널 안에서 column 균형을 맞추려 했고, 패널 자체가 필요 이상으로 넓은지는 뒤늦게 보았다.
+
+그 결과 이전 ImageGen 시안은 구조를 정리했지만, 사용자가 지적한 문제를 오히려 강화했다. 해당 세 이미지는 승인 후보가 아니며 `rejected-previous-direction/`으로 분리했다.
+
+![폐기한 이전 Deployment 방향](./assets/2026-08-22-general-uiux-analysis/rejected-previous-direction/deployment-wide-asset-concept.png)
+
+폐기 이유: 고정 기체 preview가 결정을 돕지 않고 패널 폭을 정당화하며, navy/amber가 정보 의미보다 브랜드 장식으로 먼저 보인다.
+
+## 증거와 한계
 
 ### 로컬 증거
 
-- 제품 기준: `docs/product/vehicle_game_spec.md`의 현재 12 boss-cycle 연결 런.
+- 제품 기준: `docs/product/vehicle_game_spec.md`.
 - 비주얼 기준: `docs/design/VISUAL_SYSTEM.md`와 정본 스타일 이미지.
-- 런타임 소유자: `scripts/ui/vehicle_stage_ui.gd`가 일반 모달을 조합하며, 각 패널과 `VehicleUiComponentFactory`, 공용 Theme가 책임을 나눈다.
-- 최신 완전 유효 캡처: `build/vehicle-run-final/captures-native-device-fixture/`, 2026-08-22 15:28 KST, 한국어 1280×720, 160장, captured commit `8bcdd3f2`.
-- 보고서에 보존한 화면: Deployment, shared/gameplay Settings, Guidebook, Upgrade 선택 전/후, Pause, Stage Report, Failure Report, Result 등 10장.
+- 화면 조합 소유자: `scripts/ui/vehicle_stage_ui.gd`.
+- 크기 제한 소유자: `scripts/ui/vehicle_modal_host.gd`.
+- 패널 소유자: `scripts/ui/vehicle_settings_panel.gd`, `scripts/ui/vehicle_guidebook_panel.gd` 및 각 modal panel.
+- Theme와 semantic color 소유자: `art/visuals/production/ui/vehicle_stage_theme.tres`, `scripts/vehicle/vehicle_stage_visual_profile.gd`.
+- 교정 캡처: 2026-08-22 17:19 KST, 한국어 1280×720, current worktree에서 Godot 4.7.1 capture harness 실행 성공.
 
-현재 HEAD에서 새 캡처를 한 번 시도했으나, 이 UI 작업과 무관하게 동시에 수정 중인 `vehicle_enemy_upgrade_device_runtime.gd`가 파싱되지 않아 게임이 시작되지 않았다. 해당 프로세스는 종료했고 게임 로직은 수정하지 않았다. 따라서 이 보고서는 **2026-08-22의 최신 유효 렌더를 visual baseline으로 사용하고, 이후 HEAD의 UI source와 변경 diff를 별도로 대조**한다. 정확한 current-HEAD runtime 검증이라고 주장하지 않는다.
+교정 캡처의 manifest는 실행 시각과 scenario validity를 기록하지만, embedded build identity는 `8bcdd3f2`, `source_cleanliness: dirty`로 남아 있다. 따라서 이 보고서는 이를 **현재 worktree 실행에서 얻은 진단 캡처**로 사용하며, clean commit의 release 증거라고 주장하지 않는다.
+
+![교정 시점 Deployment](./assets/2026-08-22-general-uiux-analysis/current-head-correction/01-deployment.png)
 
 ### 비주얼 권위 receipt
 
-- `VISUAL_SYSTEM.md` 전체 읽기 완료, SHA-256 `cd44b5f672043d68af4ee5c7bdc140ff81cadcd4a05cf3a9ed4850bad458e798`.
-- 정본 PNG 원본 크기 1448×1086 검사 완료.
-- 기대/관측 PNG SHA-256 `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889` 일치.
-- ImageGen의 모든 생성/수정 호출에 정본 PNG를 `referenced_image_paths`의 실제 이미지 입력으로 제공했다.
-- 정본 이미지는 형태·면·대비·detail density를 위한 문법 참고일 뿐, 그 안의 기체·glyph·panel·layout은 복사하거나 승인 자산으로 취급하지 않았다.
-- 생성 후 정본 문서가 동시에 변경되어 952줄 전체와 원본 크기 PNG를 다시 검사했다. 변경은 적 업그레이드 장치의 publication 동작에 한정되고 modal, typography, responsive, focus, media ownership 계약은 바꾸지 않아 이 UI concept의 재생성 사유가 되지 않는다.
+- `VISUAL_SYSTEM.md` 952줄 전체 재검사.
+- spec SHA-256: `cd44b5f672043d68af4ee5c7bdc140ff81cadcd4a05cf3a9ed4850bad458e798`.
+- 정본 PNG 1448×1086 원본 검사.
+- PNG SHA-256: `96ccf5d053e66dd3a102ccdf39daefd0b0c54b0e88d20428b7ba1c894f002889`.
+- 모든 ImageGen 호출에 정본 PNG를 실제 `referenced_image_paths` 입력으로 제공했다.
+- 정본 이미지는 형태·밀도·읽기 쉬움의 문법 참고일 뿐, 그 안의 기체·layout·yellow palette를 복사하거나 승인 자산으로 취급하지 않았다.
 
-## 현재 화면 진단
+### 현재 명세와의 충돌
 
-### 공통 문제
+현재 시각 명세는 navy surface `#182431`, amber/reward `#F2B735`를 semantic token으로 두고, Deployment craft preview와 일부 화면 artwork를 요구한다. 이번 교정안은 사용자 피드백에 따라 이 전제를 다시 검토한 결과다. 따라서 실제 구현 전에 다음 명세 항목을 먼저 수정해야 한다.
 
-| 문제 | 관찰 | 사용자 영향 | 권장 수정 |
+- 공용 surface의 기본색과 amber 사용 범위.
+- Deployment에서 고정 기체 preview를 요구하는 계약.
+- modal minimum size를 사실상 기본 폭으로 만드는 규칙.
+- Guidebook/Upgrade의 artwork가 식별에 필요한 경우와 장식인 경우의 경계.
+
+이 보고서는 해당 변경을 제안하지만, runtime code나 정본 명세를 아직 수정하지 않는다.
+
+## 1. 자산 사용 판단
+
+### 판단 원칙
+
+이미지는 다음 질문 중 하나에 `예`라고 답할 때만 유지한다.
+
+1. 이 이미지가 없으면 서로 다른 선택지를 빠르게 구별하기 어려운가?
+2. 이미지 자체가 gameplay 상태나 결과를 전달하는가?
+3. 텍스트만으로는 실전에서 필요한 형태 인지를 충분히 전달하지 못하는가?
+
+세 질문에 모두 `아니오`라면 이미지는 제거한다. 남은 빈 공간은 다른 장식으로 채우지 않고 패널을 줄인다.
+
+| 화면 | 기본 자산 정책 | 유지 가능한 예외 | 결론 |
 | --- | --- | --- | --- |
-| 큰 외곽 패널 | 적은 콘텐츠도 화면 대부분을 감싼다 | 시선이 어디서 시작해야 하는지 약하다 | 내용 폭에 맞춘 공용 modal max-width와 일관된 inset 사용 |
-| 빈 공간이 정보보다 큼 | Deployment, Settings, Report에서 특히 두드러진다 | 완성도가 낮고 정보 관계가 끊겨 보인다 | 관련 label/value를 가까이 묶고 바깥 여백으로 폭 증가를 흡수 |
-| 행동 위치 불일치 | 하단 중앙, 하단 좌측, header icon 등 화면마다 다르다 | muscle memory가 생기지 않는다 | primary는 고정 footer, back/settings는 고정 header command |
-| 약한 상태 위계 | 선택·focus·현재 위치가 유사한 선과 색에 의존한다 | keyboard/controller 이동 결과를 놓치기 쉽다 | selected 3 px amber rail, focus 2 px cyan outline을 분리 |
-| 개발 도구 같은 인상 | 1 px box와 긴 값 목록이 주된 표현이다 | 게임의 기계적 SF 정체성이 약하다 | broad matte plane, 명확한 mass, sparse semantic accent 사용 |
-| 긴 문서형 scrolling | Guidebook/Report가 첫 화면에서 목표를 설명하지 못한다 | 필요한 답을 찾기 전에 스크롤한다 | 첫 화면에 목적·상태·핵심 요약, 상세는 한 outer scroll로 공개 |
+| Deployment | 자산 없음 | 실제로 여러 기체·무기 중 선택할 때만 작은 identity preview | 현재 고정 기체 그림 제거 |
+| Pause | 자산 없음 | 없음 | compact task modal 유지 |
+| Settings | 자산 없음 | 설정 결과를 즉시 비교해야 하는 preview | 일반 장식 금지 |
+| Guidebook | 제한적 사용 | 발견한 기체·적·보스의 형태 식별 | preview가 stat를 fold 아래로 밀면 축소 |
+| Upgrade | 선택 식별용 사용 | 세 offer를 빠르게 구별하는 작은 artwork | 큰 카드 그림과 장식 frame 금지 |
+| Report/Result | 자산 없음 | 결과 수치와 직접 연결된 작은 semantic glyph | 기념 일러스트·배경 art 금지 |
 
-### 화면별 평가
+Deployment는 이 원칙을 검증하기 좋은 화면이다. 기체가 고정되어 있고 선택할 수 없다면 기체 그림은 정보가 아니라 확인용 장식이다. 그림을 제거한 뒤 남는 공간은 “비어 있는 문제”가 아니라 “패널을 줄여야 한다는 증거”다.
 
-#### Deployment
+## 2. 색 체계 판단
 
-현재 화면은 기체, 무기 설명, 조작법, 출격 행동을 모두 갖추고 있다. 그러나 왼쪽 preview가 작고 두 column의 정보 밀도가 크게 다르며, 출격 버튼이 내용과 멀리 떨어져 있다. 기능 추가보다 **두 column의 균형과 읽기 순서**가 먼저다.
+### 대비가 좋은 것과 방향이 맞는 것은 다르다
 
-![현재 Deployment](./assets/2026-08-22-general-uiux-analysis/current/01-deployment.png)
+현재 조합의 명도 대비는 충분하다.
 
-권장 구조는 `출격 준비 → 기체/주무장 요약 + 조작 4행 → 출격`이다. 설정은 header 우측 48×48 command로 유지한다. 난이도, 빌드 철학, 장식 문구는 추가하지 않는다.
+| 조합 | 계산 대비 | 해석 |
+| --- | ---: | --- |
+| amber `#F2B735` / navy `#182431` | 8.69:1 | 읽을 수 있음 |
+| cyan `#58BFEA` / navy `#182431` | 7.53:1 | 읽을 수 있음 |
+| white `#EEF3F7` / navy `#182431` | 14.08:1 | 읽을 수 있음 |
 
-#### Upgrade
+문제는 접근성 실패가 아니라 **의미의 과잉 사용**이다. amber가 보상, 선택, title, tab, primary action, progress에 동시에 쓰이면 어느 것도 특별하지 않다. 넓은 navy surface와 결합하면 모든 화면이 같은 경고·산업 패널처럼 보이고, 실제 gameplay 색의 역할도 약해진다.
 
-현재 Upgrade는 세 offer row, 명시적 선택, 고정 `모듈 장착`, 현재 build rail이라는 제품 계약을 이미 잘 따른다. 가장 큰 문제는 왼쪽의 빈 슬롯 군이 강한 시각 무게를 가지는 반면 의미 있는 내용은 오른쪽에 몰린다는 점이다. 전면 재설계보다 다음 수정이 적합하다.
+### 권장 semantic palette
 
-- 빈 슬롯은 outline 대비를 더 낮추고, 채워진 슬롯과 category label만 우선 읽히게 한다.
-- offer row는 artwork, category/title, inline stat, state column의 baseline을 통일한다.
-- 선택 rail과 focus outline을 동시에 보이게 하되 서로 합치지 않는다.
-- 상세 popover는 선택 row와 fixed action을 가리지 않는 현재 계약을 유지한다.
-
-![현재 Upgrade 선택](./assets/2026-08-22-general-uiux-analysis/current/06b-first-weapon-selected.png)
-
-#### Pause
-
-현재 Pause는 작고 단순하며 Resume과 Abort Run의 위험 위계도 명확하다. 이 화면은 크기를 키우기보다 공용 셸 규칙을 고정하는 기준 화면으로 쓰는 편이 좋다.
-
-- 현재 cycle/진행을 한 줄로 보여 줄 수는 있지만, 전체 loadout이나 새 기능을 넣지 않는다.
-- `계속하기`는 filled primary, `작전 종료`는 restrained danger를 유지한다.
-- Guidebook/Settings icon의 accessible name, tooltip, input hint를 동일하게 유지한다.
-
-![현재 Pause](./assets/2026-08-22-general-uiux-analysis/current/90-pause.png)
-
-#### Settings
-
-현재 category rail은 이해하기 쉽지만, 오른쪽 content의 시작 위치와 정보량이 category마다 크게 달라 빈 화면처럼 느껴진다. `현재 기체`를 Settings에 포함하는 제품 계약은 유지하되, 제목 아래에 현재 category의 목적과 값 상태를 짧게 보여 주고 content width를 제한한다.
-
-- category 순서: 기체 상태, 음량, 조작, 게임/모션, 언어.
-- 변경 값은 색만 바꾸지 말고 `변경됨` 표식 또는 reset affordance로 구분한다.
-- 슬라이더·toggle·binding row는 label, 현재 값, control의 세 기준선을 공유한다.
-- reduced motion은 정보 제거가 아니라 반복 운동의 정적 cue 대체임을 짧게 설명한다.
-- 아직 제품에 없는 검색, preset, HUD scale, 색각 mode는 이번 개선에 추가하지 않는다. 외부 근거는 향후 제품 결정 자료로만 남긴다.
-
-![현재 Settings](./assets/2026-08-22-general-uiux-analysis/current/01b-shared-settings.png)
-
-#### Guidebook
-
-현재 wide 화면은 category/list/detail 책임이 시각적으로 충분히 분리되지 않고, preview가 세로 공간을 많이 차지한 뒤 stat가 fold 아래로 밀린다. 정본 계약대로 wide에서는 정확히 세 column을 사용한다.
-
-- 왼쪽: category rail과 미발견 count.
-- 가운데: 발견된 항목의 짧은 list. selectable `???` 항목은 만들지 않는다.
-- 오른쪽: identity, preview, 실제 gameplay owner에서 읽은 stat row.
-- preview는 설명의 증거이지 화면의 주인공이 아니다. 첫 핵심 stat가 fold 위에 보여야 한다.
-- compact에서는 category tab + list/detail 두 pane으로 접되, 1280 wide 구조를 상단 탭으로 바꾸지 않는다.
-
-![현재 Guidebook](./assets/2026-08-22-general-uiux-analysis/current/01c-guidebook.png)
-
-#### Stage Report / Failure / Result
-
-현재 보고서는 요구한 한 개의 outer scroll과 fixed action을 갖췄지만, label과 값이 양 끝으로 멀리 떨어지고 섹션 사이의 빈 공간이 많다. 첫 화면에서 “무슨 일이 끝났고, 현재 상태가 무엇이며, 무엇을 누르는가”가 한 덩어리로 읽혀야 한다.
-
-- outcome은 제목 바로 아래 단일 rail로 표시한다.
-- total time, Hull, cycle progress를 한 줄의 compact fact group으로 둔다.
-- 본문은 `outcome → cycle progress → build → damage → defense → enemies → bosses → pacing → limitations` 순서를 유지한다.
-- section은 card가 아니라 heading, spacing, divider로 구분한다.
-- Result와 Failure도 같은 body를 재사용하며, fixed primary action만 목적에 맞게 바꾼다.
-- 분석 dashboard, tab, metric sub-scroll, narrow build rail은 만들지 않는다.
-
-![현재 Stage Report](./assets/2026-08-22-general-uiux-analysis/current/91-stage-report.png)
-
-## 선택한 UI 체계
-
-### 공용 골격
-
-```text
-Modal Surface
-├─ Header: context/title + optional 48×48 utility command
-├─ Content: one task-specific composition
-└─ Footer: one fixed primary action, optional restrained destructive action
-```
-
-공용 primitive는 기존 `Surface`, `TextRow`, `Command`, `Selectable`, `Meter`, `PreviewWell` 여섯 개만 사용한다. 화면 script는 hierarchy, copy, signal, state만 소유하고 새 local `StyleBox`나 screen-specific chrome을 만들지 않는다.
-
-### 시각 문법
-
-| 역할 | 규칙 |
-| --- | --- |
-| Surface | flat fill, boundary 최대 1개, 의미가 있을 때 rail 최대 1개 |
-| Primary action | amber fill, 고정 footer, 48–52 px 높이 |
-| Selected | 3 px amber rail + 구조 변화 |
-| Focus | 2 px cyan outline, selected와 별도 표시 |
-| Danger | coral text/outline, filled primary와 경쟁 금지 |
-| Typography | Noto Sans KR variable, body 650, label/title 800 |
-| Spacing | 4/8/12/16/24/32 scale, compact inset 16, wide inset 24 |
-| Containment | 보이는 배경/경계 중첩 최대 2단계 |
-
-### 정보 문법
-
-모든 화면의 첫 5초 질문을 고정한다.
-
-1. 나는 어디에 있는가?
-2. 지금 결정해야 할 것은 무엇인가?
-3. 선택하면 무엇이 달라지는가?
-4. 다음 행동은 무엇인가?
-
-이 질문에 답하지 않는 설명, badge, card, frame은 제거 후보로 본다.
-
-## TO-BE 이미지 시안
-
-세 이미지는 **구조와 시각 방향을 검토하는 concept-only evidence**다. 생성 픽셀, 기체, icon, glyph, font rendering, 세부 spacing은 승인되지 않았고 runtime에 직접 사용할 수 없다. 실제 구현은 code-native Theme/Control로 재구성해야 한다.
-
-### Deployment concept
-
-![Deployment TO-BE concept](./assets/2026-08-22-general-uiux-analysis/to-be/deployment-to-be-concept.png)
-
-유효한 방향은 preview와 weapon identity를 한 덩어리로 만들고, 오른쪽 control row의 baseline을 통일한 점이다. 다만 생성 이미지의 미세한 tonal shading은 구현 기준이 아니다. 실제 구현은 flat `StyleBoxFlat`과 정본 token을 사용한다.
-
-### Guidebook concept
-
-![Guidebook TO-BE concept](./assets/2026-08-22-general-uiux-analysis/to-be/guidebook-to-be-concept.png)
-
-wide 3열, amber selected rail, cyan focus outline, fold 위 핵심 stat가 핵심이다. 생성된 craft/icon은 placeholder이며 기존 semantic provider의 승인 asset으로 대체해야 한다.
-
-### Stage Report concept
-
-![Stage Report TO-BE concept](./assets/2026-08-22-general-uiux-analysis/to-be/stage-report-to-be-concept.png)
-
-outcome rail과 세 개의 compact fact를 먼저 보여 주고, 아래는 한 개의 세로 report 흐름을 유지한다. 아이콘이 장식적으로 늘어나지 않도록 실제 구현에서는 의미가 중복되는 아이콘을 생략할 수 있다.
-
-## 외부 레퍼런스 조사
-
-외부 자료는 Cardborne의 시각 승인 기준이 아니다. 정보 구조, focus, 다국어 fit, 접근성 검증 방법만 전이했다.
-
-| 출처 | 관찰한 패턴 | Cardborne 적용 |
+| 역할 | 권장 | 사용 범위 |
 | --- | --- | --- |
-| [Into the Breach GDC postmortem](https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf) | 제한된 선택과 명확한 결과로 판단 시간을 줄임 | Upgrade에서 변화량과 선택 결과를 같은 row에 표시 |
-| [Into the Breach UI archive](https://interfaceingame.com/games/into-the-breach) | 배치·임무·보상·옵션 목적을 화면별로 분리 | Cardborne의 modal별 목적을 섞지 않음 |
-| [Hades updates](https://www.supergiantgames.com/blog/hades-updates/) | 실수 선택, 메뉴 탐색, text fit, Codex 접근을 반복 개선 | confirm 전 선택 상태, locale overflow, controller focus 검증 |
-| [Hades Long Winter update](https://www.supergiantgames.com/blog/hades-long-winter-update-patch-notes/) | 현재 build 비교와 victory summary 강화 | Upgrade current-build 비교와 Result 요약 강화 |
-| [Hades II patch 2](https://steamcommunity.com/games/1145350/announcements/detail/521992119019110975) | 작은 화면 확대, 보상 preview, 정렬·번역 개선 | compact 구조와 미선택 offer 가독성 검증 |
-| [Slay the Spire 2 UI changes](https://www.megacrit.com/news/2024-11-07-neowsletter-issue-4/) | 작은 target과 유사한 방 유형을 크기·색·형태로 보정 | 44 px target, 색 외 rail/shape/text 사용 |
-| [Slay the Spire 2 UI archive](https://interfaceingame.com/games/slay-the-spire-2/) | Codex, 설정, 결과, 확인을 독립 흐름으로 유지 | 한 modal에 서로 다른 목적을 추가하지 않음 |
-| [Returnal UX design](https://blog.playstation.com/2021/05/11/unpacking-returnals-ux-design-gameplay-first-ui-retro-futuristic-tech-and-accessibility/) | gameplay-first UI와 설정 preview | 전투 가림 최소화, 설정 변경의 즉시 이해 지원 |
-| [Dead Cells patch notes](https://deadcells.com/patchnotes/) | text backing, Pause 설명 scroll, tooltip과 camera 설정 개선 | Pause/Settings의 readable backing과 digital navigation 점검 |
-| [Risk of Rain Returns announcements](https://steamcommunity.com/app/1337520/announcements/) | UI scale, 압축 layout, tooltip 위치, HUD overlap 개선 | 지원 viewport별 대체 layout과 overflow gate |
-| [Risk of Rain 2 patch notes](https://support.2k.com/hc/en-us/articles/47210814399123-Risk-of-Rain-2-Patch-Notes-December-9-2025) | 긴 목표 문장에 맞춘 동적 공간 | 한국어/영어 중 긴 쪽 기준으로 container 확장 |
-| [Brotato Paws & Claws update](https://steamcommunity.com/games/1942280/announcements/detail/490463750770395337) | Pause의 run 맥락, Codex 도식, controller focus 개선 | Pause의 compact progress context와 Guidebook stat 우선순위 참고 |
-| [God of War Ragnarök accessibility](https://www.playstation.com/en-us/games/god-of-war-ragnarok/accessibility/) | preset과 개별 text/icon/contrast/motion 조절 | 향후 접근성 제품 결정 참고; 이번 범위에 새 기능으로 추가하지 않음 |
-| [The Last of Us Part II accessibility](https://blog.playstation.com/2020/06/09/the-last-of-us-part-ii-accessibility-features-detailed/) | 많은 옵션을 시각·청각·운동 preset으로 묶음 | 핵심 신호를 색 하나에만 의존하지 않는 원칙 채택 |
-| [Xbox XAG 101: Text display](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/101) | 실제 화면에서 글자 크기·간격 측정 | 캡처 기반 glyph bounds와 200% text 검증 |
-| [Xbox XAG 112: UI navigation](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility/xbox-accessibility-guidelines/112?source=recommendations) | 일관된 제목·focus order·digital navigation | 공용 focus graph와 header/footer 위치 고정 |
-| [Xbox XAG 114: UI context](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility/xbox-accessibility-guidelines/114) | 목적·역할·선택 결과를 사전에 이해 | 모든 modal의 context와 next action 우선 |
-| [Xbox XAG 109: Objective clarity](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility/xbox-accessibility-guidelines/109) | 현재 목표와 누적 진행을 다시 확인 | Report 첫 화면에 outcome/progress/state 제공 |
+| Surround | 거의 검정에 가까운 neutral | gameplay와 modal 분리 |
+| Surface | neutral graphite | 일반 패널의 기본 면 |
+| Raised row | graphite보다 한 단계 밝은 neutral | 행과 입력 영역 |
+| Primary text | warm off-white/cream | title, value, primary label |
+| Secondary text | neutral gray | 설명과 보조 정보 |
+| Focus/System | cyan | keyboard/controller focus, system feedback |
+| Reward/Confirmed selection | amber | 실제 보상과 확정 선택에만 사용 |
+| Danger | coral | 파괴·종료·실패 위험 |
 
-### 채택하지 않은 패턴
+권장안은 “노란색 제거”가 아니다. **노란색의 희소성을 회복**하는 것이다. 일반 제목과 출격 버튼까지 amber로 칠하지 않는다. 출격은 중성 filled action이어도 크기, 위치, label로 충분히 primary가 된다.
 
-- Hades의 신화 frame, Returnal의 retro-futuristic overlay, Slay the Spire의 card frame 등 작품 고유 스타일은 복사하지 않는다.
-- Turn-based 게임의 모든 정보를 한 화면에 압축하는 원칙을 실시간 Cardborne 전체에 강제하지 않는다.
-- Pause에 전체 inventory, timeline, 다음 보상을 모두 넣지 않는다. 현재 제품의 compact pause 계약을 우선한다.
-- AAA 사례의 수십 개 접근성 옵션을 이번 UI 정리에서 새로 만들지 않는다.
-- Dashboard card grid, tabbed report, nested metric panel은 통계량이 많아 보여도 보고서의 한 줄 흐름과 충돌하므로 채택하지 않는다.
+### 비교 실험
 
-## 구현 우선순위 제안
+세 실험 모두 기체 그림과 장식 자산을 제거하고 같은 정보 구조를 사용했다.
 
-### P0 — 공용 셸과 행동 위치
+#### A. 중성 흑연 + cream — 구조 채택, 폭 보정 필요
 
-- `VehicleUiComponentFactory`의 기존 primitive로 header/content/footer spacing을 표준화한다.
-- Deployment, Pause, Stage/Failure/Result의 header utility와 footer action anchor를 일치시킨다.
-- 기존 Theme token과 Noto Sans KR wiring만 사용한다.
+![중성 흑연 실험](./assets/2026-08-22-general-uiux-analysis/correction/deployment-graphite-cream-no-asset.png)
 
-완료 기준: 세 modal family의 title baseline, safe inset, primary action anchor가 같은 viewport mode에서 일치한다.
+- 장점: navy/amber 의존을 끊고 게임 배경과 자연스럽게 분리된다.
+- 단점: 생성 결과가 약 880 px 이상으로 넓어져 목표 680–800 px를 지키지 못했다.
+- 판정: **색 방향 채택, 생성 layout은 반려**.
 
-### P1 — 정보 밀도와 focus
+#### B. 청회색 + cyan — 기존 방향과 차이가 부족함
 
-- Settings의 category content width와 row baseline을 정리한다.
-- Guidebook wide 3열과 compact 2-pane을 명확히 분기한다.
-- Upgrade의 빈 build slot 대비를 낮추고 selected/focus 동시 상태를 점검한다.
+![청회색 실험](./assets/2026-08-22-general-uiux-analysis/correction/deployment-bluegray-cyan-no-asset.png)
 
-완료 기준: keyboard/controller로 visual order와 같은 focus order를 이동하며, selected와 focus가 색 없이도 구분된다.
+- 장점: focus 의미가 명확하고 노란색 과용이 없다.
+- 단점: 면적이 여전히 넓고, 넓은 청회색 면이 기존 dark navy shell과 비슷한 인상을 준다.
+- 판정: **보조 token 참고만 유지, 기본 surface로는 반려**.
 
-### P2 — Report hierarchy
+#### C. 밝은 산업 회색 — 폭·밀도 검증 성공, palette 그대로는 보류
 
-- 공용 `VehicleCombatReportBody`의 section spacing과 label/value 관계를 좁힌다.
-- Stage/Failure/Result에 동일한 outcome summary와 단일 outer scroll/fixed action 계약을 적용한다.
+![밝은 산업 회색 실험](./assets/2026-08-22-general-uiux-analysis/correction/deployment-light-industrial-no-asset.png)
 
-완료 기준: 첫 720 px 높이 안에서 outcome, time, Hull, cycle progress, next action을 확인할 수 있다.
+- 장점: 약 720–780 px의 compact footprint, 단일 세로 흐름, 무에셋 구조가 가장 명확하다.
+- 단점: 밝은 큰 면은 게임 UI보다 일반 desktop app처럼 보일 수 있고 전투 배경 대비가 과도하다.
+- 판정: **구조와 밀도 채택, 밝은 palette는 보류**.
 
-### P3 — 반응형·다국어 검증
+### 최종 색 결정
 
-- ko/en × 960/1280/1920 × 100/200% text 조합을 검증한다.
-- text glyph bounds, focus path, overflow, clipping, accidental horizontal scroll, fixed action occlusion을 검사한다.
-- Web production build에서 keyboard, mouse, controller navigation을 확인한다.
+최종 권고는 A와 C의 결합이다.
 
-완료 기준: 겹침·잘림·container 이탈 0, 24×24 미만 target 0, routine target은 44 px 이상이다.
+- C의 compact 단일 흐름과 면적을 사용한다.
+- A의 neutral graphite surface와 warm off-white text를 사용한다.
+- B의 cyan을 focus/system에만 사용한다.
+- amber는 Upgrade 선택, reward, 실제 confirmed selection에만 쓴다.
+- 일반 title, category label, primary action은 색이 아니라 크기·굵기·위치·filled state로 위계를 만든다.
 
-## ImageGen 생성 기록
+## 3. 패널 폭 판단
 
-- 모드: built-in ImageGen.
-- 분류: `ui-mockup`; 수정 단계는 `precise-object-edit`.
-- 공통 실제 reference: `docs/design/cardborne-universal-art-style-reference.png`.
-- current content references: 보존된 Deployment, Settings/Guidebook, Stage Report/Result 캡처.
-- 공통 prompt 핵심: 정본 시트는 style grammar only, object/layout 복제 금지; current capture는 기능/내용 참고 only; flat matte surface, broad planes, one boundary, at most one semantic rail, Korean-first, 44 px target, fixed primary action, nested frame/gradient/glow/fake action 금지.
-- Deployment 최종 수정: 첫 시안의 정보 구조를 유지하되 row card, grid, corner bracket, gradient/glow를 제거하고 preview well + text row + fixed 52 px action으로 평탄화.
-- Guidebook 최종 수정: 첫 시안의 horizontal category tab을 제거하고 1280 wide의 category rail + entry list + detail 3열로 변경.
-- Stage Report 최종 생성: outcome rail + compact facts + 하나의 vertical report body + fixed primary action.
+### 현재 폭이 넓어지는 코드 원인
 
-모든 최종 이미지의 저장 경로와 SHA-256은 다음과 같다.
+`scripts/ui/vehicle_stage_ui.gd`의 modal minimum과 `scripts/ui/vehicle_modal_host.gd`의 viewport clamp가 결합한다. 1280 px viewport에서 host는 좌우 합계 48 px만 남겨 1232 px까지 허용한다.
 
-| 이미지 | SHA-256 |
-| --- | --- |
-| `deployment-to-be-concept.png` | `4f69a2b304993487c68be3d0d3b09c764b83e5da500c7e50e5c4f4a7bc51f02d` |
-| `guidebook-to-be-concept.png` | `95dea0ca0d337001e0347f6bbcf61076a91139958ed89ddf89d6bd019e9d2260` |
-| `stage-report-to-be-concept.png` | `d636e3cc6344c20fad9a2ef7195bedb75d3693509e0099e1b0494d54be54dc9a` |
+| 화면 | 현재 minimum width | 1280에서 사용 가능 폭 대비 |
+| --- | ---: | ---: |
+| Deployment | 1176 px | 95.5% |
+| Upgrade | 1376 px | 111.7%; clamp 의존 |
+| Result | 1176 px | 95.5% |
+| Report | 1200 px | 97.4% |
+| Settings | 920 px | 74.7% |
+| Guidebook | 1160 px | 94.2% |
 
-## 승인 경계
+이 숫자는 “responsive maximum”이 아니라 대부분 화면에서 “항상 넓은 기본값”이 된다. 특히 Report의 1200 px는 좌우 16 px씩만 남겨 modal과 full-page의 구분을 거의 없앤다.
 
-이 보고서는 분석 evidence다. 다음 항목은 별도 사용자 승인 없이는 확정되지 않는다.
+### 권장 content-fit 폭
 
-- 생성 이미지의 기체, projectile, icon, glyph, font rendering, spacing, tonal shading.
-- 생성 이미지를 runtime texture나 production manifest에 넣는 작업.
-- 현재 제품에 없는 accessibility preset, HUD scale, search/filter, retry flow 같은 기능 추가.
-- 실제 UI 구현과 기존 screen/component contract 변경.
+| 화면 | 1280 기준 기본 폭 | 넓힐 수 있는 조건 |
+| --- | ---: | --- |
+| Pause | 440–520 px | 없음 |
+| Deployment | 680–800 px | 여러 기체를 실제 선택할 때만 840–960 px |
+| Settings | 720–880 px | 긴 key binding 편집과 200% text 검증 시 |
+| Guidebook | 900–1040 px | wide 3-column 유지에 필요한 범위 내 |
+| Upgrade | 920–1040 px | 3개 offer 비교가 깨지지 않는 범위 내 |
+| Report / Failure / Result | 720–880 px | 긴 locale text가 실제 overflow할 때 |
 
-권장 다음 결정은 **P0 공용 셸과 행동 위치를 실제 code-native UI로 구현할지 승인하는 것**이다.
+폭은 위 범위의 최대값으로 고정하지 않는다. 내용의 preferred size로 시작해, locale·text scale·viewport가 요구할 때만 범위 안에서 늘린다. 960 px 이하에서는 더 좁은 layout으로 재배치하고 horizontal scroll로 해결하지 않는다.
+
+## 화면별 교정 구조
+
+### Deployment
+
+`출격 준비 → 주무장 한 줄 → 조작 4행 → 출격`의 단일 세로 흐름을 쓴다. 고정 기체 preview, 두 column, 빈 hero area를 제거한다. 기체 선택 기능이 생길 때만 preview를 별도 조건부 component로 추가한다.
+
+### Pause
+
+현재처럼 가장 작은 task modal로 유지한다. 진행 맥락은 한 줄을 넘지 않는다. Guidebook/Settings utility command와 Resume/Abort의 위계만 공용 규칙에 맞춘다.
+
+### Settings
+
+category rail은 유지하되 전체 폭을 720–880 px로 줄인다. content는 label/value/control의 세 기준선을 공유한다. 자산을 넣지 않으며, 설정 결과를 실제로 비교할 때만 작은 preview를 쓴다.
+
+### Guidebook
+
+wide에서 category/list/detail 3-column은 유지하되 900–1040 px 안에서 각 column의 읽기 폭을 제한한다. preview는 identity 확인 크기로만 두고 첫 핵심 stat를 fold 위에 보인다. 그림 때문에 detail column이 커지지 않게 한다.
+
+### Upgrade
+
+세 offer를 동시에 비교해야 하므로 일반 화면보다 넓을 수 있다. 그러나 artwork는 option identity 크기에만 머물고 카드 frame이나 큰 장식 배경으로 넓이를 만들지 않는다. 선택과 focus는 rail/outline 구조로 함께 보인다.
+
+### Report / Failure / Result
+
+720–880 px의 단일 세로 report를 쓴다. label과 value를 화면 양끝으로 보내지 않는다. `outcome → time/Hull/progress → build → damage → defense → enemies → bosses → pacing → limitations`를 한 outer scroll로 유지하고 action만 고정한다.
+
+## 외부 근거와 적용 판단
+
+외부 자료는 Cardborne의 비주얼 승인 기준이 아니다. 자산의 정보 가치, 색 의미, readable measure, focus와 navigation 판단만 전이했다.
+
+| 근거 | 가져온 판단 | Cardborne 적용 |
+| --- | --- | --- |
+| [W3C Images Tutorial](https://www.w3.org/WAI/tutorials/images/) | 정보 이미지와 장식 이미지를 구분 | 자산 유지 여부를 정보 가치로 판단 |
+| [Xbox XAG 106](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/106) | 이미지·control의 목적과 상태가 명확해야 함 | 의미 없는 preview를 일반 modal에 두지 않음 |
+| [Apple Image Views](https://developer.apple.com/design/human-interface-guidelines/image-views) | 이미지는 목적을 지원하고 content와 경쟁하지 않아야 함 | preview를 identity 확인 크기로 제한 |
+| [Returnal UX design](https://blog.playstation.com/2021/05/11/unpacking-returnals-ux-design-gameplay-first-ui-retro-futuristic-tech-and-accessibility/) | gameplay-first UI | modal 장식보다 과업과 다음 행동 우선 |
+| [Hades updates](https://www.supergiantgames.com/blog/hades-updates/) | text fit, menu navigation, Codex 접근을 반복 개선 | locale fit과 focus를 지속 검증 |
+| [Apple Color](https://developer.apple.com/design/human-interface-guidelines/color) | 색은 일관된 의미와 충분한 대비를 가져야 함 | amber와 cyan의 역할 분리 |
+| [Xbox XAG 102](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/102) | 실제 전경·배경 대비 검증 | 대비 통과와 방향 적합성을 구분 |
+| [Xbox XAG 103](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/103) | 색만으로 정보를 전달하지 않음 | selected/focus에 rail, outline, text 병행 |
+| [Slay the Spire 2 UI changes](https://www.megacrit.com/news/2024-11-07-neowsletter-issue-4/) | 크기·색·형태를 함께 조절해 target 구분 | Upgrade offer와 focus state를 구조로 구분 |
+| [Xbox XAG 101](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/101) | 실제 화면에서 글자 크기와 간격 검증 | 720p와 200% text에서 readable measure 검사 |
+| [Xbox XAG 112](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility/xbox-accessibility-guidelines/112?source=recommendations) | 일관된 focus order와 digital navigation | visual order와 focus order 일치 |
+| [Xbox XAG 114](https://learn.microsoft.com/en-us/gaming/accessibility/xbox-accessibility/xbox-accessibility-guidelines/114) | 화면 목적과 선택 결과를 이해할 수 있어야 함 | title, current state, next action 우선 |
+| [Apple Designing for Games](https://developer.apple.com/design/human-interface-guidelines/designing-for-games) | 게임의 맥락과 입력 방식에 맞는 UI | desktop app 구조를 그대로 가져오지 않음 |
+| [GOV.UK Layout](https://design-system.service.gov.uk/styles/layout/) | 긴 line length를 피하고 content에 맞는 폭 사용 | viewport 충전 대신 readable content width 사용 |
+
+조사는 자산·색·폭의 세 질문마다 독립 근거가 3개 이상 모이고, 추가 자료가 결론을 바꾸지 않는 시점에 중단했다.
+
+## 구현 순서 제안
+
+### P0 — 명세와 token 교정
+
+- `VISUAL_SYSTEM.md`의 공용 surface/amber 규칙과 modal 폭 계약을 이번 결정에 맞춰 수정한다.
+- 자산 사용의 정보 가치 기준과 화면별 예외를 명시한다.
+- 기존 wide navy/amber concept를 승인 후보에서 제외한다.
+
+완료 기준: 구현자가 현재 명세와 이 보고서 사이에서 상반된 지시를 받지 않는다.
+
+### P1 — compact shell과 Deployment
+
+- modal host를 content-fit preferred size + 화면별 max band로 바꾼다.
+- Deployment를 assetless single-column으로 재구성한다.
+- neutral graphite/cream + cyan focus의 code-native prototype을 만든다.
+
+완료 기준: 1280에서 Deployment가 680–800 px, 좌우 충분한 gameplay context, 빈 hero area 0, 고정 기체 preview 0이다.
+
+### P2 — 화면군별 폭 축소
+
+- Pause 440–520 px.
+- Settings 720–880 px.
+- Guidebook/Upgrade만 필요 조건 아래 900–1040 px.
+- Report family 720–880 px.
+
+완료 기준: 각 추가 100 px의 폭이 어떤 정보 관계를 지키는지 설명할 수 있다.
+
+### P3 — 상태·다국어·입력 검증
+
+- ko/en × 960/1280/1920 × 100/200% text.
+- keyboard/mouse/controller focus.
+- overflow, clipping, horizontal scroll, fixed action occlusion.
+- Web production build의 실제 렌더.
+
+완료 기준: 겹침·잘림·container 이탈 0, selected/focus의 비색상 구분, routine target 44 px 이상이다.
+
+## ImageGen 기록과 판정
+
+모든 이미지는 `ui-mockup` 비교 실험이며 production asset이 아니다. 생성 픽셀, icon, glyph, font rendering과 spacing은 승인되지 않았다. runtime에서는 Godot Theme/Control로 다시 구현해야 한다.
+
+| 이미지 | SHA-256 | 판정 |
+| --- | --- | --- |
+| `deployment-graphite-cream-no-asset.png` | `e99c5f9010120b05d5e20ce4614d109ec26593a5a25914ef29d254ffce7343ba` | 색 방향 채택, 폭 반려 |
+| `deployment-bluegray-cyan-no-asset.png` | `4fb3680e89c5031cbd8c9ee0af6ad851f5e47376cf85eb801b021f4f47e70829` | 보조 token 참고, 기본 surface 반려 |
+| `deployment-light-industrial-no-asset.png` | `e5be871f453dbb518aa24dcfee50d4a1d7d4434a9c331f3796e90359b2c818ef` | 구조·밀도 채택, 밝은 palette 보류 |
+| `deployment-wide-asset-concept.png` | `4f69a2b304993487c68be3d0d3b09c764b83e5da500c7e50e5c4f4a7bc51f02d` | 폐기 |
+| `guidebook-wide-asset-concept.png` | `95dea0ca0d337001e0347f6bbcf61076a91139958ed89ddf89d6bd019e9d2260` | 폐기 |
+| `stage-report-wide-navy-amber-concept.png` | `d636e3cc6344c20fad9a2ef7195bedb75d3693509e0099e1b0494d54be54dc9a` | 폐기 |
+
+교정 실험의 공통 prompt 계약은 다음과 같다.
+
+- 정본 시트는 style grammar only, object/layout/palette 복제 금지.
+- latest Deployment capture는 content reference only.
+- 고정 기체 artwork와 장식 asset 제거.
+- 680–800 px compact modal, single vertical flow.
+- navy/amber branding 금지.
+- 한 번에 한 palette 변수만 비교.
+
+## 결정 및 승인 경계
+
+이 교정판이 권고하는 방향은 다음과 같다.
+
+- general UI의 기본은 **assetless, compact, neutral graphite**.
+- cyan은 focus/system, amber는 reward/confirmed selection, coral은 danger.
+- gameplay art는 식별·선택·상태 전달 가치가 있을 때만 사용.
+- max width는 기본값이 아니며, content-fit preferred size가 먼저다.
+
+아직 승인하거나 수행하지 않은 항목은 다음과 같다.
+
+- 정본 시각 명세와 Theme token 수정.
+- runtime panel 구현.
+- 생성 이미지를 production texture로 승격.
+- 새 기능, 새 접근성 옵션, 새 gameplay 선택지 추가.
+
+다음 결정은 **P0 명세 교정과 P1 compact Deployment code prototype을 시작할지**다.
