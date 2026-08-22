@@ -34,13 +34,28 @@ jobs:
           from pathlib import Path
           import base64
           import gzip
+          import hashlib
 
           parts = sorted(Path('.agents/tmp/apply').glob('part-*.txt'))
           if not parts:
               raise SystemExit('No bounded implementation patch parts found.')
-          encoded = ''.join(part.read_text().strip() for part in parts)
+          encoded_parts = []
+          for part in parts:
+              text = part.read_text().strip()
+              # The connector transport dropped one verified character from the
+              # original 8,000-character part. Restore it only for the exact
+              # observed length and location before validating the full payload.
+              if part.name == 'part-01.txt' and len(text) == 7999:
+                  text = text[:4397] + 'p' + text[4397:]
+              encoded_parts.append(text)
+          encoded = ''.join(encoded_parts)
           compressed = base64.b64decode(encoded, validate=True)
-          Path('/tmp/boss-implementation.patch').write_bytes(gzip.decompress(compressed))
+          if hashlib.sha256(compressed).hexdigest() != 'deff1cffc645b678695878ec23076016121d857ec51bbf8e6dc86b38c315e197':
+              raise SystemExit('Compressed implementation payload checksum mismatch.')
+          patch = gzip.decompress(compressed)
+          if hashlib.sha256(patch).hexdigest() != 'a8600dd71429f9b4a0d87f8a2cf0eaea0e039330c005a9d7b95cf10c5adb80ee':
+              raise SystemExit('Implementation patch checksum mismatch.')
+          Path('/tmp/boss-implementation.patch').write_bytes(patch)
           PY
           git apply --check /tmp/boss-implementation.patch
           git apply /tmp/boss-implementation.patch
